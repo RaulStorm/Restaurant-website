@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Бронь стола</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <header>
+        <h1>Бронирование столика</h1>
+        <nav>
+            <ul>
+                <li><a href="index.html">Главная</a></li>
+                <li><a href="menu.html">Меню ресторана</a></li>
+                <li><a href="review.html">Оставить отзыв</a></li>
+                <li><a href="contacts.html">Контакты</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <form id="reservation-form">
+            <label for="name">Ваше имя:</label>
+            <input type="text" id="name" required>
+            <label for="people">Количество человек:</label>
+            <input type="number" id="people" required>
+            <label for="date">Дата и время:</label>
+            <input type="datetime-local" id="date" required>
+            <button type="submit">Забронировать</button>
+        </form>
+    </main>
+    <script src="reservation.js"></script>
+</body>
+</html>
+`
