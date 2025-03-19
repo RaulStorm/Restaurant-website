@@ -4,24 +4,69 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Главная страница</title>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
     <header>
-        <h1>Ресторан</h1>
+        <h1 class="restaurant-name">
+            <a href="/index.html" class="restaurant-link">Деливия</a>
+        </h1>
         <nav>
             <ul>
-                <li><a href="/страницы/menu.html">Меню ресторана</a></li>
-                <li><a href="/страницы/reservation.html">Зарезервировать столик</a></li>
-                <li><a href="/страницы/review.html">Оставить отзыв</a></li>
+                <li><a href="/index.html">Главная</a></li>
+                <li><a href="/страницы/menu.html">Меню</a></li>
+                <li><a href="/страницы/reservation.html">Бронь</a></li>
+                <li><a href="/страницы/review.html">Отзывы</a></li>
                 <li><a href="/страницы/contacts.html">Контакты</a></li>
             </ul>
         </nav>
     </header>
+    
     <main>
-        <h2>Добро пожаловать в наш ресторан!</h2>
-        <p>Наслаждайтесь вкусной едой и отличным обслуживанием.</p>
+        <section class="gallery">
+            <div class="carousel">
+                <button class="prev" onclick="changeImage(-1)">&#10094;</button>
+                <div class="carousel-images">
+                    <img src="images/restaurant_interior1.png" alt="Интерьер ресторана 1" class="active">
+                    <img src="images/restaurant_interior2.png" alt="Интерьер ресторана 2">
+                    <img src="images/restaurant_interior3.png" alt="Интерьер ресторана 3">
+                </div>
+                <button class="next" onclick="changeImage(1)">&#10095;</button>
+            </div>
+        </section>
+
+        <section class="about">
+            <h2>О ресторане</h2>
+            <p>
+                Мы готовы предложить вам уникальный гастрономический опыт с блюдами, 
+                которые мы готовим с любовью и вниманием к деталям. 
+                Наши повара используют только свежие и качественные ингредиенты.
+            </p>
+            <p>
+                В "Деливия" вас ждет уютная атмосфера, где каждый гость чувствует себя по-особенному. 
+                Мы уверены, что каждый визит станет для вас запоминающимся событием.
+            </p>
+            <p>
+                Мы предлагаем как классические блюда, так и авторские творения, чтобы удовлетворить 
+                любой вкус. Обязательно посетите наше меню и узнайте о специальных предложениях.
+            </p>
+        </section>
     </main>
-    <script src="script.js"></script>
+    
+    <script src="/js/script.js"></script>
+
+    <footer>
+        <!-- Здесь будет загружен footer.html -->
+    </footer>
+    
+    <script>
+        fetch('/страницы/footer.html')
+        .then(response => response.text())
+        .then(data => {
+            document.querySelector('footer').innerHTML = data;
+        })
+        .catch(err => console.error('Ошибка загрузки footer:', err));
+    </script>
 </body>
 </html>

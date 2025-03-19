@@ -1,0 +1,193 @@
+
+h2 {
+    color: #333; /* Темный цвет заголовка */
+    text-align: center;
+    padding: 20px 0;
+    font-size: 32px; /* Крупный шрифт для заголовка */
+}
+
+.category {
+    display: none; /* Скрываем категории по умолчанию */
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Автоматически заполняем доступное пространство */
+    gap: 20px; /* Пробел между карточками */
+    margin-bottom: 40px;
+}
+.category.active {
+    display: block; /* Показываем активную категорию */
+}
+
+.menu-item {
+    margin: 8px;
+    border: 1px solid #877a7a;
+    border-radius: 5px;
+    padding: 10px;
+    background-color: #b3aeae;
+    display: inline-block; /* Для карточек на одной строке */
+    width: calc(23% - 20px); /* Ширина карточки с учетом отступов */
+    vertical-align: top; /* Выровнять карточки по верхнему краю */
+    transition: transform 0.3s, box-shadow 0.3s; /* Плавный эффект при наведении */
+
+}
+
+.menu-item:hover {
+    transform: translateY(-5px); /* Поднятие карточки */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); /* Увеличение тени */
+
+}
+
+.menu-item img {
+    height: 130;
+    max-width: 100;
+    
+    width: auto; /* Изображение занимает всю ширину карточки */
+    height: 150px; /* Фиксированная высота для однородного вида */
+    object-position: center; /* Центрируем изображение */
+    border-radius: 8px; /* Более круглые углы для изображений */
+
+}
+
+.menu-card {
+    text-align: center; /* Центрируем текст в карточке */
+}
+
+.menu-image {
+    width: 100%; /* Полная ширина изображения */
+    height: auto; /* Автоматическая высота */
+    border-radius: 5px; /* Округлые углы для изображения */
+}
+
+.menu-item h4 {
+    margin: 10px 0 5px;
+    font-size: 20px; /* Увеличиваем размер заголовка */
+    color: #495057; /* Тёмный цвет для текста */
+}
+
+.menu-item p {
+    margin: 5px 0;
+    color: #6c757d; /* Светло-серый цвет для описания */
+    font-size: 14px; /* Размер текста для описаний */
+}
+
+.price {
+    font-weight: bold;
+    color: #28a745; /* Зеленый цвет для цены */
+    font-size: 18px; /* Увеличиваем размер текста цены */
+}
+
+.item-quantity {
+    width: 60px; /* Ширина инпута */
+    padding: 5px; /* Внутренние отступы */
+    margin-top: 10px;
+    border: 1px solid #ced4da; /* Цвет границы */
+    border-radius: 5px;
+}
+
+.add-to-cart {
+    background-color: #505b66; /* Синий цвет */
+    border: none;
+    color: rgb(255, 255, 255);
+    padding: 10px 15px; /* Внутренние отступы */
+    border-radius: 5px; /* Округление */
+    cursor: pointer;
+    margin-top: 10px; /* Отступ сверху */
+    transition: background-color 0.3s; /* Плавный эффект */
+}
+
+.add-to-cart:hover {
+    background-color: #101315; /* Более тёмный синий при наведении */
+}
+
+#cart {
+    margin-top: 30px;
+    padding: 20px;
+    background-color: #ffffff; /* Белый фон */
+    border-radius: 10px; /* Округлые углы */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Легкая тень */
+}
+
+#table-number, #cart-total {
+    margin-top: 10px;
+    padding: 10px;
+    border: 1px solid #ced4da; /* Цвет границы */
+    border-radius: 5px;
+}
+
+.tabs {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px; /* Отступ между вкладками и меню */
+}
+.tab-button {
+    background-color: #b5b7ba; /* Синий цвет для вкладок */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 0 5px; /* Отступ между кнопками */
+    transition: transform 0.3s, box-shadow 0.3s; /* Плавный эффект при наведении */
+}
+
+.tab-button:hover {
+    background-color: #616364; /* Более темный цвет при наведении */
+}
+
+.tab-button.active {
+    background-color: #323335e7; /* Цвет активной вкладки */
+}
+
+h2 {
+    color: #333;
+    text-align: center;
+    padding: 20px 0;
+    font-size: 32px;
+}
+
+#cart {
+    max-width: 600px;
+    margin: 30px auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+#cart-items {
+    margin-bottom: 20px;
+    text-align: left; /* Выравнивание для списка товаров */
+}
+
+#cart-total {
+    margin-top: 20px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+#table-number, #order-notes {
+    width: calc(100% - 22px);
+    padding: 10px;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+    margin-top: 15px;
+}
+
+#order-notes {
+    min-height: 80px;
+    resize: vertical; /* Позволяет пользователю изменять размер текстового поля */
+}
+
+#place-order {
+    background-color: #28a745;
+    border: none;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: background-color 0.3s;
+}
+
+#place-order:hover {
+    background-color: #218838;
+}

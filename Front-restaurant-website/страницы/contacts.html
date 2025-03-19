@@ -3,25 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <title>Контакты</title>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/contacts.css">
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=7b6ff80b-e515-4ceb-85ae-59d2d019e1e2&lang=ru_RU" type="text/javascript"></script>
 </head>
 <body>
     <header>
-        <h1>Контакты</h1>
+        <h1 class="restaurant-name">
+            <a href="/index.html" class="restaurant-link">Деливия</a>
+        </h1>
         <nav>
             <ul>
-                <li><a href="menu.html">Меню ресторана</a></li>
-                <li><a href="reservation.html">Зарезервировать столик</a></li>
-                <li><a href="review.html">Оставить отзыв</a></li>
+                <li><a href="/index.html">Главная</a></li>
+                <li><a href="/страницы/menu.html">Меню</a></li>
+                <li><a href="/страницы/reservation.html">Бронь</a></li>
+                <li><a href="/страницы/review.html">Отзывы</a></li>
+                <li><a href="/страницы/contacts.html">Контакты</a></li>
             </ul>
         </nav>
     </header>
-    <main>
-        <h2>Адрес:</h2>
-        <p>г. Москва, ул. Примерная, д.1</p>
-        <h2>Телефон:</h2>
-        <p>+7 (495) 123-45-67</p>
+    <main class="main">
+        <div class="card">
+            <h2>Адрес:</h2>
+            <p>г. Москва, ул. Примерная, д.1</p>
+            <h2>Телефон:</h2>
+            <p>+7 (495) 123-45-67</p>
+            <div id="map" style="width: 100%; height: 300px; margin-top: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);"></div>
+        </div>
     </main>
+    
+
+    <footer class="footer">
+        <!-- Здесь будет загружен footer.html -->
+    </footer>
+    
+    <script>
+        ymaps.ready(init);
+        function init() {
+            var map = new ymaps.Map("map", {
+                center: [51.6615, 39.2003],
+                zoom: 15
+            });
+
+            var placemark = new ymaps.Placemark([55.7558, 37.6173], {
+                hintContent: 'Деливия',
+                balloonContent: 'Здесь находится наш ресторан'
+            });
+
+            map.geoObjects.add(placemark);
+        }
+        
+        fetch('/страницы/footer.html')
+            .then(response => response.text())
+            .then(data => {
+                document.querySelector('footer').innerHTML = data;
+            })
+            .catch(err => console.error('Ошибка загрузки footer:', err));
+    </script>
+    
     <script src="contacts.js"></script>
 </body>
 </html>

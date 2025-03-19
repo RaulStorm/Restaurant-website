@@ -1,26 +1,62 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <title>Меню ресторана</title>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/menu.css">
 </head>
+
 <body>
     <header>
-        <h1>Меню ресторана</h1>
+        <h1 class="restaurant-name">
+            <a href="/index.html" class="restaurant-link">Деливия</a>
+        </h1>
         <nav>
             <ul>
-                <li><a href="index.html">Главная</a></li>
-                <li><a href="reservation.html">Зарезервировать столик</a></li>
-                <li><a href="review.html">Оставить отзыв</a></li>
-                <li><a href="contacts.html">Контакты</a></li>
+                <li><a href="/index.html">Главная</a></li>
+                <li><a href="/страницы/menu.html">Меню</a></li>
+                <li><a href="/страницы/reservation.html">Бронь</a></li>
+                <li><a href="/страницы/review.html">Отзывы</a></li>
+                <li><a href="/страницы/contacts.html">Контакты</a></li>
             </ul>
         </nav>
     </header>
+
     <main>
         <h2>Наше меню</h2>
-        <div id="menu-items"></div>
+        <div class="tabs">
+            <!-- Кнопки вкладок будут добавлены динамически через JavaScript -->
+        </div>
+        <div id="menu-items"></div> <!-- Контейнер для отображения блюд -->
+    
+        <h2>Корзина</h2>
+        <div id="cart">
+            <div id="cart-items"></div> <!-- Контейнер для элементов корзины -->
+            <div id="cart-total">Итого: <span id="total-price">0</span> ₽</div>
+            <input type="text" id="table-number" placeholder="Номер столика" required>
+            <textarea id="order-notes" placeholder="Ваши пожелания к заказу"></textarea>
+            <button id="place-order">Сделать заказ</button>
+        </div>
     </main>
-    <script src="menu.js"></script>
+    
+
+    <footer>
+        <!-- Здесь будет загружен footer.html -->
+    </footer>
+
+    <script>
+        fetch('/страницы/footer.html')
+            .then(response => response.text())
+            .then(data => {
+                document.querySelector('footer').innerHTML = data;
+            })
+            .catch(err => console.error('Ошибка загрузки footer:', err));
+    </script>
+
+    <script src="/js/menu.js"></script> <!-- Подключение JS файла -->
 </body>
+
 </html>

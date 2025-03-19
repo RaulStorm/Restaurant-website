@@ -1,46 +1,209 @@
-body {
-    font-family: Arial, sans-serif;
-    line-height: 1.6;
-    margin: 0;
-    padding: 0;
+/* Стили для заголовка */
+header {
+    display: flex; /* Используем flexbox для удобного выравнивания */
+    justify-content: space-between; /* Распределяем пространство между элементами */
+    align-items: center; /* Центрируем элементы по вертикали */
+    background-color: #7e56563b; /* Цвет фона */
+    padding: 15px; /* Отступы */
+    width: 100%; /* Фиксированная ширина */
+    max-width: 1000px; /* Максимальная ширина */
+    height: 70px; /* Фиксированная высота */
+    margin: 0 auto; /* Центрируем заголовок на странице */
+    box-sizing: border-box; /* Учитываем отступы в размерах */
 }
 
-header {
-    background: #333;
-    color: #fff;
-    padding: 10px 0;
-    text-align: center;
+.restaurant-name {
+    font-family: 'Pacifico', cursive; /* Используем подключённый шрифт */
+    font-size: 36px; /* Размер шрифта */
+    color: #fff; /* Цвет текста */
+    margin: 3; /* Убираем отступы */
+}
+
+.restaurant-link {
+    color: #fff; /* Цвет текста ссылки */
+    text-decoration: none; /* Убираем подчеркивание */
+}
+
+nav {
+    flex-grow: 1; /* Заставляем навигацию занимать оставшееся пространство */
+    text-align: center; /* Центрируем меню */
 }
 
 nav ul {
-    list-style: none;
-    padding: 0;
+    list-style-type: none; /* Убираем точки списка */
+    padding: 0; /* Убираем отступы */
+    margin: 0; /* Убираем отступы */
 }
 
 nav ul li {
-    display: inline;
-    margin: 0 15px;
+    display: inline; /* Горизонтальное расположение пунктов меню */
+    margin: 0 15px; /* Отступы между пунктами меню */
 }
 
 nav ul li a {
-    color: #fff;
-    text-decoration: none;
+    color: #fff; /* Цвет текста пунктов меню */
+    text-decoration: none; /* Убираем подчеркивание */
+}
+
+.about {
+    margin: 10px;
+    background-color: #b6a9a9; /* Светлый фон для блока о ресторане */
+    padding: 30px; /* Увеличенные отступы для создания пространства */
+    border-radius: 15px; /* Закругленные углы */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Нежная тень для визуальной глубины */
+    margin-bottom: 30px; /* Отступ снизу для разделения с другими блоками */
+}
+
+.about h2 {
+    font-size: 28px; /* Размер заголовка секции */
+    color: #333; /* Цвет заголовка */
+    margin-bottom: 15px; /* Отступ снизу */
+    text-align: center; /* Центрирование заголовка */
+    font-weight: bold; /* Жирный шрифт */
+}
+
+.about p {
+    font-size: 16px; /* Размер текста абзацев */
+    line-height: 1.6; /* Увеличенный интерлиньяж для лучшей читаемости */
+    color: #555; /* Цвет текста */
+    margin-bottom: 15px; /* Отступы между абзацами */
+    text-align: left; /* Выравнивание текста по левому краю */
+}
+
+/* Опционально: Добавление стиля ссылкам в блоке */
+.about a {
+    color: #ff7e5f; /* Цвет ссылок */
+    text-decoration: underline; /* Подчеркивание */
+}
+
+.about a:hover {
+    text-decoration: none; /* Убираем подчеркивание при наведении */
+}
+
+/* Стили для тела страницы */
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Минимальная высота для заполнения всего окна браузера */
 }
 
 main {
-    padding: 20px;
+    flex: 1; /* Заставляем основной контент занимать оставшееся пространство */
 }
 
-form {
-    display: flex;
-    flex-direction: column;
+/* Стили для футера */
+footer {
+    margin: 10px;
+
+    background-color: #6d5959; /* Фоновый цвет футера */
+    color: #fff; /* Цвет текста футера */
+    padding: 20px px; /* Отступы */
+    display: flex; /* Использование Flexbox */
+    flex-direction: column; /* Вертикальное выравнивание */
+    text-align: center; /* Центрирование текста */
 }
 
-form label {
-    margin: 10px 0 5px;
+.footer-content {
+    display: flex; /* Горизонтальное распределение */
+    justify-content: space-between; /* Пространство между секциями */
 }
 
-form input, form textarea {
-    padding: 8px;
-    margin-bottom: 10px;
+.footer-section {
+    flex: 1; /* Равное распределение пространства */
+    margin: 0 10px; /* Отступы между секциями */
+}
+
+.footer-section h3 {
+    border-bottom: 1px solid #fff; /* Линия под заголовком */
+    padding-bottom: 5px; /* Отступ снизу */
+}
+
+.social-media {
+    list-style-type: none; /* Убираем точки списка */
+    padding: 0; /* Убираем отступы */
+    margin: 0; /* Убираем отступы */
+}
+
+.social-media li {
+    display: inline; /* Горизонтальное расположение пунктов меню */
+    margin-right: 15px; /* Отступы между пунктами */
+}
+
+.social-media li a {
+    color: #fff; /* Цвет ссылок */
+    text-decoration: none; /* Убираем подчеркивание */
+}
+
+.social-media li a:hover {
+    text-decoration: underline; /* Подчеркивание при наведении */
+}
+
+.footer-bottom {
+    text-align: center; /* Центрирование текста */
+    margin-top: 15px; /* Отступ сверху */
+    font-size: 14px; /* Размер шрифта */
+}
+
+/* Стили для галереи */
+.gallery {
+    margin-top: 20px; /* Отступ сверху */
+    text-align: center; /* Центрирование заголовка */
+}
+
+/* Карусель и изображения */
+.carousel {
+    position: relative; /* Для позиционирования кнопок */
+    width: 100%; /* Ширина карусели */
+    max-width: 800px; /* Максимальная ширина */
+    margin: auto; /* Центрирование */
+    overflow: hidden; /* Скрыть изображения, которые выходят за пределы */
+}
+
+.carousel-images {
+    display: flex; /* Оставляем flex-контейнер для горизонтального выравнивания изображений, если нужно */
+    overflow: hidden; /* Скрыть изображения, которые выходят за пределы */
+    position: relative; /* Для позиционирования внутренних элементов */
+}
+
+.carousel-images img {
+    width: 100%; /* Ширина изображения */
+    height: auto; /* Автоматическая высота */
+    border-radius: 5px; /* Закругленные углы */
+    display: none; /* Скрываем все изображения по умолчанию */
+}
+
+.carousel-images img.active {
+    display: block; /* Показываем только активное изображение */
+}
+
+/* Стили для кнопок навигации */
+button.prev, button.next {
+    position: absolute; /* Абсолютное позиционирование кнопок */
+    top: 50%; /* Центрирование по вертикали */
+    background-color: rgba(255, 255, 255, 0.7); /* Полупрозрачный фон */
+    border: none; /* Без рамки */
+    cursor: pointer; /* Указатель при наведении */
+    padding: 10px 15px; /* Отступы для кнопок */
+    border-radius: 5px; /* Закругленные углы */
+    transform: translateY(-50%); /* Центрирование по вертикали */
+}
+
+button.prev {
+    left: 10px; /* Отступ от левого края */
+}
+
+button.next {
+    right: 10px; /* Отступ от правого края */
+}
+
+button:hover {
+    background-color: rgba(255, 255, 255, 0.9); /* Более яркий фон при наведении */
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background: linear-gradient(135deg, #bbbdc1, #cddff4);
+    margin: 0;
+    padding: 0;
+    color: #333;
 }
