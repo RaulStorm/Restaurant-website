@@ -62,13 +62,5 @@ main {
     background-color: #0056b3;
 }
 
-footer {
-    background-color: #333;
-    color: #fff;
-    text-align: center;
-    padding: 10px 0;
-    width: 100%;
-    /* Удален fixed positioning */
-    position: relative; /* Чтобы подстроить футер под страницу */
-}
+
 

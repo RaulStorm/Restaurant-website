@@ -1,4 +1,4 @@
-package org.example.restaurantwebsite.controller;// MenuController.java
+package org.example.restaurantwebsite.controller;
 
 import org.example.restaurantwebsite.model.MenuItemDto;
 import org.example.restaurantwebsite.model.MenuItem;
@@ -13,9 +13,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.bind.annotation.CrossOrigin;
+
 
 @RestController
 @RequestMapping("/api")
+@CrossOrigin(origins = "http://127.0.0.1:5500")
 public class MenuController {
 
     @Autowired

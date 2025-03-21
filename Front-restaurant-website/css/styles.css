@@ -45,6 +45,15 @@ nav ul li a {
     text-decoration: none; /* Убираем подчеркивание */
 }
 
+.auth-link {
+    align-items: center;
+}
+
+.auth-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 5px;
+}
 .about {
     margin: 10px;
     background-color: #b6a9a9; /* Светлый фон для блока о ресторане */
