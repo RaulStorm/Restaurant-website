@@ -10,18 +10,7 @@
 </head>
 <body>
     <header>
-        <h1 class="restaurant-name">
-            <a href="/index.html" class="restaurant-link">Деливия</a>
-        </h1>
-        <nav>
-            <ul>
-                <li><a href="/index.html">Главная</a></li>
-                <li><a href="/страницы/menu.html">Меню</a></li>
-                <li><a href="/страницы/reservation.html">Бронь</a></li>
-                <li><a href="/страницы/review.html">Отзывы</a></li>
-                <li><a href="/страницы/contacts.html">Контакты</a></li>
-            </ul>
-        </nav>
+
     </header>
     <main class="main">
         <div class="card">
@@ -40,27 +29,39 @@
     
     <script>
         ymaps.ready(init);
+    
         function init() {
             var map = new ymaps.Map("map", {
                 center: [51.6615, 39.2003],
                 zoom: 15
             });
-
+    
             var placemark = new ymaps.Placemark([51.6615, 39.2003], {
                 hintContent: 'Деливия',
                 balloonContent: 'Здесь можно вкусно поесть 😎'
             });
-
+    
             map.geoObjects.add(placemark);
         }
-        
-        fetch('/страницы/footer.html')
-            .then(response => response.text())
-            .then(data => {
-                document.querySelector('footer').innerHTML = data;
-            })
-            .catch(err => console.error('Ошибка загрузки footer:', err));
+    
+        function loadComponent(url, selector) {
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Ошибка загрузки: ${response.statusText}`);
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    document.querySelector(selector).innerHTML = data;
+                })
+                .catch(err => console.error(err.message));
+        }
+    
+        loadComponent('/страницы/footer.html', 'footer');
+        loadComponent('/страницы/header.html', 'header');
     </script>
+    
     
     <script src="/js/contacts.js"></script>
 </body>

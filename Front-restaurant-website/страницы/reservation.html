@@ -9,18 +9,7 @@
 </head>
 <body>
     <header>
-        <h1 class="restaurant-name">
-            <a href="/index.html" class="restaurant-link">Деливия</a>
-        </h1>
-        <nav>
-            <ul>
-                <li><a href="/index.html">Главная</a></li>
-                <li><a href="/страницы/menu.html">Меню</a></li>
-                <li><a href="/страницы/reservation.html">Бронь</a></li>
-                <li><a href="/страницы/review.html">Отзывы</a></li>
-                <li><a href="/страницы/contacts.html">Контакты</a></li>
-            </ul>
-        </nav>
+
     </header>
     
     <main>
@@ -44,10 +33,17 @@
     <script>
         fetch('/страницы/footer.html')
         .then(response => response.text())
-            .then(data => {
-                document.querySelector('footer').innerHTML = data;
-            })
-            .catch(err => console.error('Ошибка загрузки footer:', err));
+        .then(data => {
+            document.querySelector('footer').innerHTML = data;
+        })
+        .catch(err => console.error('Ошибка загрузки footer:', err));
+
+        fetch('/страницы/header.html')
+        .then(response => response.text())
+        .then(data => {
+            document.querySelector('header').innerHTML = data;
+        })
+        .catch(err => console.error('Ошибка загрузки header:', err));
     </script>
     
     <script src="/js/reservation.js"></script>
