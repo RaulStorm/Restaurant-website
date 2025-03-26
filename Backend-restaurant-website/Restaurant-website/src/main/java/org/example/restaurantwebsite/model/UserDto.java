@@ -28,5 +28,12 @@ public class UserDto {
     public void setPassword(String password) {
         this.password = password;
     }
-// Геттеры и сеттеры
+
+    @Override
+    public String toString() {
+        return "UserDto{" +
+                "name='" + name + '\'' +
+                ", password='" + password + '\'' +
+                '}';
+    }
 }

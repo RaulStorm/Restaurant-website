@@ -9,7 +9,6 @@ public class Response {
         this.message = message;
     }
 
-    // Getters and setters
     public boolean isSuccess() {
         return success;
     }

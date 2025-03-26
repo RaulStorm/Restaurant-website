@@ -1,22 +1,28 @@
 package org.example.restaurantwebsite.service;
 
-import org.example.restaurantwebsite.model.Role;
+import jakarta.transaction.Transactional;
 import org.example.restaurantwebsite.model.User;
 import org.example.restaurantwebsite.repository.RoleRepository;
 import org.example.restaurantwebsite.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 
+import java.security.Key;
+import java.util.Base64;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Optional;
-import java.util.Set;
 
 @Service
 public class UserService {
+
+    private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
     @Autowired
     private UserRepository userRepository;
@@ -27,22 +33,28 @@ public class UserService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    private final String jwtSecret = "your_jwt_secret";
+    @Value("${jwt.secret}") // Загружаем секретный ключ из application.properties
+    private String jwtSecret;
 
+    private Key getSigningKey() {
+        return Keys.hmacShaKeyFor(Base64.getDecoder().decode(jwtSecret));
+    }
+
+    @Transactional
     public String registerUser(String name, String email, String password) {
+        logger.info("Регистрация пользователя с именем: {}", name);
+
         if (userRepository.findByEmail(email).isPresent()) {
-            return null;  // пользователь уже существует
+            logger.warn("Попытка регистрации с уже существующим email: {}", email);
+            return null; // Пользователь с таким email уже есть
         }
 
-        Role clientRole = roleRepository.findByName("CLIENT").orElseThrow(() -> new RuntimeException("Role not found"));
+        User newUser = new User();
+        newUser.setName(name);
+        newUser.setEmail(email);
+        newUser.setPassword(passwordEncoder.encode(password)); // Шифруем пароль
+        userRepository.save(newUser);
 
-        User user = new User();
-        user.setName(name);
-        user.setEmail(email);
-        user.setPassword(passwordEncoder.encode(password));
-        user.setRoles(new HashSet<>(Set.of(clientRole)));
-
-        userRepository.save(user);
         return generateToken(email);
     }
 
@@ -62,7 +74,7 @@ public class UserService {
                 .setSubject(email)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + 86400000)) // 1 день
-                .signWith(SignatureAlgorithm.HS512, jwtSecret)
+                .signWith(getSigningKey(), SignatureAlgorithm.HS512)
                 .compact();
     }
 }
