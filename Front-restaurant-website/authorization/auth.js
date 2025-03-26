@@ -16,15 +16,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const signInForm = document.querySelector('.sign-in-form');
     signInForm.addEventListener('submit', function(event) {
         event.preventDefault();
-        const nameInput = signInForm.querySelector('input[name="name"]');
+        const emailInput = signInForm.querySelector('input[name="email"]');
         const passwordInput = signInForm.querySelector('input[name="password"]');
 
-        if (!nameInput || !passwordInput) {
+        if (!emailInput || !passwordInput) {
             console.error('Не удалось получить значения формы');
             return;
         }
 
-        const name = nameInput.value.trim();
+        const email = emailInput.value.trim();
         const password = passwordInput.value.trim();
 
         fetch(`${API_URL}/api/login`, {
@@ -32,17 +32,19 @@ document.addEventListener('DOMContentLoaded', function() {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ name, password })
+            body: JSON.stringify({ email, password })
         })
         .then(response => response.ok ? response.json() : Promise.reject(response.json()))
         .then(data => {
-            if (data.success) {
-                console.log('Вход выполнен');
+            if (data.success && data.token) {
+                localStorage.setItem('token', data.token); // Сохраняем токен
+                localStorage.setItem('user', JSON.stringify(data.user)); // Сохраняем данные пользователя
+                window.location.href = '/index.html'; // Переход на главную страницу
             } else {
                 console.error('Ошибка входа:', data.message || 'Неизвестная ошибка');
             }
         })
-        .catch(error => error.then(err => console.error('Ошибка:', err)));
+        .catch(error => console.error('Ошибка:', error));
     });
 
     const signUpForm = document.querySelector('.sign-up-form');
@@ -76,6 +78,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('Ошибка регистрации:', data.message || 'Неизвестная ошибка');
             }
         })
-        .catch(error => error.then(err => console.error('Ошибка:', err)));
+        .catch(error => console.error('Ошибка:', error));
     });
 });
+
+// Функция для обновления UI после загрузки страницы
+document.addEventListener('DOMContentLoaded', updateUserUI); 
+
+function updateUserUI() {
+    const userIcon = document.querySelector('#user-icon'); // Найди элемент с id="user-icon"
+    const user = JSON.parse(localStorage.getItem('user'));
+
+    if (user) {
+        userIcon.src = '/authorization/img/avatar-icon.png'; // Меняем на иконку личного кабинета
+        userIcon.alt = 'Личный кабинет';
+        userIcon.onclick = () => window.location.href = '/profile.html'; // Переход в личный кабинет
+    } else {
+        userIcon.src = '/authorization/img/auth.png'; // Возвращаем иконку входа
+        userIcon.alt = 'Вход';
+        userIcon.onclick = () => window.location.href = '/authorization/auth.html'; // Переход на страницу входа
+    }
+}

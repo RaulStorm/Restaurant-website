@@ -32,7 +32,7 @@ public class UserDto {
     @Override
     public String toString() {
         return "UserDto{" +
-                "name='" + name + '\'' +
+                "email='" + email + '\'' +
                 ", password='" + password + '\'' +
                 '}';
     }
