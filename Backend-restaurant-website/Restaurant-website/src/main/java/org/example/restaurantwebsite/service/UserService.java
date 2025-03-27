@@ -2,7 +2,6 @@ package org.example.restaurantwebsite.service;
 
 import jakarta.transaction.Transactional;
 import org.example.restaurantwebsite.model.User;
-import org.example.restaurantwebsite.repository.RoleRepository;
 import org.example.restaurantwebsite.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,8 +26,6 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
-    private RoleRepository roleRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
