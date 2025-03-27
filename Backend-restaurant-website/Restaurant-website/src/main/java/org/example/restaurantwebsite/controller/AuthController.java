@@ -1,18 +1,25 @@
 package org.example.restaurantwebsite.controller;
 
+import io.jsonwebtoken.Jwts;
+import org.example.restaurantwebsite.model.User;
 import org.example.restaurantwebsite.model.UserDto;
 import org.example.restaurantwebsite.model.Response;
 import org.example.restaurantwebsite.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.beans.factory.annotation.Value;
 
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api")
@@ -20,6 +27,8 @@ public class AuthController {
 
     private final UserService userService;
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
+    @Value("${jwt.secret}")
+    private String jwtSecret;
 
     @Autowired
     public AuthController(UserService userService) {
@@ -76,4 +85,34 @@ public class AuthController {
             return ResponseEntity.status(500).body(new Response(false, "Внутренняя ошибка сервера"));
         }
     }
+    @GetMapping("/user-info")
+    public ResponseEntity<?> getUserInfo(@RequestHeader("Authorization") String token) {
+        try {
+            String jwtToken = token.replace("Bearer ", ""); // Убираем "Bearer "
+            String email = Jwts.parserBuilder()
+                    .setSigningKey(Base64.getDecoder().decode(jwtSecret))
+                    .build()
+                    .parseClaimsJws(jwtToken)
+                    .getBody()
+                    .getSubject();
+
+            Optional<User> userOpt = userService.findByEmail(email);
+            if (userOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new Response(false, "Пользователь не найден"));
+            }
+
+            User user = userOpt.get();
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("email", user.getEmail());
+            response.put("name", user.getName());
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new Response(false, "Неверный токен"));
+        }
+    }
+
 }

@@ -39,6 +39,10 @@ public class UserService {
     private Key getSigningKey() {
         return Keys.hmacShaKeyFor(Base64.getDecoder().decode(jwtSecret));
     }
+    public Optional<User> findByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
+
 
     @Transactional
     public String registerUser(String name, String email, String password) {
