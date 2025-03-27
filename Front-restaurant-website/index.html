@@ -51,25 +51,27 @@
     </footer>
     
     <script>
-        // Загружаем header
-        fetch('/страницы/header.html')
-            .then(response => response.text())
-            .then(data => {
-                // Вставляем загруженный HTML в header
-                document.querySelector('header').innerHTML = data;
-                
-                // После загрузки вызываем updateUserUI для обновления иконки
-                updateUserUI();
-            })
-            .catch(err => console.error('Ошибка загрузки header:', err));
-    
-        // Загружаем footer
-        fetch('/страницы/footer.html')
-            .then(response => response.text())
-            .then(data => {
-                document.querySelector('footer').innerHTML = data;
-            })
-            .catch(err => console.error('Ошибка загрузки footer:', err));
+ fetch('/страницы/header.html')
+    .then(response => response.text())
+    .then(data => {
+        document.querySelector('header').innerHTML = data;
+        // Обновляем UI после загрузки header
+        updateUserUI();
+    })
+    .catch(err => {
+        console.error('Ошибка загрузки header:', err);
+        updateUserUI(); // В случае ошибки обновляем UI
+    });
+
+fetch('/страницы/footer.html')
+    .then(response => response.text())
+    .then(data => {
+        document.querySelector('footer').innerHTML = data;
+    })
+    .catch(err => {
+        console.error('Ошибка загрузки footer:', err);
+    });
+
     </script>
     <script src="/authorization/auth.js"></script> <!-- Добавь этот скрипт на все страницы -->
 
