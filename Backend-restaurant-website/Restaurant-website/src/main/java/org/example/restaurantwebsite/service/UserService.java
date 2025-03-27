@@ -33,7 +33,7 @@ public class UserService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    @Value("${jwt.secret}") // Загружаем секретный ключ из application.properties
+    @Value("${jwt.secret}")
     private String jwtSecret;
 
     private Key getSigningKey() {
