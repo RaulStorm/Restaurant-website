@@ -55,12 +55,9 @@
     .then(response => response.text())
     .then(data => {
         document.querySelector('header').innerHTML = data;
-        // Обновляем UI после загрузки header
-        updateUserUI();
     })
     .catch(err => {
         console.error('Ошибка загрузки header:', err);
-        updateUserUI(); // В случае ошибки обновляем UI
     });
 
 fetch('/страницы/footer.html')
@@ -73,7 +70,6 @@ fetch('/страницы/footer.html')
     });
 
     </script>
-    <script src="/authorization/auth.js"></script> <!-- Добавь этот скрипт на все страницы -->
 
 </body>
 </html>

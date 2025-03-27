@@ -41,11 +41,8 @@
         fetch('/страницы/header.html')
             .then(response => response.text())
             .then(data => {
-                // Вставляем загруженный HTML в header
                 document.querySelector('header').innerHTML = data;
                 
-                // После загрузки вызываем updateUserUI для обновления иконки
-                updateUserUI();
             })
             .catch(err => console.error('Ошибка загрузки header:', err));
     
@@ -59,7 +56,6 @@
     </script>
 
     <script src="/js/menu.js"></script> <!-- Подключение JS файла -->
-    <script src="/authorization/auth.js"></script> <!-- Добавь этот скрипт на все страницы -->
 
 </body>
 
