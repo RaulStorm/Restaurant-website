@@ -4,7 +4,6 @@ import org.example.restaurantwebsite.model.MenuItemDto;
 import org.example.restaurantwebsite.model.MenuItem;
 import org.example.restaurantwebsite.model.MenuItemImage;
 import org.example.restaurantwebsite.repository.MenuItemRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -21,8 +20,11 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 @CrossOrigin(origins = "http://127.0.0.1:5500")
 public class MenuController {
 
-    @Autowired
-    private MenuItemRepository menuItemRepository;
+    private final MenuItemRepository menuItemRepository;
+
+    public MenuController(MenuItemRepository menuItemRepository) {
+        this.menuItemRepository = menuItemRepository;
+    }
 
     @GetMapping("/menu")
     public ResponseEntity<List<MenuItemDto>> getMenu() {
@@ -38,6 +40,10 @@ public class MenuController {
     }
 
     private MenuItemDto convertToDto(MenuItem menuItem) {
+        return getMenuItemDto(menuItem);
+    }
+
+    public static MenuItemDto getMenuItemDto(MenuItem menuItem) {
         MenuItemDto dto = new MenuItemDto();
         dto.setId(menuItem.getId());
         dto.setName(menuItem.getName());

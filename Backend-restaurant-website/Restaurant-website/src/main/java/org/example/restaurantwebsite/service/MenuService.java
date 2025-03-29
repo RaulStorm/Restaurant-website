@@ -5,22 +5,22 @@ import org.example.restaurantwebsite.repository.MenuItemRepository;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class MenuService {
 
-    @Autowired
-    private MenuItemRepository menuItemRepository;
+    private final MenuItemRepository menuItemRepository;
+
+    public MenuService(MenuItemRepository menuItemRepository) {
+        this.menuItemRepository = menuItemRepository;
+    }
 
     public List<MenuItem> getAllMenuItems() {
         Iterable<MenuItem> iterable = menuItemRepository.findAllWithImages(); // Убедитесь, что этот метод существует
 
-        // Преобразуем Iterable в List
-        List<MenuItem> list = StreamSupport.stream(iterable.spliterator(), false)
-                .collect(Collectors.toList());
 
-        return list;
+        return StreamSupport.stream(iterable.spliterator(), false)
+                .collect(Collectors.toList());
     }
 }

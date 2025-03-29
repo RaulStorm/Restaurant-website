@@ -1,7 +1,12 @@
 package org.example.restaurantwebsite.model;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
 // MenuItemImage.java
+@Setter
+@Getter
 @Entity
 @Table(name = "menu_item_images")
 public class MenuItemImage {
@@ -19,36 +24,4 @@ public class MenuItemImage {
     @Column(name = "image_url")
     private String imageUrl;
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Long getMenuItemId() {
-        return menuItemId;
-    }
-
-    public void setMenuItemId(Long menuItemId) {
-        this.menuItemId = menuItemId;
-    }
-
-    public MenuItem getMenuItem() {
-        return menuItem;
-    }
-
-    public void setMenuItem(MenuItem menuItem) {
-        this.menuItem = menuItem;
-    }
-
-    public String getImageUrl() {
-        return imageUrl;
-    }
-
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
-    }
-// Getters and Setters
 }

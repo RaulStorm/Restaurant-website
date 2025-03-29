@@ -11,6 +11,5 @@ public class Review {
 
     private String review;
 
-    // Getters and Setters
-    // ...
+
 }
