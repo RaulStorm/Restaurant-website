@@ -1,13 +1,11 @@
 package org.example.restaurantwebsite.config;
 
-import org.example.restaurantwebsite.security.JwtAuthenticationFilter;
 import org.example.restaurantwebsite.security.JwtTokenProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -21,15 +19,11 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfig {
 
-<<<<<<< HEAD
     private final JwtTokenProvider jwtTokenProvider;
 
     public SecurityConfig(JwtTokenProvider jwtTokenProvider) {
         this.jwtTokenProvider = jwtTokenProvider;
     }
-=======
-
->>>>>>> ec63c2eed480bf7ae719c2ab3fa86027dac8f1f8
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -39,13 +33,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .httpBasic(Customizer.withDefaults())
-<<<<<<< HEAD
-                .csrf(csrf -> csrf.disable())
-                // Добавляем фильтр для аутентификации через JWT
-                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
-=======
-                .csrf(AbstractHttpConfigurer::disable);
->>>>>>> ec63c2eed480bf7ae719c2ab3fa86027dac8f1f8
+                .csrf(csrf -> csrf.disable());
 
         return http.build();
     }

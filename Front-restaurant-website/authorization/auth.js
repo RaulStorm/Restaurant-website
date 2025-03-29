@@ -1,88 +1,92 @@
-const API_URL = "http://localhost:8080";
+const API_URL = "http://localhost:8080"; // Убедитесь, что этот URL правильный и доступен
 
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', function() {
+    const sign_in_btn = document.querySelector("#sign-in-btn");
+    const sign_up_btn = document.querySelector("#sign-up-btn");
+    const container = document.querySelector(".container");
+
+    // Переключение между режимами входа и регистрации
+    sign_up_btn.addEventListener('click', () => {
+        container.classList.add("sign-up-mode");
+    });
+
+    sign_in_btn.addEventListener('click', () => {
+        container.classList.remove("sign-up-mode");
+    });
+
+    // Обработчик отправки формы входа
     const signInForm = document.querySelector('.sign-in-form');
-    const signUpForm = document.querySelector('.sign-up-form');
+    signInForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+        const emailInput = signInForm.querySelector('input[name="email"]');
+        const passwordInput = signInForm.querySelector('input[name="password"]');
 
-    // Обработчик формы входа
-    if (signInForm) {
-        signInForm.addEventListener('submit', async function (event) {
-            event.preventDefault();
-            const email = signInForm.querySelector('input[name="email"]').value.trim();
-            const password = signInForm.querySelector('input[name="password"]').value.trim();
+        if (!emailInput || !passwordInput) {
+            console.error('Не удалось получить значения формы');
+            return;
+        }
 
-            // Хешируем пароль перед отправкой (SHA-256)
-            const hashedPassword = CryptoJS.SHA256(password).toString();
+        const email = emailInput.value.trim();
+        const password = passwordInput.value.trim();
 
-            try {
-                const response = await fetch(`${API_URL}/api/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password: hashedPassword })
-                });
-
-                const data = await response.json();
-                if (!response.ok) throw new Error(data.message || "Ошибка входа");
-
-                localStorage.setItem('token', data.token);
-                window.location.href = '/profile.html'; // Перенаправление на профиль
-            } catch (error) {
-                console.error('Ошибка входа:', error.message || 'Неизвестная ошибка');
-            }
-        });
-    }
-
-    // Обработчик формы регистрации
-    if (signUpForm) {
-        signUpForm.addEventListener('submit', async function (event) {
-            event.preventDefault();
-            const name = signUpForm.querySelector('input[name="name"]').value.trim();
-            const email = signUpForm.querySelector('input[name="email"]').value.trim();
-            const password = signUpForm.querySelector('input[name="password"]').value.trim();
-
-            // Хешируем пароль перед отправкой
-            const hashedPassword = CryptoJS.SHA256(password).toString();
-
-            try {
-                const response = await fetch(`${API_URL}/api/register`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, email, password: hashedPassword })
-                });
-
-                const data = await response.json();
-                if (!response.ok) throw new Error(data.message || "Ошибка регистрации");
-
-                console.log('Регистрация выполнена');
-                window.location.href = '/index.html'; // Перенаправление на главную страницу
-            } catch (error) {
-                console.error('Ошибка регистрации:', error.message || 'Неизвестная ошибка');
-            }
-        });
-    }
-});
-
-async function logout() {
-    const token = localStorage.getItem('token');
-
-    if (!token) {
-        console.warn("Пользователь уже разлогинен");
-        window.location.href = '/login.html';
-        return;
-    }
-
-    try {
-        await fetch(`${API_URL}/api/logout`, {
+        // Отправка данных для входа на сервер
+        fetch(`${API_URL}/api/login`, {
             method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-    } catch (error) {
-        console.error("Ошибка при выходе:", error);
-    }
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email, password }) // Отправка email и password
+        })
+        .then(response => response.ok ? response.json() : Promise.reject(response.json()))
+        .then(data => {
+            if (data.success) {
+                console.log('Вход выполнен');
+                // Сохраните полученный токен в localStorage или sessionStorage
+                localStorage.setItem('token', data.token);
+                // Переход на главную страницу
+                window.location.href = '/';
+            } else {
+                console.error('Ошибка входа:', data.message || 'Неизвестная ошибка');
+            }
+        })
+        .catch(error => error.then(err => console.error('Ошибка:', err)));
+    });
 
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    console.log('Выход выполнен');
-    window.location.href = '/login.html';
-}
+    // Обработчик отправки формы регистрации
+    const signUpForm = document.querySelector('.sign-up-form');
+    signUpForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+        const nameInput = signUpForm.querySelector('input[name="name"]');
+        const emailInput = signUpForm.querySelector('input[name="email"]');
+        const passwordInput = signUpForm.querySelector('input[name="password"]');
 
+        if (!nameInput || !emailInput || !passwordInput) {
+            console.error('Не удалось получить значения формы');
+            return;
+        }
+
+        const name = nameInput.value.trim();
+        const email = emailInput.value.trim();
+        const password = passwordInput.value.trim();
+
+        // Отправка данных для регистрации на сервер
+        fetch(`${API_URL}/api/register`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ name, email, password })
+        })
+        .then(response => response.ok ? response.json() : Promise.reject(response.json()))
+        .then(data => {
+            if (data.success) {
+                console.log('Регистрация выполнена');
+                // Перенаправление на страницу входа
+                window.location.href = '/index.html';
+            } else {
+                console.error('Ошибка регистрации:', data.message || 'Неизвестная ошибка');
+            }
+        })
+        .catch(error => error.then(err => console.error('Ошибка:', err)));
+    });
+});
