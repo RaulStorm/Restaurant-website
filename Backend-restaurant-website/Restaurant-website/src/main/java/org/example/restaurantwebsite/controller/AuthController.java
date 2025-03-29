@@ -4,6 +4,7 @@ import io.jsonwebtoken.Jwts;
 import org.example.restaurantwebsite.model.User;
 import org.example.restaurantwebsite.model.UserDto;
 import org.example.restaurantwebsite.model.Response;
+import org.example.restaurantwebsite.service.TokenBlacklistService;
 import org.example.restaurantwebsite.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -25,6 +26,8 @@ import java.util.Optional;
 @RequestMapping("/api")
 public class AuthController {
 
+    @Autowired
+    private TokenBlacklistService tokenBlacklistService;
     private final UserService userService;
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
     @Value("${jwt.secret}")
@@ -85,10 +88,27 @@ public class AuthController {
             return ResponseEntity.status(500).body(new Response(false, "Внутренняя ошибка сервера"));
         }
     }
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(@RequestHeader("Authorization") String token) {
+        String jwtToken = token.replace("Bearer ", "");
+
+        // Здесь можно добавить токен в "чёрный список"
+        userService.invalidateToken(jwtToken);
+
+        return ResponseEntity.ok(new Response(true, "Выход выполнен"));
+    }
+
     @GetMapping("/user-info")
     public ResponseEntity<?> getUserInfo(@RequestHeader("Authorization") String token) {
         try {
-            String jwtToken = token.replace("Bearer ", ""); // Убираем "Bearer "
+            String jwtToken = token.replace("Bearer ", "");
+
+            // Проверяем, не заблокирован ли токен
+            if (userService.isTokenBlacklisted(jwtToken)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new Response(false, "Токен недействителен"));
+            }
+
             String email = Jwts.parserBuilder()
                     .setSigningKey(Base64.getDecoder().decode(jwtSecret))
                     .build()
@@ -114,5 +134,7 @@ public class AuthController {
                     .body(new Response(false, "Неверный токен"));
         }
     }
+
+
 
 }
