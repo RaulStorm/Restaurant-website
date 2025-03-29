@@ -17,6 +17,8 @@ import java.security.Key;
 import java.util.Base64;
 import java.util.Date;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class UserService {
@@ -36,6 +38,7 @@ public class UserService {
     private Key getSigningKey() {
         return Keys.hmacShaKeyFor(Base64.getDecoder().decode(jwtSecret));
     }
+
     public Optional<User> findByEmail(String email) {
         return userRepository.findByEmail(email);
     }
@@ -78,4 +81,18 @@ public class UserService {
                 .signWith(getSigningKey(), SignatureAlgorithm.HS512)
                 .compact();
     }
+
+    private final Set<String> blacklistedTokens = ConcurrentHashMap.newKeySet();
+
+    // Метод для добавления токена в чёрный список
+    public void invalidateToken(String token) {
+        blacklistedTokens.add(token);
+    }
+
+    // Метод для проверки, заблокирован ли токен
+    public boolean isTokenBlacklisted(String token) {
+        return blacklistedTokens.contains(token);
+    }
 }
+
+
