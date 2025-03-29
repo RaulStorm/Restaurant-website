@@ -1,11 +1,16 @@
 package org.example.restaurantwebsite.model;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
+@Setter
+@Getter
 @Entity
-@Table(name = "categories") // Убедитесь, что имя таблицы указано верно
+@Table(name = "categories")
 
 public class Category {
+    // Геттеры и сеттеры
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -15,24 +20,5 @@ public class Category {
     // Конструкторы
     public Category() {} // Пустой конструктор
 
-    public Category(String name) {
-        this.name = name;
-    }
 
-    // Геттеры и сеттеры
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
 }

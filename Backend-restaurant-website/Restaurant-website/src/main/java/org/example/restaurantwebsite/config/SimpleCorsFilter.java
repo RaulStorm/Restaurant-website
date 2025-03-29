@@ -32,7 +32,7 @@ public class SimpleCorsFilter implements Filter {
         }
     }
 
-    public void init(FilterConfig filterConfig) throws ServletException {
+    public void init(FilterConfig filterConfig) {
         // Можно оставить пустым, если не используете
     }
 

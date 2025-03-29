@@ -4,7 +4,6 @@ import io.jsonwebtoken.Jwts;
 import org.example.restaurantwebsite.model.User;
 import org.example.restaurantwebsite.model.UserDto;
 import org.example.restaurantwebsite.model.Response;
-import org.example.restaurantwebsite.service.TokenBlacklistService;
 import org.example.restaurantwebsite.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -26,8 +25,6 @@ import java.util.Optional;
 @RequestMapping("/api")
 public class AuthController {
 
-    @Autowired
-    private TokenBlacklistService tokenBlacklistService;
     private final UserService userService;
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
     @Value("${jwt.secret}")

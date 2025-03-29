@@ -15,6 +15,5 @@ public class Reservation {
     @Column(name = "reservation_time")
     private String reservationTime;
 
-    // Getters and Setters
-    // ...
+
 }
