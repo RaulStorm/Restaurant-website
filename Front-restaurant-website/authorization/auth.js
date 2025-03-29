@@ -60,7 +60,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
-<<<<<<< HEAD
 });
 
 async function logout() {
@@ -86,6 +85,4 @@ async function logout() {
     console.log('Выход выполнен');
     window.location.href = '/login.html';
 }
-=======
-});
->>>>>>> ec63c2eed480bf7ae719c2ab3fa86027dac8f1f8
+
