@@ -19,22 +19,12 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private final JwtTokenProvider jwtTokenProvider;
-
-    public SecurityConfig(JwtTokenProvider jwtTokenProvider) {
-        this.jwtTokenProvider = jwtTokenProvider;
-    }
-
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtTokenProvider jwtTokenProvider) throws Exception {
         http
-                .authorizeHttpRequests((requests) -> requests
+                .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/register", "/api/login", "/api/menu", "/public/**", "/").permitAll()
-                        .requestMatchers("/api/register", "/api/login", "/api/menu", "/public/**", "/").hasRole("GUEST")
-                        .requestMatchers("/api/reserve").hasRole("CLIENT")
-                        .requestMatchers("/api/register", "/api/login", "/api/menu", "/public/**", "/").hasAnyRole("USER", "ADMIN")
-
-
+                        .requestMatchers("/api/reservations").hasAnyRole("CLIENT", "ADMIN") // Доступ для бронирования
                         .anyRequest().authenticated()
                 )
                 .httpBasic(Customizer.withDefaults())
@@ -43,6 +33,7 @@ public class SecurityConfig {
         return http.build();
     }
 
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
@@ -50,15 +41,15 @@ public class SecurityConfig {
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
+        configuration.setMaxAge(3600L); // Кэширование предзапросов на 1 час
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
-
         return source;
     }
-
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
 }

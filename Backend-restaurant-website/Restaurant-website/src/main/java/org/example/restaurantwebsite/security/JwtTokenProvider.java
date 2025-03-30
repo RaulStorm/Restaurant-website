@@ -1,44 +1,67 @@
 package org.example.restaurantwebsite.security;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.Claims;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Component;
+
 import java.util.Date;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-import org.springframework.stereotype.Service;
-
-@Service
+@Component
 public class JwtTokenProvider {
 
-    private final String secretKey = "your-secret-key"; // используйте безопасный ключ в реальном приложении
+    private final String jwtSecret = "your_secret_key"; // Задай секретный ключ в application.properties
+    private final long jwtExpirationMs = 86400000; // Время жизни токена (24 часа)
 
-    // Генерация JWT токена
-    public String generateToken(String username) {
-        Claims claims = Jwts.claims().setSubject(username);
+    public String generateToken(UserDetails userDetails) {
         Date now = new Date();
-        Date validity = new Date(now.getTime() + 3600000); // 1 час
+        Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
+
+        // Получаем роли пользователя и добавляем их в токен
+        List<String> roles = userDetails.getAuthorities()
+                .stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList());
 
         return Jwts.builder()
-                .setClaims(claims)
+                .setSubject(userDetails.getUsername())
+                .claim("roles", roles) // Добавляем роли в токен
                 .setIssuedAt(now)
-                .setExpiration(validity)
-                .signWith(SignatureAlgorithm.HS256, secretKey)
+                .setExpiration(expiryDate)
+                .signWith(SignatureAlgorithm.HS512, jwtSecret)
                 .compact();
     }
 
-    // Извлечение имени пользователя из токена
     public String getUsernameFromToken(String token) {
         Claims claims = Jwts.parser()
-                .setSigningKey(secretKey)
+                .setSigningKey(jwtSecret)
                 .parseClaimsJws(token)
                 .getBody();
+
         return claims.getSubject();
     }
 
-    // Проверка токена на валидность
+    public Set<SimpleGrantedAuthority> getRolesFromToken(String token) {
+        Claims claims = Jwts.parser()
+                .setSigningKey(jwtSecret)
+                .parseClaimsJws(token)
+                .getBody();
+
+        List<String> roles = claims.get("roles", List.class);
+        return roles.stream()
+                .map(SimpleGrantedAuthority::new)
+                .collect(Collectors.toSet());
+    }
+
     public boolean validateToken(String token) {
         try {
-            Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token);
+            Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token);
             return true;
         } catch (Exception e) {
             return false;
