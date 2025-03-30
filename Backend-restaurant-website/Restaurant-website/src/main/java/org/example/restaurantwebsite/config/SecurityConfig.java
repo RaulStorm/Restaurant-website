@@ -24,7 +24,7 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/register", "/api/login", "/api/menu", "/public/**", "/").permitAll()
-                        .requestMatchers("/api/reserve").hasAnyRole("CLIENT", "ADMIN") // Доступ для бронирования
+                        .requestMatchers("/api/register", "/api/login", "/api/menu","/api/reserve" ,"/public/**", "/").hasAuthority("ROLE_CLIENT")
                         .anyRequest().authenticated()
                 )
                 .httpBasic(Customizer.withDefaults())

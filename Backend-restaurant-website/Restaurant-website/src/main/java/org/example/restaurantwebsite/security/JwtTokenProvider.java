@@ -3,11 +3,13 @@ package org.example.restaurantwebsite.security;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import org.springframework.security.core.GrantedAuthority;
+import org.example.restaurantwebsite.model.Role;
+import org.example.restaurantwebsite.model.User;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -16,40 +18,53 @@ import java.util.stream.Collectors;
 @Component
 public class JwtTokenProvider {
 
-    private final String jwtSecret = "your_secret_key"; // Задай секретный ключ в application.properties
-    private final long jwtExpirationMs = 86400000; // Время жизни токена (24 часа)
+    @Value("${jwt.secret}") // Берем секретный ключ из application.properties
+    private String secretKey;
 
-    public String generateToken(UserDetails userDetails) {
+    @Value("${jwt.expiration}") // Время жизни токена в миллисекундах
+    private long jwtExpirationMs;
+
+    /**
+     * Генерация JWT-токена для пользователя.
+     */
+    public String generateToken(User user) {
+        Claims claims = Jwts.claims().setSubject(user.getEmail());
+        claims.put("name", user.getName());
+        claims.put("roles", user.getRoles().stream()
+                .map(Role::getName)
+                .collect(Collectors.toList()));
+
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
-
-        // Получаем роли пользователя и добавляем их в токен
-        List<String> roles = userDetails.getAuthorities()
-                .stream()
-                .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.toList());
+        Date validity = new Date(now.getTime() + jwtExpirationMs);
 
         return Jwts.builder()
-                .setSubject(userDetails.getUsername())
-                .claim("roles", roles) // Добавляем роли в токен
+                .setClaims(claims)
                 .setIssuedAt(now)
-                .setExpiration(expiryDate)
-                .signWith(SignatureAlgorithm.HS512, jwtSecret)
+                .setExpiration(validity)
+                .signWith(SignatureAlgorithm.HS256, secretKey.getBytes(StandardCharsets.UTF_8))
                 .compact();
     }
 
+    /**
+     * Получение имени пользователя из токена.
+     */
     public String getUsernameFromToken(String token) {
-        Claims claims = Jwts.parser()
-                .setSigningKey(jwtSecret)
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(secretKey.getBytes(StandardCharsets.UTF_8))
+                .build()
                 .parseClaimsJws(token)
                 .getBody();
 
         return claims.getSubject();
     }
 
+    /**
+     * Получение ролей пользователя из токена.
+     */
     public Set<SimpleGrantedAuthority> getRolesFromToken(String token) {
-        Claims claims = Jwts.parser()
-                .setSigningKey(jwtSecret)
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(secretKey.getBytes(StandardCharsets.UTF_8))
+                .build()
                 .parseClaimsJws(token)
                 .getBody();
 
@@ -59,9 +74,15 @@ public class JwtTokenProvider {
                 .collect(Collectors.toSet());
     }
 
+    /**
+     * Проверка валидности токена.
+     */
     public boolean validateToken(String token) {
         try {
-            Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token);
+            Jwts.parserBuilder()
+                    .setSigningKey(secretKey.getBytes(StandardCharsets.UTF_8))
+                    .build()
+                    .parseClaimsJws(token);
             return true;
         } catch (Exception e) {
             return false;
