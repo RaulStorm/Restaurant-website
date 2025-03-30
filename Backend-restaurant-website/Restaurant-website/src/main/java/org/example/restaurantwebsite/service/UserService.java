@@ -76,13 +76,22 @@ public class UserService {
     }
 
     private String generateToken(String email) {
+        Optional<User> userOpt = userRepository.findByEmail(email);
+        if (userOpt.isEmpty()) {
+            throw new RuntimeException("Пользователь не найден");
+        }
+
+        User user = userOpt.get();
+
         return Jwts.builder()
-                .setSubject(email)
+                .setSubject(email) // Email пользователя
+                .claim("name", user.getName()) // Добавляем имя пользователя
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + 86400000)) // 1 день
                 .signWith(getSigningKey(), SignatureAlgorithm.HS512)
                 .compact();
     }
+
 
     private final Set<String> blacklistedTokens = ConcurrentHashMap.newKeySet();
 

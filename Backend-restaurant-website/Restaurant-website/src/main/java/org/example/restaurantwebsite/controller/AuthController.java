@@ -72,27 +72,32 @@ public class AuthController {
         }
 
         try {
-            String token = userService.authenticate(userDto.getEmail(), userDto.getPassword());
-            if (token != null) {
-                Map<String, Object> responseBody = new HashMap<>();
-                responseBody.put("success", true);
-                responseBody.put("message", "Вход выполнен");
-                responseBody.put("token", token);
+            Optional<User> userOpt = userService.findByEmail(userDto.getEmail());
+            if (userOpt.isPresent()) {
+                User user = userOpt.get();
+                String token = userService.authenticate(userDto.getEmail(), userDto.getPassword());
 
-                return ResponseEntity.ok(responseBody);
-            } else {
-                return ResponseEntity.badRequest().body(new Response(false, "Неправильный email или пароль"));
+                if (token != null) {
+                    Map<String, Object> responseBody = new HashMap<>();
+                    responseBody.put("success", true);
+                    responseBody.put("message", "Вход выполнен");
+                    responseBody.put("token", token);
+                    responseBody.put("name", user.getName()); // Теперь имя передаётся в JSON
+
+                    return ResponseEntity.ok(responseBody);
+                }
             }
+            return ResponseEntity.badRequest().body(new Response(false, "Неправильный email или пароль"));
         } catch (Exception e) {
             logger.error("Ошибка при входе", e);
             return ResponseEntity.status(500).body(new Response(false, "Внутренняя ошибка сервера"));
         }
     }
+
     @PostMapping("/logout")
     public ResponseEntity<?> logout(@RequestHeader("Authorization") String token) {
         String jwtToken = token.replace("Bearer ", "");
 
-        // Здесь можно добавить токен в "чёрный список"
         userService.invalidateToken(jwtToken);
 
         return ResponseEntity.ok(new Response(true, "Выход выполнен"));

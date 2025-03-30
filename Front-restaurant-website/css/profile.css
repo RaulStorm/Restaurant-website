@@ -1,0 +1,129 @@
+@import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
+
+body, main {
+    font-family: 'Arial', sans-serif;
+    background-color: #f8f8f8;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    max-width: none;
+}
+
+/* Основной контейнер профиля */
+.profile-container {
+    width: 60%;
+    max-width: 1100px; /* Раньше было 800px */
+    margin: 40px auto;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+}
+
+/* Заголовок профиля */
+.profile-header {
+    text-align: center;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #eee;
+}
+
+.profile-header img {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+}
+
+.profile-header h2 {
+    font-size: 24px;
+    color: #333;
+    margin: 10px 0;
+}
+
+.profile-header p {
+    font-size: 16px;
+    color: gray;
+    margin-bottom: 15px;
+}
+
+/* Кнопка выхода */
+#logout-btn {
+    background: #ff4d4d;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+#logout-btn:hover {
+    background: #cc0000;
+}
+
+/* Блоки профиля */
+.profile-section {
+    margin-top: 20px;
+}
+
+.profile-section h3 {
+    font-size: 20px;
+    color: #444;
+    border-bottom: 2px solid #ff6b6b;
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+}
+
+/* Списки */
+.profile-section ul {
+    list-style: none;
+    padding: 0;
+}
+
+.profile-section ul li {
+    background: #ffe3e3;
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+/* Блок отзывов */
+#user-review {
+    font-size: 16px;
+    color: #555;
+    padding: 10px;
+    background: #f1f1f1;
+    border-radius: 5px;
+}
+
+/* Кнопка "Оставить отзыв" */
+#add-review-btn {
+    background: #ff8c42;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s;
+    display: block;
+    margin-top: 10px;
+}
+
+#add-review-btn:hover {
+    background: #e57300;
+}
+
+/* Адаптивность */
+@media (max-width: 1024px) {
+    .profile-container {
+        max-width: 90vw;
+    }
+}
+
+@media (max-width: 768px) {
+    .profile-container {
+        width: 95%;
+    }
+}
