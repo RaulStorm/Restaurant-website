@@ -30,6 +30,11 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests((requests) -> requests
                         .requestMatchers("/api/register", "/api/login", "/api/menu", "/public/**", "/").permitAll()
+                        .requestMatchers("/api/register", "/api/login", "/api/menu", "/public/**", "/").hasRole("ADMIN")
+                        .requestMatchers("/api/register", "/api/login", "/api/menu", "/public/**", "/").hasRole("USER")
+                        .requestMatchers("/api/register", "/api/login", "/api/menu", "/public/**", "/").hasAnyRole("USER", "ADMIN")
+
+
                         .anyRequest().authenticated()
                 )
                 .httpBasic(Customizer.withDefaults())

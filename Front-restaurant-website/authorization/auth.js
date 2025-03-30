@@ -41,6 +41,9 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             if (data.success) {
                 console.log('Вход выполнен');
+         
+  
+        
                 // Сохраните полученный токен в localStorage или sessionStorage
                 localStorage.setItem('token', data.token);
                 // Переход на главную страницу
@@ -49,7 +52,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('Ошибка входа:', data.message || 'Неизвестная ошибка');
             }
         })
-        .catch(error => error.then(err => console.error('Ошибка:', err)));
+        .catch(error => console.log(error));
     });
 
     // Обработчик отправки формы регистрации
