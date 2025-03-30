@@ -18,6 +18,7 @@ import java.util.Date;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -25,8 +26,6 @@ public class UserService {
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
     private final UserRepository userRepository;
-
-
     private final PasswordEncoder passwordEncoder;
 
     @Value("${jwt.secret}")
@@ -45,20 +44,19 @@ public class UserService {
         return userRepository.findByEmail(email);
     }
 
-
     @Transactional
     public String registerUser(String name, String email, String password) {
         logger.info("Регистрация пользователя с именем: {}", name);
 
         if (userRepository.findByEmail(email).isPresent()) {
             logger.warn("Попытка регистрации с уже существующим email: {}", email);
-            return null; // Пользователь с таким email уже есть
+            return null;
         }
 
         User newUser = new User();
         newUser.setName(name);
         newUser.setEmail(email);
-        newUser.setPassword(passwordEncoder.encode(password)); // Шифруем пароль
+        newUser.setPassword(passwordEncoder.encode(password));
         userRepository.save(newUser);
 
         return generateToken(email);
@@ -76,7 +74,7 @@ public class UserService {
     }
 
     private String generateToken(String email) {
-        Optional<User> userOpt = userRepository.findByEmail(email);
+        Optional<User> userOpt = userRepository.findByEmailWithRoles(email);
         if (userOpt.isEmpty()) {
             throw new RuntimeException("Пользователь не найден");
         }
@@ -84,26 +82,24 @@ public class UserService {
         User user = userOpt.get();
 
         return Jwts.builder()
-                .setSubject(email) // Email пользователя
-                .claim("name", user.getName()) // Добавляем имя пользователя
+                .setSubject(email)
+                .claim("name", user.getName())
+                .claim("roles", user.getRoles().stream()
+                        .map(role -> role.getName())
+                        .collect(Collectors.toList())) // Теперь роли не пустые
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + 86400000)) // 1 день
                 .signWith(getSigningKey(), SignatureAlgorithm.HS512)
                 .compact();
     }
 
-
     private final Set<String> blacklistedTokens = ConcurrentHashMap.newKeySet();
 
-    // Метод для добавления токена в чёрный список
     public void invalidateToken(String token) {
         blacklistedTokens.add(token);
     }
 
-    // Метод для проверки, заблокирован ли токен
     public boolean isTokenBlacklisted(String token) {
         return blacklistedTokens.contains(token);
     }
 }
-
-

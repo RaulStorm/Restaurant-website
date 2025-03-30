@@ -21,22 +21,24 @@ public class ReservationService {
         this.tableRepository = tableRepository;
     }
 
-    // Метод для бронирования столика
     public Optional<String> reserveTable(Reservation reservation) {
-        // Проверка на доступность столика
-        Optional<Reservation> existingReservation = reservationRepository.findByTableIdAndReservationTime(
-                reservation.getTable().getId(), reservation.getReservationTime());
-
-        if (existingReservation.isPresent()) {
-            return Optional.of("Столик уже забронирован на это время. Пожалуйста, выберите другое время.");
+        if (reservation.getTable() == null || reservation.getReservationTime() == null) {
+            return Optional.of("Некорректные данные для бронирования.");
         }
 
-        // Проверка, существует ли столик
-        if (!tableRepository.existsById(reservation.getTable().getId())) {
+        Long tableId = reservation.getTable().getId();
+        Date startTime = reservation.getReservationTime();
+        Date endTime = reservation.getReservationEndTime(); // Теперь это поле в БД
+
+        // Проверяем пересечение бронирований
+        if (reservationRepository.findByTableIdAndTimeOverlap(tableId, startTime, endTime).isPresent()) {
+            return Optional.of("Столик уже забронирован в это время. Выберите другое время.");
+        }
+
+        if (!tableRepository.existsById(tableId)) {
             return Optional.of("Столик не существует.");
         }
 
-        // Сохраняем бронирование
         reservationRepository.save(reservation);
         return Optional.empty();
     }

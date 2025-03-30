@@ -6,10 +6,13 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import org.example.restaurantwebsite.model.Role;
 import org.example.restaurantwebsite.model.User;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -27,11 +30,13 @@ public class JwtTokenProvider {
     /**
      * Генерация JWT-токена для пользователя.
      */
-    public String generateToken(User user) {
-        Claims claims = Jwts.claims().setSubject(user.getEmail());
-        claims.put("name", user.getName());
-        claims.put("roles", user.getRoles().stream()
-                .map(Role::getName)
+    public String generateToken(Authentication authentication) {
+        String username = authentication.getName();
+        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+
+        Claims claims = Jwts.claims().setSubject(username);
+        claims.put("roles", authorities.stream()
+                .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList()));
 
         Date now = new Date();
@@ -41,8 +46,15 @@ public class JwtTokenProvider {
                 .setClaims(claims)
                 .setIssuedAt(now)
                 .setExpiration(validity)
-                .signWith(SignatureAlgorithm.HS256, secretKey.getBytes(StandardCharsets.UTF_8))
+                .signWith(SignatureAlgorithm.HS512, secretKey.getBytes())
                 .compact();
+    }
+
+    public Claims getClaimsFromToken(String token) {
+        return Jwts.parser()
+                .setSigningKey(secretKey)
+                .parseClaimsJws(token)
+                .getBody();
     }
 
     /**

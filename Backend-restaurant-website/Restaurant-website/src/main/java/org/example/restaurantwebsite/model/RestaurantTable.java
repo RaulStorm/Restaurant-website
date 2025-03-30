@@ -1,53 +1,22 @@
 package org.example.restaurantwebsite.model;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 import org.example.restaurantwebsite.repository.TableStatus;
 
+@Getter
 @Entity
-
-public class RestaurantTable  {
-
+@Table(name = "restaurant_tables") // Название таблицы в БД
+public class RestaurantTable {
+    // Геттеры и сеттеры
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private int number;  // Номер столика
-    private int capacity;  // Вместимость столика
+    @Setter
+    private String tableNumber; // Номер столика
+    @Setter
+    private int seats; // Количество мест
 
-    @Enumerated(EnumType.STRING)
-    private TableStatus status;  // Статус столика (например, available или reserved)
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public int getNumber() {
-        return number;
-    }
-
-    public void setNumber(int number) {
-        this.number = number;
-    }
-
-    public int getCapacity() {
-        return capacity;
-    }
-
-    public void setCapacity(int capacity) {
-        this.capacity = capacity;
-    }
-
-    public TableStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(TableStatus status) {
-        this.status = status;
-    }
-
-    // Getters and Setters
 }

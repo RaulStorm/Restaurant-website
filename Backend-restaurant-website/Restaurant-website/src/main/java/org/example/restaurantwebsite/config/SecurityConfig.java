@@ -9,6 +9,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -20,28 +21,24 @@ import java.util.List;
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtTokenProvider jwtTokenProvider) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // ✅ Разрешаем CORS
+                .csrf(csrf -> csrf.disable()) // ✅ Отключаем CSRF
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/register", "/api/login", "/api/menu", "/public/**", "/").permitAll()
-                        .requestMatchers("/api/register", "/api/login", "/api/menu","/api/reserve" ,"/public/**", "/").hasAuthority("ROLE_CLIENT")
-                        .anyRequest().authenticated()
-                )
-                .httpBasic(Customizer.withDefaults())
-                .csrf(csrf -> csrf.disable());
+                        .anyRequest().permitAll() // ✅ Временно разрешаем все запросы
+                );
 
         return http.build();
     }
 
-
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:5500"));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowCredentials(true);
-        configuration.setMaxAge(3600L); // Кэширование предзапросов на 1 час
+        configuration.setAllowedOriginPatterns(List.of("*")); // ✅ Разрешаем любые источники
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")); // ✅ Все методы
+        configuration.setAllowedHeaders(List.of("*")); // ✅ Все заголовки
+        configuration.setAllowCredentials(true); // ✅ Разрешаем куки и токены
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
@@ -51,5 +48,4 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
 }

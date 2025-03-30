@@ -3,36 +3,34 @@ package org.example.restaurantwebsite.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import jakarta.persistence.Table;
 import java.util.Date;
-
-
-@Setter
 @Getter
 @Entity
 public class Reservation {
-
+    // Геттеры и сеттеры
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
-
-    @ManyToOne
     @JoinColumn(name = "table_id", nullable = false)
-    private RestaurantTable table;
+    private RestaurantTable table; // Связь со столиком
 
-    @Column(name = "reservation_time", nullable = false)
-    private Date reservationTime;
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date reservationTime; // Время начала брони
 
-    @Column(name = "number_of_people", nullable = false)
-    private int numberOfPeople;
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date reservationEndTime; // Время окончания брони
 
-    @Column(name = "name", nullable = true)
-    private String name;  // Это имя пользователя, если необходимо
+    @PrePersist
+    public void setReservationEndTime() {
+        this.reservationEndTime = new Date(this.reservationTime.getTime() + 3 * 60 * 60 * 1000);
+    }
 
-    // Getters and Setters
+    public void setTable(RestaurantTable table) { this.table = table; }
 
+    public void setReservationTime(Date reservationTime) {
+        this.reservationTime = reservationTime;
+        this.reservationEndTime = new Date(this.reservationTime.getTime() + 3 * 60 * 60 * 1000);
+    }
 }
