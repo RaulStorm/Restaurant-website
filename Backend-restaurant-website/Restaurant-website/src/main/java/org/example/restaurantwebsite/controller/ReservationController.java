@@ -1,35 +1,82 @@
 package org.example.restaurantwebsite.controller;
 
+import org.example.restaurantwebsite.model.ReservationDto;
 import org.example.restaurantwebsite.model.Reservation;
-import org.example.restaurantwebsite.model.Response;
+import org.example.restaurantwebsite.model.RestaurantTable;
+import org.example.restaurantwebsite.model.User;
+import org.example.restaurantwebsite.repository.RestaurantTableRepository;
+import org.example.restaurantwebsite.repository.UserRepository;
 import org.example.restaurantwebsite.service.ReservationService;
+import org.example.restaurantwebsite.security.JwtTokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Optional;
+import jakarta.servlet.http.HttpServletRequest;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
-@CrossOrigin(origins = "http://localhost:5500")
 @RestController
 @RequestMapping("/api")
 public class ReservationController {
 
-    private final ReservationService reservationService;
+    @Autowired
+    private ReservationService reservationService;
 
     @Autowired
-    public ReservationController(ReservationService reservationService) {
-        this.reservationService = reservationService;
-    }
+    private UserRepository userRepository;
 
-    // Эндпоинт для бронирования столика
+    @Autowired
+    private RestaurantTableRepository restaurantTableRepository;
+
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
+
     @PostMapping("/reserve")
-    public ResponseEntity<?> reserveTable(@RequestBody Reservation reservation) {
-        Optional<String> result = reservationService.reserveTable(reservation);
-
-        if (result.isPresent()) {
-            return ResponseEntity.badRequest().body(new Response(false, result.get()));
-        } else {
-            return ResponseEntity.ok(new Response(true, "Столик успешно забронирован"));
+    public ResponseEntity<?> createReservation(@RequestBody ReservationDto reservationDto, HttpServletRequest request) {
+        System.out.println("Reservation Data: " + reservationDto);
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Missing or invalid Authorization header");
         }
+        String token = authHeader.substring(7);
+
+        // Получаем email (subject) из токена
+        String email = jwtTokenUtil.getUsernameFromToken(token);
+
+        // Ищем пользователя по email
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
+
+        // Формируем объект бронирования
+        Reservation reservation = new Reservation();
+        reservation.setUser(user);
+
+        // Преобразуем строку времени в объект Date
+        String reservationTimeStr = reservationDto.getReservationTime();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm");
+        Date reservationTime;
+        try {
+            reservationTime = sdf.parse(reservationTimeStr);
+        } catch (ParseException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid reservation time format");
+        }
+        reservation.setReservationTime(reservationTime);
+        reservation.setNumberOfPeople(reservationDto.getNumberOfPeople());
+
+        // Получаем столик из БД через репозиторий
+        Long tableId = reservationDto.getTable().getId();
+        RestaurantTable restaurantTable = restaurantTableRepository.findById(tableId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Table not found"));
+        reservation.setRestaurantTable(restaurantTable);
+
+        // Сохраняем бронирование через сервис
+        reservationService.createReservation(reservation);
+
+        return ResponseEntity.ok("Reservation successful");
     }
 }
