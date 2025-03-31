@@ -5,8 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
         event.preventDefault();
 
         // Получаем токен из localStorage
-        const token = localStorage.getItem('jwtToken');
-        console.log("Токен:", token);  // 🔍 Проверяем, есть ли токен
+        const token = localStorage.getItem('token');
 
         if (!token) {
             alert('Ошибка: Пользователь не авторизован.');
@@ -14,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Получаем значения из формы
-        const people = document.getElementById('people').value;
+        const people = parseInt(document.getElementById('people').value, 10);
         const reservationTime = document.getElementById('date').value;
         const tableId = document.getElementById('tableId').value;
 
@@ -28,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("Отправляемые данные:", requestData);
 
         try {
-            const response = await fetch(`${API_URL}/api/reservations`, {
+            const response = await fetch(`${API_URL}/api/reserve`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -62,5 +61,5 @@ atob(base64)
 );
 
 
-let token = localStorage.getItem("token");
+let storedToken  = localStorage.getItem("token");
 }

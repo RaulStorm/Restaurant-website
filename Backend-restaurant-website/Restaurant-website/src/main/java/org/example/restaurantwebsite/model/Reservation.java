@@ -1,5 +1,6 @@
 package org.example.restaurantwebsite.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -15,6 +16,8 @@ public class Reservation {
     @ManyToOne
     @JoinColumn(name = "table_id", nullable = false)
     private RestaurantTable table; // Связь со столиком
+    @JsonProperty("numberOfPeople")
+    private Integer numberOfPeople;
 
     @Temporal(TemporalType.TIMESTAMP)
     private Date reservationTime; // Время начала брони
