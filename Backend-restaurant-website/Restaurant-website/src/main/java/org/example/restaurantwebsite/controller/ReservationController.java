@@ -37,7 +37,7 @@ public class ReservationController {
 
     @PostMapping("/reserve")
     public ResponseEntity<?> createReservation(@RequestBody ReservationDto reservationDto, HttpServletRequest request) {
-        System.out.println("Reservation Data: " + reservationDto);
+        // Извлекаем токен из заголовка Authorization
         String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -57,14 +57,7 @@ public class ReservationController {
         reservation.setUser(user);
 
         // Преобразуем строку времени в объект Date
-        String reservationTimeStr = reservationDto.getReservationTime();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm");
-        Date reservationTime;
-        try {
-            reservationTime = sdf.parse(reservationTimeStr);
-        } catch (ParseException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid reservation time format");
-        }
+        Date reservationTime = parseReservationTime(reservationDto.getReservationTime());
         reservation.setReservationTime(reservationTime);
         reservation.setNumberOfPeople(reservationDto.getNumberOfPeople());
 
@@ -78,5 +71,15 @@ public class ReservationController {
         reservationService.createReservation(reservation);
 
         return ResponseEntity.ok("Reservation successful");
+    }
+
+    // Метод для преобразования строки времени в объект Date
+    private Date parseReservationTime(String reservationTimeStr) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm");
+        try {
+            return sdf.parse(reservationTimeStr);
+        } catch (ParseException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid reservation time format");
+        }
     }
 }
