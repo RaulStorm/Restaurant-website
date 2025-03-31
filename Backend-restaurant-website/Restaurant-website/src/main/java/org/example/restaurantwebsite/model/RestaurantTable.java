@@ -19,7 +19,6 @@ public class RestaurantTable {
     @Setter
     private int seats; // Количество мест
 
-    public void setId(Long id) {
 
-    }
+
 }

@@ -18,6 +18,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Map;
+import java.util.HashMap;
 
 @RestController
 @RequestMapping("/api")
@@ -36,12 +38,13 @@ public class ReservationController {
     private JwtTokenUtil jwtTokenUtil;
 
     @PostMapping("/reserve")
-    public ResponseEntity<?> createReservation(@RequestBody ReservationDto reservationDto, HttpServletRequest request) {
+    public ResponseEntity<Map<String, String>> createReservation(@RequestBody ReservationDto reservationDto, HttpServletRequest request) {
         // Извлекаем токен из заголовка Authorization
         String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("Missing or invalid Authorization header");
+                    .header("Content-Type", "application/json;charset=UTF-8")
+                    .body(createErrorResponse("Missing or invalid Authorization header"));
         }
         String token = authHeader.substring(7);
 
@@ -54,23 +57,29 @@ public class ReservationController {
 
         // Формируем объект бронирования
         Reservation reservation = new Reservation();
-        reservation.setUser(user);
+        reservation.setUser(user);  // Устанавливаем пользователя
 
         // Преобразуем строку времени в объект Date
         Date reservationTime = parseReservationTime(reservationDto.getReservationTime());
-        reservation.setReservationTime(reservationTime);
-        reservation.setNumberOfPeople(reservationDto.getNumberOfPeople());
+
+        // Преобразуем reservationTime в java.sql.Date, если необходимо
+        java.sql.Date sqlReservationTime = new java.sql.Date(reservationTime.getTime());  // Преобразуем в java.sql.Date
+
+        reservation.setReservationTime(sqlReservationTime);
+        reservation.setNumberOfPeople(reservationDto.getNumberOfPeople());  // Устанавливаем количество людей
 
         // Получаем столик из БД через репозиторий
         Long tableId = reservationDto.getTable().getId();
         RestaurantTable restaurantTable = restaurantTableRepository.findById(tableId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Table not found"));
-        reservation.setRestaurantTable(restaurantTable);
+        reservation.setRestaurantTable(restaurantTable);  // Устанавливаем столик
 
         // Сохраняем бронирование через сервис
         reservationService.createReservation(reservation);
 
-        return ResponseEntity.ok("Reservation successful");
+        return ResponseEntity.status(HttpStatus.OK)
+                .header("Content-Type", "application/json;charset=UTF-8")
+                .body(createSuccessResponse("Table successfully reserved"));
     }
 
     // Метод для преобразования строки времени в объект Date
@@ -81,5 +90,19 @@ public class ReservationController {
         } catch (ParseException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid reservation time format");
         }
+    }
+
+    // Метод для создания ответа об ошибке
+    private Map<String, String> createErrorResponse(String errorMessage) {
+        Map<String, String> errorResponse = new HashMap<>();
+        errorResponse.put("error", errorMessage);
+        return errorResponse;
+    }
+
+    // Метод для создания успешного ответа
+    private Map<String, String> createSuccessResponse(String message) {
+        Map<String, String> successResponse = new HashMap<>();
+        successResponse.put("message", message);
+        return successResponse;
     }
 }

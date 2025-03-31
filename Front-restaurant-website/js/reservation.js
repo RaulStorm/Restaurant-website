@@ -4,62 +4,49 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('reservation-form').addEventListener('submit', async function(event) {
         event.preventDefault();
 
-        // Получаем токен из localStorage
         const token = localStorage.getItem('token');
-
         if (!token) {
-            alert('Ошибка: Пользователь не авторизован.');
+            alert('Ошибка: Вы не авторизованы. Пожалуйста, войдите в систему.');
             return;
         }
 
-        // Получаем значения из формы
         const people = parseInt(document.getElementById('people').value, 10);
         const reservationTime = document.getElementById('date').value;
         const tableId = document.getElementById('tableId').value;
 
-        // Формируем данные
         const requestData = { 
             table: { id: tableId }, 
             reservationTime: reservationTime, 
             numberOfPeople: people 
         };
 
-        console.log("Отправляемые данные:", requestData);
-
         try {
             const response = await fetch(`${API_URL}/api/reserve`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`  // 🟢 Передаем токен
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify(requestData),
             });
 
+            const responseData = await response.json();
+
             if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`Ошибка запроса: ${response.status} - ${errorText}`);
+                // Отображаем ошибку с более подробной информацией
+                alert(responseData.error || 'Ошибка при бронировании столика. Пожалуйста, попробуйте снова.');
+                return;
             }
 
-            alert('Столик успешно забронирован!');
+            alert(responseData.message || 'Столик успешно забронирован!');
         } catch (error) {
-            console.error('Ошибка бронирования:', error);
-            alert('Ошибка при бронировании столика.');
+            // Обрабатываем сетевые или неожиданные ошибки
+            console.error('Ошибка при бронировании:', error);
+            if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+                alert('Не удалось выполнить запрос. Пожалуйста, проверьте ваше соединение с сервером.');
+            } else {
+                alert('Ошибка при бронировании столика: ' + error.message);
+            }
         }
     });
 });
-
-function parseJwt(token) {
-const base64Url = token.split('.')[1]; // payload
-const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-
-const jsonPayload = decodeURIComponent(
-atob(base64)
-    .split('')
-    .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-    .join('')
-);
-
-
-let storedToken  = localStorage.getItem("token");
-}

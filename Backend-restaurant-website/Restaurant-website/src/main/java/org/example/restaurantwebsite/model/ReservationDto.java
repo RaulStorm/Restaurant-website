@@ -25,6 +25,3 @@ public class ReservationDto {
         this.table = table;
     }
 }
-
-
-

@@ -17,12 +17,10 @@ public class Reservation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Связь со столиком
     @ManyToOne
     @JoinColumn(name = "table_id", nullable = false)
     private RestaurantTable table;
 
-    // Связь с пользователем
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
@@ -35,23 +33,32 @@ public class Reservation {
     @Column(name = "reservation_time", nullable = false)
     private Date reservationTime;
 
-    // Для миграции схемы временно допускаем NULL, но это поле будет вычисляться автоматически
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "reservation_end_time", nullable = true)
     private Date reservationEndTime;
 
-    // При сохранении вычисляем время окончания бронирования (reservationTime + 3 часа)
     @PrePersist
     public void calculateReservationEndTime() {
         if (this.reservationTime != null) {
-            this.reservationEndTime = new Date(this.reservationTime.getTime() + 3 * 60 * 60 * 1000);
+            this.reservationEndTime = new Date(this.reservationTime.getTime() + 3 * 60 * 60 * 1000); // 3 hours
         }
     }
+
     public void setRestaurantTable(RestaurantTable restaurantTable) {
         this.table = restaurantTable;
     }
 
     public RestaurantTable getRestaurantTable() {
         return this.table;
+    }
+
+    // Метод для установки пользователя
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    // Метод для установки количества людей
+    public void setNumberOfPeople(Integer numberOfPeople) {
+        this.numberOfPeople = numberOfPeople;
     }
 }
