@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
-<script>
+
 function parseJwt(token) {
 const base64Url = token.split('.')[1]; // payload
 const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -63,3 +63,4 @@ atob(base64)
 
 
 let token = localStorage.getItem("token");
+}
