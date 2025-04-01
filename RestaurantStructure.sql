@@ -258,6 +258,39 @@ LOCK TABLES `prices` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `reservation`
+--
+
+DROP TABLE IF EXISTS `reservation`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `reservation` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) DEFAULT NULL,
+  `number_of_people` int NOT NULL,
+  `reservation_time` datetime(6) NOT NULL,
+  `table_id` bigint NOT NULL,
+  `user_id` bigint NOT NULL,
+  `reservation_end_time` datetime(6) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `FKrea93581tgkq61mdl13hehami` (`user_id`),
+  KEY `FK6q8yf9y6oje2kg8d474ewewua` (`table_id`),
+  CONSTRAINT `FK6q8yf9y6oje2kg8d474ewewua` FOREIGN KEY (`table_id`) REFERENCES `restaurant_tables` (`id`),
+  CONSTRAINT `FKiubxshfem7twm0kw6ot5cc2wn` FOREIGN KEY (`table_id`) REFERENCES `restaurant_table` (`id`),
+  CONSTRAINT `FKrea93581tgkq61mdl13hehami` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `reservation`
+--
+
+LOCK TABLES `reservation` WRITE;
+/*!40000 ALTER TABLE `reservation` DISABLE KEYS */;
+/*!40000 ALTER TABLE `reservation` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `reservations`
 --
 
@@ -268,15 +301,17 @@ CREATE TABLE `reservations` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `user_id` bigint NOT NULL,
   `table_id` bigint NOT NULL,
-  `reservation_time` varchar(255) DEFAULT NULL,
+  `reservation_time` datetime(6) NOT NULL,
   `number_of_people` int NOT NULL,
-  `name` varchar(255) DEFAULT NULL,
+  `reservation_end_time` datetime(6) DEFAULT NULL,
+  `name` varchar(255) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
-  KEY `table_id` (`table_id`),
+  KEY `FKlmsyoaj81pfgb83w1jhupfq0g` (`table_id`),
+  CONSTRAINT `FKlmsyoaj81pfgb83w1jhupfq0g` FOREIGN KEY (`table_id`) REFERENCES `restaurant_tables` (`id`),
   CONSTRAINT `reservations_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   CONSTRAINT `reservations_ibfk_2` FOREIGN KEY (`table_id`) REFERENCES `tables` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -285,7 +320,58 @@ CREATE TABLE `reservations` (
 
 LOCK TABLES `reservations` WRITE;
 /*!40000 ALTER TABLE `reservations` DISABLE KEYS */;
+INSERT INTO `reservations` VALUES (1,3,3,'2025-06-05 19:28:00.000000',6,'2025-06-05 22:28:00.000000','Иван');
 /*!40000 ALTER TABLE `reservations` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `restaurant_table`
+--
+
+DROP TABLE IF EXISTS `restaurant_table`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `restaurant_table` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `capacity` int NOT NULL,
+  `number` int NOT NULL,
+  `status` enum('AVAILABLE','RESERVED') DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `restaurant_table`
+--
+
+LOCK TABLES `restaurant_table` WRITE;
+/*!40000 ALTER TABLE `restaurant_table` DISABLE KEYS */;
+/*!40000 ALTER TABLE `restaurant_table` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `restaurant_tables`
+--
+
+DROP TABLE IF EXISTS `restaurant_tables`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `restaurant_tables` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `table_number` varchar(255) DEFAULT NULL,
+  `seats` int NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `restaurant_tables`
+--
+
+LOCK TABLES `restaurant_tables` WRITE;
+/*!40000 ALTER TABLE `restaurant_tables` DISABLE KEYS */;
+INSERT INTO `restaurant_tables` VALUES (1,'Table 1',4),(2,'Table 2',2),(3,'Table 3',6),(4,'Table 4',4),(5,'Table 5',3),(6,'Table 6',5),(7,'Table 7',2),(8,'Table 8',6),(9,'Table 9',4),(10,'Table 10',5),(11,'Table 11',3),(12,'Table 12',2),(13,'Table 13',6),(14,'Table 14',4),(15,'Table 15',5),(16,'Table 16',4),(17,'Table 17',6),(18,'Table 18',3),(19,'Table 19',2),(20,'Table 20',5);
+/*!40000 ALTER TABLE `restaurant_tables` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -336,7 +422,7 @@ CREATE TABLE `roles` (
 
 LOCK TABLES `roles` WRITE;
 /*!40000 ALTER TABLE `roles` DISABLE KEYS */;
-INSERT INTO `roles` VALUES (1,'Admin'),(3,'Client'),(4,'Guest'),(5,'Kitchen Staff'),(2,'Waiter');
+INSERT INTO `roles` VALUES (1,'ROLE_ADMIN'),(3,'ROLE_CLIENT'),(4,'ROLE_GUEST'),(5,'ROLE_KITCHEN_STAFF'),(2,'ROLE_WAITER');
 /*!40000 ALTER TABLE `roles` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -353,7 +439,7 @@ CREATE TABLE `tables` (
   `capacity` int NOT NULL,
   `status` enum('available','reserved') NOT NULL DEFAULT 'available',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -362,7 +448,7 @@ CREATE TABLE `tables` (
 
 LOCK TABLES `tables` WRITE;
 /*!40000 ALTER TABLE `tables` DISABLE KEYS */;
-INSERT INTO `tables` VALUES (1,1,4,'available'),(2,2,2,'available'),(3,3,6,'reserved');
+INSERT INTO `tables` VALUES (1,1,4,'available'),(2,2,2,'available'),(3,3,6,'reserved'),(4,4,4,'available'),(5,5,3,'available'),(6,6,5,'reserved'),(7,7,2,'available'),(8,8,6,'available'),(9,9,4,'reserved'),(10,10,5,'available'),(11,11,3,'available'),(12,12,2,'reserved'),(13,13,6,'available'),(14,14,4,'available'),(15,15,5,'reserved'),(16,16,4,'available'),(17,17,6,'reserved'),(18,18,3,'available'),(19,19,2,'available'),(20,20,5,'reserved');
 /*!40000 ALTER TABLE `tables` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -455,4 +541,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-03-29 23:55:45
+-- Dump completed on 2025-04-01 18:35:27

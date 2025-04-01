@@ -39,7 +39,7 @@ public class ReservationController {
 
     @PostMapping("/reserve")
     public ResponseEntity<Map<String, String>> createReservation(@RequestBody ReservationDto reservationDto, HttpServletRequest request) {
-        // Извлекаем токен из заголовка Authorization
+        // Извлекаем токен
         String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -48,33 +48,43 @@ public class ReservationController {
         }
         String token = authHeader.substring(7);
 
-        // Получаем email (subject) из токена
+        // Получаем email пользователя
         String email = jwtTokenUtil.getUsernameFromToken(token);
 
-        // Ищем пользователя по email
+        // Получаем пользователя
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
 
-        // Формируем объект бронирования
-        Reservation reservation = new Reservation();
-        reservation.setUser(user);  // Устанавливаем пользователя
-
-        // Преобразуем строку времени в объект Date
+        // Преобразуем дату из строки
         Date reservationTime = parseReservationTime(reservationDto.getReservationTime());
 
-        // Преобразуем reservationTime в java.sql.Date, если необходимо
-        java.sql.Date sqlReservationTime = new java.sql.Date(reservationTime.getTime());  // Преобразуем в java.sql.Date
+        // 🔴 1. Проверка: нельзя бронировать в прошлом
+        if (reservationTime.before(new Date())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(createErrorResponse("You cannot reserve a table in the past."));
+        }
 
-        reservation.setReservationTime(sqlReservationTime);
-        reservation.setNumberOfPeople(reservationDto.getNumberOfPeople());  // Устанавливаем количество людей
-
-        // Получаем столик из БД через репозиторий
+        // Получаем столик
         Long tableId = reservationDto.getTable().getId();
         RestaurantTable restaurantTable = restaurantTableRepository.findById(tableId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Table not found"));
-        reservation.setRestaurantTable(restaurantTable);  // Устанавливаем столик
 
-        // Сохраняем бронирование через сервис
+        // 🔴 2. Проверка: нельзя бронировать на большее число человек, чем вмещает стол
+        int requestedPeople = reservationDto.getNumberOfPeople();
+        if (requestedPeople > restaurantTable.getSeats()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(createErrorResponse("The number of people exceeds the number of seats at this table."));
+        }
+
+        // Формируем и заполняем объект Reservation
+        Reservation reservation = new Reservation();
+        reservation.setUser(user);
+        reservation.setReservationTime(new java.sql.Date(reservationTime.getTime()));
+        reservation.setNumberOfPeople(requestedPeople);
+        reservation.setRestaurantTable(restaurantTable);
+        reservation.setName(reservationDto.getName());
+
+        // Сохраняем бронирование
         reservationService.createReservation(reservation);
 
         return ResponseEntity.status(HttpStatus.OK)
@@ -82,7 +92,7 @@ public class ReservationController {
                 .body(createSuccessResponse("Table successfully reserved"));
     }
 
-    // Метод для преобразования строки времени в объект Date
+
     private Date parseReservationTime(String reservationTimeStr) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm");
         try {
@@ -92,14 +102,12 @@ public class ReservationController {
         }
     }
 
-    // Метод для создания ответа об ошибке
     private Map<String, String> createErrorResponse(String errorMessage) {
         Map<String, String> errorResponse = new HashMap<>();
         errorResponse.put("error", errorMessage);
         return errorResponse;
     }
 
-    // Метод для создания успешного ответа
     private Map<String, String> createSuccessResponse(String message) {
         Map<String, String> successResponse = new HashMap<>();
         successResponse.put("message", message);

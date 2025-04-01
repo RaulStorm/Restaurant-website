@@ -13,14 +13,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const people = parseInt(document.getElementById('people').value, 10);
         const reservationTime = document.getElementById('date').value;
         const tableId = document.getElementById('tableId').value;
-        const name = document.getElementById('name').value;  // Получаем имя пользователя
 
+        const name = document.getElementById('name').value;
         const requestData = { 
-            name: name,  // Отправляем поле "name"
-            table: { id: tableId }, 
+            name: name,
+            table: { id: tableId },
             reservationTime: reservationTime,
             numberOfPeople: people 
         };
+        
 
         try {
             const response = await fetch(`${API_URL}/api/reserve`, {

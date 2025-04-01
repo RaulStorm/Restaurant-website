@@ -37,6 +37,18 @@ public class Reservation {
     @Column(name = "reservation_end_time", nullable = true)
     private Date reservationEndTime;
 
+    
+    @Column(name = "name")
+    private String name;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
     @PrePersist
     public void calculateReservationEndTime() {
         if (this.reservationTime != null) {
