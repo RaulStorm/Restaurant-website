@@ -55,6 +55,7 @@ public class ReviewController {
 
     @GetMapping("/reviews/latest")
     public List<Review> getLatestPositiveReviews() {
+        // Получаем топ-5 отзывов с рейтингом больше 4, отсортированных по дате
         return reviewService.findLatestPositiveReviews();
     }
 }

@@ -7,5 +7,6 @@ import java.util.List;
 
 public interface ReviewRepository extends JpaRepository<Review, Long> {
 
-    List<Review> findTop5ByRatingGreaterThanOrderByCreatedAtDesc(int rating);  // Метод для получения топ-5 отзывов
+    List<Review> findTop5ByRatingGreaterThanEqualOrderByCreatedAtDesc(int rating);
+
 }

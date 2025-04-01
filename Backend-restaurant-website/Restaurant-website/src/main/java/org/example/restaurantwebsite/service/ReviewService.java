@@ -18,6 +18,7 @@ public class ReviewService {
         this.reviewRepository = reviewRepository;
     }
 
+
     @Transactional
     public Review saveReview(Review review) {
         return reviewRepository.save(review);
@@ -25,11 +26,12 @@ public class ReviewService {
 
 
 
-    public List<Review> getTopReviews() {
-        return reviewRepository.findTop5ByRatingGreaterThanOrderByCreatedAtDesc(4); // Отзывы с рейтингом > 4, отсортированные по дате
-    }
-    public List<Review> findLatestPositiveReviews() {
-        return reviewRepository.findTop5ByRatingGreaterThanOrderByCreatedAtDesc(4);
-    }
 
+
+
+
+    // Возвращаем отзывы с рейтингом больше 4, отсортированные по дате
+    public List<Review> findLatestPositiveReviews() {
+        return reviewRepository.findTop5ByRatingGreaterThanEqualOrderByCreatedAtDesc(4);
+    }
 }
