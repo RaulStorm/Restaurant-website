@@ -20,7 +20,7 @@ header {
 }
 
 .restaurant-link {
-    color: #fff; /* Цвет текста ссылки */
+    color: #352323; /* Цвет текста ссылки */
     text-decoration: none; /* Убираем подчеркивание */
 }
 
@@ -211,7 +211,7 @@ button:hover {
 
 body {
     font-family: 'Roboto', sans-serif;
-    background: linear-gradient(135deg, #bbbdc1, #cddff4);
+    background: linear-gradient(135deg, #cddff4, #42454b);
     margin: 0;
     padding: 0;
     color: #333;

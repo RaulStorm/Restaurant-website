@@ -61,6 +61,40 @@ main {
 #review-form button:hover {
     background-color: #0056b3;
 }
+.full-stars {
+    text-align: center;
+    margin-top: 10px;
+}
 
+.full-stars .rating-group {
+    display: inline-flex;
+    flex-direction: row-reverse;
+}
 
+.full-stars input[type="radio"] {
+    position: absolute;
+    left: -9999px;
+}
 
+.full-stars label {
+    cursor: pointer;
+}
+
+.full-stars label svg {
+    height: 40px;
+    width: 40px;
+    fill: #ccc;
+    transition: fill 0.3s ease;
+}
+
+/* Звезды при выборе */
+.full-stars input[type="radio"]:checked ~ label svg,
+.full-stars input[type="radio"]:checked + label svg {
+    fill: #f0b70b;
+}
+
+/* Звезды при наведении */
+.full-stars label:hover svg,
+.full-stars label:hover ~ label svg {
+    fill: #f0b70b;
+}
