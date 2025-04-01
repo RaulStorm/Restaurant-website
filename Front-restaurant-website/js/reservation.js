@@ -13,10 +13,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const people = parseInt(document.getElementById('people').value, 10);
         const reservationTime = document.getElementById('date').value;
         const tableId = document.getElementById('tableId').value;
+        const name = document.getElementById('name').value;  // Получаем имя пользователя
 
         const requestData = { 
+            name: name,  // Отправляем поле "name"
             table: { id: tableId }, 
-            reservationTime: reservationTime, 
+            reservationTime: reservationTime,
             numberOfPeople: people 
         };
 
@@ -33,14 +35,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const responseData = await response.json();
 
             if (!response.ok) {
-                // Отображаем ошибку с более подробной информацией
                 alert(responseData.error || 'Ошибка при бронировании столика. Пожалуйста, попробуйте снова.');
                 return;
             }
 
             alert(responseData.message || 'Столик успешно забронирован!');
         } catch (error) {
-            // Обрабатываем сетевые или неожиданные ошибки
             console.error('Ошибка при бронировании:', error);
             if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
                 alert('Не удалось выполнить запрос. Пожалуйста, проверьте ваше соединение с сервером.');
