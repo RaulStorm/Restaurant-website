@@ -2,6 +2,7 @@ package org.example.restaurantwebsite.model;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.example.restaurantwebsite.model.OrderItemRequest;
 
 import java.util.List;
 
@@ -12,4 +13,6 @@ public class OrderRequest {
     private String orderNotes;       // Примечания к заказу
     private Long reservationId;      // ID резервации (опционально)
     private List<OrderItemRequest> items; // Элементы заказа
+
 }
+
