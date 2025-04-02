@@ -1,9 +1,9 @@
 package org.example.restaurantwebsite.service;
 
 import lombok.RequiredArgsConstructor;
-import org.example.restaurantwebsite.model.*;
 import org.example.restaurantwebsite.model.OrderItemRequest;
 import org.example.restaurantwebsite.model.OrderRequest;
+import org.example.restaurantwebsite.model.*;
 import org.example.restaurantwebsite.repository.MenuItemRepository;
 import org.example.restaurantwebsite.repository.OrderRepository;
 import org.example.restaurantwebsite.repository.UserRepository;
@@ -24,30 +24,28 @@ public class OrderService {
 
     @Transactional
     public void createOrder(OrderRequest request, String username) {
-        // Находим пользователя по username
         User user = userRepository.findByEmail(username)
                 .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
 
-        // Создаём заказ
         Order order = new Order();
         order.setUser(user);
         order.setTableNumber(request.getTableNumber());
         order.setOrderNotes(request.getOrderNotes());
+        order.setOrderTime(LocalDateTime.now());
 
-        // Добавляем позиции заказа
         List<OrderItem> items = new ArrayList<>();
         for (OrderItemRequest itemRequest : request.getItems()) {
             MenuItem menuItem = menuItemRepository.findById(itemRequest.getMenuItemId())
-                    .orElseThrow(() -> new RuntimeException("Блюдо не найдено: id = " + itemRequest.getMenuItemId()));
+                    .orElseThrow(() -> new RuntimeException("Блюдо не найдено: " + itemRequest.getMenuItemId()));
 
             OrderItem item = new OrderItem();
             item.setMenuItem(menuItem);
             item.setQuantity(itemRequest.getQuantity());
-            item.setOrder(order); // Устанавливаем связь с заказом
-
+            item.setOrder(order);
             items.add(item);
         }
 
+        order.setItems(items);
         orderRepository.save(order);
     }
 }

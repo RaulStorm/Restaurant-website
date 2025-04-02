@@ -4,22 +4,22 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+@Entity
 @Getter
 @Setter
-@Entity
 @Table(name = "order_items")
 public class OrderItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "menu_item_id", nullable = false)  // Убедись, что поле не null
-    private MenuItem menuItem;  // Связь с конкретным блюдом
-
-    private int quantity;       // Количество
+    private int quantity;
 
     @ManyToOne
-    @JoinColumn(name = "order_id", nullable = false)  // Связь с заказом
+    @JoinColumn(name = "menu_item_id")
+    private MenuItem menuItem;
+
+    @ManyToOne
+    @JoinColumn(name = "order_id")
     private Order order;
 }

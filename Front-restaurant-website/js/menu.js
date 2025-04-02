@@ -193,6 +193,12 @@ document.getElementById('place-order').addEventListener('click', async () => {
 
     try {
         const token = localStorage.getItem('token');
+
+        if (!token) {
+            alert("Вы не авторизованы. Пожалуйста, войдите в систему.");
+            return;
+        }
+
         const response = await fetch(`${API_URL}/api/orders`, {
             method: 'POST',
             headers: {
@@ -209,7 +215,7 @@ document.getElementById('place-order').addEventListener('click', async () => {
 
         const result = await response.json();
         alert("Ваш заказ оформлен!");
-        console.log(result);
+        console.log('Результат заказа:', result);
 
         cart = [];
         updateCart();
@@ -217,6 +223,6 @@ document.getElementById('place-order').addEventListener('click', async () => {
         document.getElementById('order-notes').value = '';
     } catch (error) {
         console.error("Ошибка при отправке заказа:", error);
-        alert("Не удалось оформить заказ.");
+        alert("Не удалось оформить заказ. Проверьте авторизацию или попробуйте позже.");
     }
 });
