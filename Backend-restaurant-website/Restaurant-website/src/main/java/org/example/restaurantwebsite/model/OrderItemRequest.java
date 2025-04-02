@@ -1,11 +1,9 @@
 package org.example.restaurantwebsite.model;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
-@Getter
-@Setter
+@Data
 public class OrderItemRequest {
-    private Long menuItemId;         // ID блюда
-    private int quantity;            // Количество
+    private Long menuItemId;
+    private int quantity;
 }

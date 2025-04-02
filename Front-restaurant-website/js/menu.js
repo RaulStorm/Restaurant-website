@@ -167,36 +167,32 @@ function updateCart() {
 }
 
 document.getElementById('place-order').addEventListener('click', async () => {
-    // Проверка, что корзина не пуста
     if (cart.length === 0) {
-        alert("Ваша корзина пуста. Пожалуйста, добавьте товары.");
+        alert("Ваша корзина пуста.");
         return;
     }
 
-    const tableNumber = document.getElementById('table-number').value;
-    const orderNotes = document.getElementById('order-notes').value;
+    const tableNumber = document.getElementById('table-number').value.trim();
+    const orderNotes = document.getElementById('order-notes').value.trim();
 
     if (!tableNumber) {
-        alert("Пожалуйста, укажите номер столика.");
+        alert("Введите номер столика.");
         return;
     }
 
     const orderData = {
-        tableNumber: tableNumber,
-        orderNotes: orderNotes,
+        tableNumber,
+        orderNotes,
         items: cart.map(item => ({
             menuItemId: item.id,
             quantity: item.quantity
         }))
     };
 
+    console.log("Отправляем заказ:", orderData);
+
     try {
         const token = localStorage.getItem('token');
-        if (!token) {
-            alert("Ошибка: Вы не авторизованы.");
-            return;
-        }
-
         const response = await fetch(`${API_URL}/api/orders`, {
             method: 'POST',
             headers: {
@@ -207,16 +203,20 @@ document.getElementById('place-order').addEventListener('click', async () => {
         });
 
         if (!response.ok) {
-            throw new Error('Ошибка при оформлении заказа: ' + response.statusText);
+            const errText = await response.text();
+            throw new Error("Ошибка сервера: " + errText);
         }
 
         const result = await response.json();
-        alert("Ваш заказ успешно оформлен!");
-        console.log(result);  // Логирование результата, если нужно для отладки
-        cart = []; // Очистить корзину после успешного заказа
-        updateCart(); // Обновить корзину
+        alert("Ваш заказ оформлен!");
+        console.log(result);
+
+        cart = [];
+        updateCart();
+        document.getElementById('table-number').value = '';
+        document.getElementById('order-notes').value = '';
     } catch (error) {
-        console.error('Ошибка при оформлении заказа:', error);
-        alert('Не удалось оформить заказ. Попробуйте позже.');
+        console.error("Ошибка при отправке заказа:", error);
+        alert("Не удалось оформить заказ.");
     }
 });
