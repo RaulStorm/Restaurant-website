@@ -165,3 +165,58 @@ function updateCart() {
 
     totalPriceContainer.textContent = totalPrice.toFixed(2); // Установка общей суммы
 }
+
+document.getElementById('place-order').addEventListener('click', async () => {
+    // Проверка, что корзина не пуста
+    if (cart.length === 0) {
+        alert("Ваша корзина пуста. Пожалуйста, добавьте товары.");
+        return;
+    }
+
+    const tableNumber = document.getElementById('table-number').value;
+    const orderNotes = document.getElementById('order-notes').value;
+
+    if (!tableNumber) {
+        alert("Пожалуйста, укажите номер столика.");
+        return;
+    }
+
+    const orderData = {
+        tableNumber: tableNumber,
+        orderNotes: orderNotes,
+        items: cart.map(item => ({
+            menuItemId: item.id,
+            quantity: item.quantity
+        }))
+    };
+
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert("Ошибка: Вы не авторизованы.");
+            return;
+        }
+
+        const response = await fetch(`${API_URL}/api/orders`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(orderData)
+        });
+
+        if (!response.ok) {
+            throw new Error('Ошибка при оформлении заказа: ' + response.statusText);
+        }
+
+        const result = await response.json();
+        alert("Ваш заказ успешно оформлен!");
+        console.log(result);  // Логирование результата, если нужно для отладки
+        cart = []; // Очистить корзину после успешного заказа
+        updateCart(); // Обновить корзину
+    } catch (error) {
+        console.error('Ошибка при оформлении заказа:', error);
+        alert('Не удалось оформить заказ. Попробуйте позже.');
+    }
+});
