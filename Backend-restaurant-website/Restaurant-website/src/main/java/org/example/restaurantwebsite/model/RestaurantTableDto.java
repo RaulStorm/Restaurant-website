@@ -1,12 +1,11 @@
 package org.example.restaurantwebsite.model;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+
+@Data
+@AllArgsConstructor
 public class RestaurantTableDto {
     private Long id;
-
-    public Long getId() {
-        return id;
-    }
-    public void setId(Long id) {
-        this.id = id;
-    }
+    private String tableNumber;
 }

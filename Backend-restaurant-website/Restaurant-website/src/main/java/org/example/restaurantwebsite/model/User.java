@@ -22,6 +22,19 @@ public class User {
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private Set<Role> roles;
+    @ManyToMany
+    @JoinTable(name = "favorite_dishes",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "menu_item_id"))
+    private Set<MenuItem> favoriteDishes;
+
+    public Set<MenuItem> getFavoriteDishes() {
+        return favoriteDishes;
+    }
+
+    public void setFavoriteDishes(Set<MenuItem> favoriteDishes) {
+        this.favoriteDishes = favoriteDishes;
+    }
 
     public Long getId() {
         return id;

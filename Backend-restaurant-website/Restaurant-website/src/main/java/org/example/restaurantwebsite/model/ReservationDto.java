@@ -33,4 +33,6 @@ public class ReservationDto {
     public void setTable(RestaurantTableDto table) {
         this.table = table;
     }
+
+
 }

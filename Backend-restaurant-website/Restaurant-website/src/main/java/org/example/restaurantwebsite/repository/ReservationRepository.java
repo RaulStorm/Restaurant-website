@@ -1,11 +1,13 @@
 package org.example.restaurantwebsite.repository;
 
 import org.example.restaurantwebsite.model.Reservation;
+import org.example.restaurantwebsite.model.User;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.sql.Date;  // Импортируем java.sql.Date
+import java.util.List;
 import java.util.Optional;
 
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
@@ -17,4 +19,6 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     Optional<Reservation> findOverlappingReservations(@Param("tableId") Long tableId,
                                                       @Param("startTime") Date startTime,
                                                       @Param("endTime") Date endTime);
+    List<Reservation> findByUser(User user);
+
 }
