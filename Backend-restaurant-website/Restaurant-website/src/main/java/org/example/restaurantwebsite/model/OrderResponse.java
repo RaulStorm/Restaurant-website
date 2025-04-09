@@ -1,10 +1,15 @@
 package org.example.restaurantwebsite.model;
 
-import lombok.Data;
+import java.util.List;
 
-@Data
 public class OrderResponse {
     private Long id;
-    private String status; // Предполагается, что в Order есть поле status
-    // Добавьте другие поля по необходимости
+    private List<ItemDto> items;
+
+    // геттеры/сеттеры
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public List<ItemDto> getItems() { return items; }
+    public void setItems(List<ItemDto> items) { this.items = items; }
 }
