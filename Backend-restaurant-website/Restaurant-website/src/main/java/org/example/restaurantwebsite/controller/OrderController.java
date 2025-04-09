@@ -19,9 +19,10 @@ public class OrderController {
         if (authentication == null) {
             return ResponseEntity.status(401).body("Пользователь не авторизован");
         }
-
         String username = authentication.getName();
         orderService.createOrder(request, username);
-        return ResponseEntity.ok().build();
+        // Возвращаем сообщение в виде JSON-строки:
+        return ResponseEntity.ok("{\"message\":\"Заказ оформлен успешно\"}");
     }
+
 }
