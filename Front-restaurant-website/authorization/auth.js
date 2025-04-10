@@ -82,14 +82,22 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(response => response.ok ? response.json() : Promise.reject(response.json()))
         .then(data => {
-            if (data.success) {
+            if (data.success && data.token) {
                 console.log('Регистрация выполнена');
-                // Перенаправление на страницу входа
-                window.location.href = '/index.html';
+        
+                // ✅ Сохраняем токен нового пользователя
+                localStorage.setItem('token', data.token);
+        
+                // ✅ Можно сохранить имя, если нужно
+                localStorage.setItem('name', data.name);
+        
+                // ✅ Перенаправляем сразу на главную страницу
+                window.location.href = '/';
             } else {
                 console.error('Ошибка регистрации:', data.message || 'Неизвестная ошибка');
             }
         })
+        
         .catch(error => error.then(err => console.error('Ошибка:', err)));
     });
 });

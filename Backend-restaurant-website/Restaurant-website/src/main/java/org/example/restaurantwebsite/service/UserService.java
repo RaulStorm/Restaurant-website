@@ -1,7 +1,9 @@
 package org.example.restaurantwebsite.service;
 
 import jakarta.transaction.Transactional;
+import org.example.restaurantwebsite.model.Role;
 import org.example.restaurantwebsite.model.User;
+import org.example.restaurantwebsite.repository.RoleRepository;
 import org.example.restaurantwebsite.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,13 +29,14 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-
+    private final RoleRepository roleRepository;
     @Value("${jwt.secret}")
     private String jwtSecret;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, RoleRepository roleRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.roleRepository = roleRepository;
     }
 
     private Key getSigningKey() {
@@ -57,10 +60,20 @@ public class UserService {
         newUser.setName(name);
         newUser.setEmail(email);
         newUser.setPassword(passwordEncoder.encode(password));
+
+        // Присваиваем роль CLIENT
+        Role clientRole = roleRepository.findByName("ROLE_CLIENT")
+                .orElseThrow(() -> new RuntimeException("Роль ROLE_CLIENT не найдена"));
+
+        newUser.setRoles(Set.of(clientRole)); // 👈 добавление роли
+
         userRepository.save(newUser);
 
         return generateToken(email);
     }
+
+
+
 
     public String authenticate(String email, String password) {
         Optional<User> userOpt = userRepository.findByEmail(email);

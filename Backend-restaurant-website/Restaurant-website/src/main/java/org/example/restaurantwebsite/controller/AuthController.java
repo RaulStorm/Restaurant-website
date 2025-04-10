@@ -1,6 +1,7 @@
 package org.example.restaurantwebsite.controller;
 
 import io.jsonwebtoken.Jwts;
+import org.example.restaurantwebsite.model.Role;
 import org.example.restaurantwebsite.model.User;
 import org.example.restaurantwebsite.model.UserDto;
 import org.example.restaurantwebsite.model.Response;
@@ -17,10 +18,7 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api")
@@ -33,7 +31,6 @@ public class AuthController {
     @Value("${jwt.secret}")
     private String jwtSecret;
 
-    @Autowired
     public AuthController(UserService userService) {
         this.userService = userService;
     }
@@ -55,6 +52,9 @@ public class AuthController {
             Map<String, Object> responseBody = new HashMap<>();
             responseBody.put("success", true);
             responseBody.put("message", "Регистрация успешна");
+            responseBody.put("token", token);
+            responseBody.put("name", userDto.getName()); // 👈 фронт может отобразить имя
+            responseBody.put("email", userDto.getEmail());
 
             return ResponseEntity.ok(responseBody);
         } catch (Exception e) {
@@ -62,6 +62,10 @@ public class AuthController {
             return ResponseEntity.status(500).body(new Response(false, "Внутренняя ошибка сервера"));
         }
     }
+
+
+
+
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody @Valid UserDto userDto, BindingResult result) {
@@ -82,7 +86,7 @@ public class AuthController {
                     responseBody.put("success", true);
                     responseBody.put("message", "Вход выполнен");
                     responseBody.put("token", token);
-                    responseBody.put("name", user.getName()); // Теперь имя передаётся в JSON
+                    responseBody.put("name", user.getName());
 
                     return ResponseEntity.ok(responseBody);
                 }
@@ -93,6 +97,7 @@ public class AuthController {
             return ResponseEntity.status(500).body(new Response(false, "Внутренняя ошибка сервера"));
         }
     }
+
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(@RequestHeader("Authorization") String token) {

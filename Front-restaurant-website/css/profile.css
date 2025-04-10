@@ -4,7 +4,6 @@
 /* Общий стиль */
 body {
     font-family: 'Roboto', sans-serif;
-    background: linear-gradient(135deg, #cddff4, #f1f2f6);
     margin: 0;
     padding: 0;
     color: #333;
@@ -15,7 +14,7 @@ body {
     width: 95%;
     max-width: 900px;
     margin: 50px auto;
-    background: #ffffff;
+    background: linear-gradient(45deg, #d3bebe, #ebd8b4, #757a7f);
     border-radius: 20px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
     padding: 40px;
