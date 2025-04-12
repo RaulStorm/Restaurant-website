@@ -6,67 +6,59 @@ h2 {
     font-size: 32px; /* Крупный шрифт для заголовка */
 }
 
-.category {
-    display: none; /* Скрываем категории по умолчанию */
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Автоматически заполняем доступное пространство */
-    gap: 20px; /* Пробел между карточками */
-    margin-bottom: 40px;
-}
-.category.active {
-    display: block; /* Показываем активную категорию */
-}
 
-.menu-item {
+
+/*/* .menu-item {
     margin: 8px;
     border: 1px solid #877a7a;
     border-radius: 5px;
     padding: 10px;
     background-color: #b3aeae;
-    display: inline-block; /* Для карточек на одной строке */
-    width: calc(23% - 20px); /* Ширина карточки с учетом отступов */
-    vertical-align: top; /* Выровнять карточки по верхнему краю */
-    transition: transform 0.3s, box-shadow 0.3s; /* Плавный эффект при наведении */
+    display: inline-block; 
+    width: calc(23% - 20px); 
+    vertical-align: top; 
+    transition: transform 0.3s, box-shadow 0.3s; 
 
-}
+} */ 
+ 
+/* .menu-item:hover {
+    transform: translateY(-5px); 
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 
-.menu-item:hover {
-    transform: translateY(-5px); /* Поднятие карточки */
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); /* Увеличение тени */
+} */
 
-}
-
-.menu-item img {
+/* .menu-item img {
     height: 130;
     max-width: 100;
     
-    width: auto; /* Изображение занимает всю ширину карточки */
-    height: 150px; /* Фиксированная высота для однородного вида */
-    object-position: center; /* Центрируем изображение */
-    border-radius: 8px; /* Более круглые углы для изображений */
+    width: auto;
+    height: 150px; 
+    object-position: center;
+    border-radius: 8px; 
 
-}
+} */
 
-.menu-card {
-    text-align: center; /* Центрируем текст в карточке */
-}
+/* .menu-card {
+    text-align: center;
+} */
 
-.menu-image {
-    width: 100%; /* Полная ширина изображения */
-    height: auto; /* Автоматическая высота */
-    border-radius: 5px; /* Округлые углы для изображения */
+/* .menu-image {
+    width: 100%; 
+    height: auto; 
+    border-radius: 5px; 
 }
 
 .menu-item h4 {
     margin: 10px 0 5px;
-    font-size: 20px; /* Увеличиваем размер заголовка */
-    color: #495057; /* Тёмный цвет для текста */
+    font-size: 20px;
+    color: #495057; 
 }
 
 .menu-item p {
     margin: 5px 0;
-    color: #6c757d; /* Светло-серый цвет для описания */
-    font-size: 14px; /* Размер текста для описаний */
-}
+    color: #6c757d; 
+    font-size: 14px; 
+} */
 
 .price {
     font-weight: bold;
@@ -189,5 +181,136 @@ h2 {
 }
 
 #place-order:hover {
+    background-color: #218838;
+}
+
+
+
+/*  */
+
+.category {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    justify-items: center;
+  }
+  
+.category.active {
+    display: block; /* Показываем активную категорию */
+}
+.menu-item {
+    display: inline-block;
+    margin: 10px;
+}
+
+.flip-card {
+    background-color: transparent;
+    width: 220px;
+    height: 320px;
+    perspective: 1000px;
+}
+
+.flip-card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.8s;
+    transform-style: preserve-3d;
+}
+
+.flip-card:hover .flip-card-inner {
+    transform: rotateY(180deg);
+}
+
+.flip-card-front,
+.flip-card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 15px;
+    backface-visibility: hidden;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+.flip-card-front {
+    background: #fff;
+}
+
+.flip-card-back {
+    background: #fff;
+    transform: rotateY(180deg);
+}
+
+/* Фото на обеих сторонах */
+.flip-card-front img,
+.flip-card-back img {
+    width: 100%;
+    height: 140px;
+    object-fit: contain; /* <— теперь влезает вся бутылка, чашка и т.д. */
+    border-radius: 10px;
+    margin-bottom: 8px;
+}
+
+/* Название и цена */
+.flip-card-front h4,
+.flip-card-back h4 {
+    font-size: 16px;
+    margin: 5px 0;
+    text-align: center;
+}
+
+.flip-card-front .price,
+.flip-card-back .price {
+    font-size: 16px;
+    color: #28a745;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+/* Описание */
+.flip-card-front .description {
+    font-size: 14px;
+    margin-top: 10px;
+    color: #444;
+    text-align: center;
+    padding: 0 6px;
+  }
+  
+
+/* Кол-во */
+.flip-card-back .quantity-block {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 10px;
+}
+
+.flip-card-back input.item-quantity {
+    width: 50px;
+    padding: 5px;
+    border: 1px solid #aaa;
+    border-radius: 5px;
+    text-align: center;
+}
+
+/* Кнопка */
+.flip-card-back button.add-to-cart {
+    background-color: #28a745;
+    color: white;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.flip-card-back button.add-to-cart:hover {
     background-color: #218838;
 }

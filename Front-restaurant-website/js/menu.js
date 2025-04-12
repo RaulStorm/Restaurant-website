@@ -1,39 +1,54 @@
-const API_URL = "http://localhost:8080"; // Убедитесь, что этот URL правильный и доступен из вашего браузера
-let cart = []; // Массив для хранения позиций в корзине
+const API_URL = "http://localhost:8080"; // Убедитесь, что URL доступен из браузера
+let cart = []; // Товары в корзине
+let allMenuItems = []; // Все блюда с категорией
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         const response = await fetch(`${API_URL}/api/menu`);
         if (!response.ok) {
-            throw new Error('Сетевая ошибка: ' + response.status);
+            throw new Error('Ошибка сети: ' + response.status);
         }
         const data = await response.json();
-        console.log('Полученные данные:', data); // Лог для проверки данных
 
-        const menuItemsContainer = document.getElementById('menu-items');
         const categories = {};
 
-        // Группируем блюда по категориям
+        // Группируем по категориям
         data.forEach(item => {
-            const categoryName = item.categoryName || 'Другие'; // Предполагается наличие поля categoryName
+            const categoryName = item.categoryName || 'Другие';
             if (!categories[categoryName]) {
                 categories[categoryName] = [];
             }
             categories[categoryName].push(item);
         });
 
-        // Создаем вкладки для категорий и секции для меню
         createTabButtons(Object.keys(categories));
-        createCategorySections(categories, menuItemsContainer);
-        attachCartListeners(); // Подключаем слушатели после генерации элементов меню
+        saveMenuItems(categories);
+        renderItems('all');
     } catch (error) {
-        console.error('Ошибка:', error);
+        console.error('Ошибка при загрузке меню:', error);
     }
 });
 
-// Создание кнопок вкладок категорий
+// Сохраняем все блюда с указанием категории
+function saveMenuItems(categories) {
+    allMenuItems = Object.entries(categories).flatMap(([category, items]) =>
+        items.map(item => ({ ...item, category }))
+    );
+}
+
+// Создаём кнопки вкладок
 function createTabButtons(categoryNames) {
     const tabsContainer = document.querySelector('.tabs');
+
+    const allButton = document.createElement('button');
+    allButton.className = 'tab-button active';
+    allButton.textContent = 'Все';
+    allButton.dataset.category = 'all';
+    allButton.addEventListener('click', () => {
+        showItems('all');
+        setActiveTab(allButton);
+    });
+    tabsContainer.appendChild(allButton);
 
     categoryNames.forEach(name => {
         const tabButton = document.createElement('button');
@@ -48,127 +63,115 @@ function createTabButtons(categoryNames) {
 
         tabsContainer.appendChild(tabButton);
     });
-
-    const allButton = document.createElement('button');
-    allButton.className = 'tab-button active';
-    allButton.textContent = 'Все';
-    allButton.dataset.category = 'all';
-    allButton.addEventListener('click', () => {
-        showItems('all');
-        setActiveTab(allButton);
-    });
-    tabsContainer.prepend(allButton);
 }
 
-// Создание секций для каждой категории и их элементов
-function createCategorySections(categories, menuItemsContainer) {
-    for (const category in categories) {
-        const categoryDiv = document.createElement('div');
-        categoryDiv.className = 'category';
-        categoryDiv.dataset.category = category;
+// Отображение блюд по категории
+function showItems(category) {
+    renderItems(category);
+}
 
-        categories[category].forEach(item => {
-            const menuItemDiv = document.createElement('div');
-            menuItemDiv.className = 'menu-item';
+// Перерисовка карточек
+function renderItems(selectedCategory) {
+    const menuItemsContainer = document.getElementById('menu-items');
+    menuItemsContainer.innerHTML = '';
 
-            const imageUrl = item.images && item.images.length > 0 ? item.images[0] : '/default-image.jpg'; // Поддержка отсутствия изображения
+    const itemsToShow = selectedCategory === 'all'
+        ? allMenuItems
+        : allMenuItems.filter(item => item.category === selectedCategory);
 
-            menuItemDiv.innerHTML = `
-                <div class="menu-card">
-                    <img src="${imageUrl}" alt="${item.name}" class="menu-image" loading="lazy"/>
+    itemsToShow.forEach(item => {
+        const imageUrl = item.images?.[0] || '/default-image.jpg';
+
+        const menuItemDiv = document.createElement('div');
+        menuItemDiv.className = 'menu-item flip-card';
+
+        menuItemDiv.innerHTML = `
+            <div class="flip-card-inner">
+                <div class="flip-card-front">
+                    <img src="${imageUrl}" alt="${item.name}" />
                     <h4>${item.name}</h4>
-                    <p>${item.description}</p>
-                    <div class="price"><span>${item.price.toFixed(2)}</span> ₽</div>
-                    <input type="number" class="item-quantity" min="1" value="1">
+                    <div class="price">${item.price.toFixed(2)} ₽</div>
+                    <p class="description">${item.description || 'Описание отсутствует'}</p>
+                </div>
+                <div class="flip-card-back">
+                    <img src="${imageUrl}" alt="${item.name}" />
+                    <h4>${item.name}</h4>
+                    <div class="quantity-block">
+                        <input type="number" class="item-quantity" min="1" value="1">
+                    </div>
                     <button class="add-to-cart" data-id="${item.id}">Добавить в корзину</button>
                 </div>
-            `;
-            categoryDiv.appendChild(menuItemDiv);
-        });
+            </div>
+        `;
 
-        menuItemsContainer.appendChild(categoryDiv);
-    }
-
-    showItems('all'); // Изначально отображаем все элементы
-}
-
-// Отображение элементов по категориям
-function showItems(category) {
-    const categories = document.querySelectorAll('.category');
-    categories.forEach(cat => {
-        if (category === 'all' || cat.dataset.category === category) {
-            cat.classList.add('active');
-        } else {
-            cat.classList.remove('active');
-        }
+        menuItemsContainer.appendChild(menuItemDiv);
     });
+
+    attachCartListeners();
 }
 
-// Установка активной вкладки
+// Подсветка активной вкладки
 function setActiveTab(activeButton) {
-    const tabButtons = document.querySelectorAll('.tab-button');
-    tabButtons.forEach(button => button.classList.remove('active'));
+    const buttons = document.querySelectorAll('.tab-button');
+    buttons.forEach(btn => btn.classList.remove('active'));
     activeButton.classList.add('active');
 }
 
-// Подключение слушателей для добавления товаров в корзину
+// Назначаем обработчики "Добавить в корзину"
 function attachCartListeners() {
-    const addToCartButtons = document.querySelectorAll('.add-to-cart');
-    addToCartButtons.forEach(button => {
+    const buttons = document.querySelectorAll('.add-to-cart');
+    buttons.forEach(button => {
         button.addEventListener('click', handleAddToCart);
     });
 }
 
-// Обработка добавления товаров в корзину
+// Обработка добавления в корзину
 function handleAddToCart(event) {
     const itemId = event.target.dataset.id;
-    const itemContainer = event.target.closest('.menu-item');
+    const itemContainer = event.target.closest('.flip-card');
     const itemName = itemContainer.querySelector('h4').textContent;
-    const itemPrice = parseFloat(itemContainer.querySelector('.price span').textContent);
+    const itemPrice = parseFloat(itemContainer.querySelector('.price').textContent.replace(' ₽', '').trim());
     const itemQuantity = parseInt(itemContainer.querySelector('.item-quantity').value);
 
-    // Проверка корректности введенного количества
     if (isNaN(itemQuantity) || itemQuantity <= 0) {
-        alert("Пожалуйста, введите корректное количество товаров.");
+        alert("Введите корректное количество.");
         return;
     }
 
-    const itemInCart = cart.find(i => i.id === itemId);
+    const existingItem = cart.find(item => item.id === itemId);
 
-    if (itemInCart) {
-        itemInCart.quantity += itemQuantity;
+    if (existingItem) {
+        existingItem.quantity += itemQuantity;
     } else {
         cart.push({ id: itemId, name: itemName, price: itemPrice, quantity: itemQuantity });
     }
 
-    console.log('Корзина:', cart); // Лог для проверки корзины
-    updateCart(); // Обновление отображения корзины
+    updateCart();
 }
 
-// Обновление отображения корзины
+// Отображение корзины
 function updateCart() {
     const cartItemsContainer = document.querySelector('#cart-items');
     const totalPriceContainer = document.querySelector('#total-price');
 
-    cartItemsContainer.innerHTML = ''; // Очистка текущих значений
+    cartItemsContainer.innerHTML = '';
 
     let totalPrice = 0;
 
     cart.forEach(item => {
         const itemRow = document.createElement('div');
-        itemRow.textContent = `${item.name} x ${item.quantity} - ${item.price * item.quantity} ₽`;
-
+        itemRow.textContent = `${item.name} x ${item.quantity} — ${(item.price * item.quantity).toFixed(2)} ₽`;
         cartItemsContainer.appendChild(itemRow);
-
         totalPrice += item.price * item.quantity;
     });
 
-    totalPriceContainer.textContent = totalPrice.toFixed(2); // Установка общей суммы
+    totalPriceContainer.textContent = totalPrice.toFixed(2);
 }
 
+// Отправка заказа
 document.getElementById('place-order').addEventListener('click', async () => {
     if (cart.length === 0) {
-        alert("Ваша корзина пуста.");
+        alert("Корзина пуста.");
         return;
     }
 
@@ -189,13 +192,10 @@ document.getElementById('place-order').addEventListener('click', async () => {
         }))
     };
 
-    console.log("Отправляем заказ:", orderData);
-
     try {
         const token = localStorage.getItem('token');
-
         if (!token) {
-            alert("Вы не авторизованы. Пожалуйста, войдите в систему.");
+            alert("Вы не авторизованы.");
             return;
         }
 
@@ -214,15 +214,15 @@ document.getElementById('place-order').addEventListener('click', async () => {
         }
 
         const result = await response.json();
-        alert("Ваш заказ оформлен!");
-        console.log('Результат заказа:', result);
+        alert("Заказ оформлен!");
 
+        // Очистка
         cart = [];
         updateCart();
         document.getElementById('table-number').value = '';
         document.getElementById('order-notes').value = '';
     } catch (error) {
-        console.error("Ошибка при отправке заказа:", error);
-        alert("Не удалось оформить заказ. Проверьте авторизацию или попробуйте позже.");
+        console.error("Ошибка оформления:", error);
+        alert("Ошибка оформления заказа.");
     }
 });
