@@ -201,6 +201,7 @@ h2 {
 .menu-item {
     display: inline-block;
     margin: 10px;
+    justify-content: center;
 }
 
 .flip-card {
@@ -239,11 +240,11 @@ h2 {
 }
 
 .flip-card-front {
-    background: #fff;
+    background: #d29999;
 }
 
 .flip-card-back {
-    background: #fff;
+    background: #b89090;
     transform: rotateY(180deg);
 }
 
@@ -252,7 +253,7 @@ h2 {
 .flip-card-back img {
     width: 100%;
     height: 140px;
-    object-fit: contain; /* <— теперь влезает вся бутылка, чашка и т.д. */
+    object-fit: contain;
     border-radius: 10px;
     margin-bottom: 8px;
 }
@@ -267,10 +268,10 @@ h2 {
 
 .flip-card-front .price,
 .flip-card-back .price {
-    font-size: 16px;
+    font-size: 19px;
     color: #28a745;
     font-weight: bold;
-    margin-bottom: 5px;
+    margin-bottom: px;
 }
 
 /* Описание */
@@ -288,6 +289,7 @@ h2 {
     display: flex;
     justify-content: center;
     align-items: center;
+    color: #aaa;
     gap: 5px;
     margin-bottom: 10px;
 }
