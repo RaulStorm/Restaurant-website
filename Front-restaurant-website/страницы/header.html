@@ -4,20 +4,24 @@
     </h1>
     <nav>
         <ul>
-            <li><a href="/index.html">Главная</a></li>
-            <li><a href="/страницы/menu.html">Меню</a></li>
-            <li><a href="/страницы/reservation.html">Бронь</a></li>
-            <li><a href="/страницы/review.html">Отзывы</a></li>
-            <li><a href="/страницы/contacts.html">Контакты</a></li>
-            <li><a href="/страницы/menu.html#my-basked">🧺</a></li>
-
+            <li><a href="/index.html" class="nav-link">Главная</a></li>
+            <li><a href="/страницы/menu.html" class="nav-link">Меню</a></li>
+            <li><a href="/страницы/reservation.html" class="nav-link">Бронь</a></li>
+            <li><a href="/страницы/review.html" class="nav-link">Отзывы</a></li>
+            <li><a href="/страницы/contacts.html" class="nav-link">Контакты</a></li>
+            <li><a href="/страницы/menu.html#my-basked" class="nav-link">🧺</a></li>
             <li id="user-auth">
                 <a id="url-auth" href="/authorization/auth.html" class="auth-link">
                     <img id="user-icon" src="/authorization/img/auth.png" alt="Авторизация" class="auth-icon">
                 </a>
             </li>
         </ul>
+        <span class="highlight"></span>
+        <!-- Бургер-меню и его иконка -->
+        <div class="burger-menu" onclick="toggleMenu()">☰</div>
     </nav>
 </header>
+
+
 
 <script src="/authorization/auth.js"></script>

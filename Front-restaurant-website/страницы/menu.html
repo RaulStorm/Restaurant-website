@@ -80,6 +80,46 @@ fetch('/страницы/footer.html')
     .catch(err => {
         console.error('Ошибка загрузки footer:', err);
     });
+    // =================================
+    document.addEventListener('DOMContentLoaded', () => {
+    const links = document.querySelectorAll('.nav-link');
+    const highlight = document.querySelector('.highlight');
+    
+    // Функция для движения подсветки
+    function moveHighlight(link) {
+        highlight.style.width = link.offsetWidth + 'px';
+        highlight.style.left = link.offsetLeft + 'px';
+    }
+    
+    // Слушатели событий для вкладок
+    links.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+
+            // Убираем активный класс с всех ссылок
+            links.forEach(l => l.classList.remove('active'));
+
+            // Добавляем активный класс к текущей вкладке
+            link.classList.add('active');
+
+            // Перемещаем подсветку
+            moveHighlight(link);
+        });
+    });
+
+    // Изначальное позиционирование подсветки для первой активной вкладки
+    const active = document.querySelector('.nav-link.active');
+    if (active) {
+        moveHighlight(active);
+    }
+});
+
+document.querySelector('.burger-menu').addEventListener('click', function() {
+    const nav = document.querySelector('nav');
+    const burgerMenu = document.querySelector('.burger-menu');
+    nav.classList.toggle('active');
+    burgerMenu.classList.toggle('active');
+});
 
     </script>
 

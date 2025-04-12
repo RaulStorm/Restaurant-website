@@ -24,25 +24,47 @@ header {
     text-decoration: none; /* Убираем подчеркивание */
 }
 
+
+/* Стили для навигации */
 nav {
-    flex-grow: 1; /* Заставляем навигацию занимать оставшееся пространство */
-    text-align: center; /* Центрируем меню */
+    flex-grow: 1;
+    text-align: center;
+    position: relative;
+
 }
 
 nav ul {
-    list-style-type: none; /* Убираем точки списка */
-    padding: 0; /* Убираем отступы */
-    margin: 0; /* Убираем отступы */
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+
 }
 
 nav ul li {
-    display: inline; /* Горизонтальное расположение пунктов меню */
-    margin: 0 15px; /* Отступы между пунктами меню */
+    display: inline-block;  /* Сделать элементы строкой */
+    margin: 0 1px; 
 }
 
 nav ul li a {
-    color: #fff; /* Цвет текста пунктов меню */
-    text-decoration: none; /* Убираем подчеркивание */
+    color: #fff;
+    text-decoration: none;
+    font-weight: 500;
+    padding: 10px 20px;
+    position: relative;
+    display: inline-block;
+    transition: transform 0.3s, box-shadow 0.3s; /* Плавный эффект при наведении */
+
+}
+
+nav ul li a.active {
+    color: black;  /* Изменяем цвет активной вкладки */
+
+}
+
+nav ul li a:hover {
+    background-color: #644545; /* Цвет фона при наведении */
+    border-radius: 20px;
+
 }
 
 .auth-link {
@@ -55,39 +77,63 @@ nav ul li a {
     margin-right: 5px;
 }
 .about {
-    margin: 10px;
-    background-color: #b6a9a9; /* Светлый фон для блока о ресторане */
-    padding: 30px; /* Увеличенные отступы для создания пространства */
-    border-radius: 15px; /* Закругленные углы */
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Нежная тень для визуальной глубины */
-    margin-bottom: 30px; /* Отступ снизу для разделения с другими блоками */
+    max-width: 800px; /* Устанавливаем максимальную ширину блока */
+    width: 100%; /* Блок будет занимать 100% ширины контейнера до max-width */
+    margin: 40px auto; /* Центрируем блок и добавляем отступы сверху и снизу */
+    padding: 40px;
+    background-color: #f9f9f9;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    text-align: center;
 }
 
 .about h2 {
-    font-size: 28px; /* Размер заголовка секции */
-    color: #333; /* Цвет заголовка */
-    margin-bottom: 15px; /* Отступ снизу */
-    text-align: center; /* Центрирование заголовка */
-    font-weight: bold; /* Жирный шрифт */
+    font-size: 32px;
+    color: #333;
+    font-family: 'Pacifico', cursive;
+    margin-bottom: 20px;
+    font-weight: bold;
 }
 
 .about p {
-    font-size: 16px; /* Размер текста абзацев */
-    line-height: 1.6; /* Увеличенный интерлиньяж для лучшей читаемости */
-    color: #555; /* Цвет текста */
-    margin-bottom: 15px; /* Отступы между абзацами */
-    text-align: left; /* Выравнивание текста по левому краю */
+    font-size: 18px;
+    line-height: 1.8;
+    color: #555;
+    margin-bottom: 20px;
+    text-align: left;
+    padding: 0 20px;
 }
 
-/* Опционально: Добавление стиля ссылкам в блоке */
 .about a {
-    color: #ff7e5f; /* Цвет ссылок */
-    text-decoration: underline; /* Подчеркивание */
+    color: #ff7e5f;
+    font-size: 18px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.3s ease;
 }
 
 .about a:hover {
-    text-decoration: none; /* Убираем подчеркивание при наведении */
+    color: #333;
 }
+
+
+
+
+
+/* Мобильная версия */
+@media screen and (max-width: 768px) {
+    .about {
+        padding: 20px;
+        margin: 10px;
+    }
+    .about h2 {
+        font-size: 24px;
+    }
+    .about p {
+        font-size: 16px;
+    }
+}
+
 
 /* Стили для тела страницы */
 body {
@@ -161,53 +207,52 @@ footer {
 
 /* Карусель и изображения */
 .carousel {
-    position: relative; /* Для позиционирования кнопок */
-    width: 100%; /* Ширина карусели */
-    max-width: 800px; /* Максимальная ширина */
-    margin: auto; /* Центрирование */
-    overflow: hidden; /* Скрыть изображения, которые выходят за пределы */
+    width: 650px;
+    overflow-x: hidden;
+    scroll-snap-type: x mandatory;
+    position: relative;
+    max-width: 800px;
+    margin: auto;
+    overflow: hidden;
+    scroll-behavior: smooth; /* Плавная прокрутка */
 }
 
 .carousel-images {
-    display: flex; /* Оставляем flex-контейнер для горизонтального выравнивания изображений, если нужно */
-    overflow: hidden; /* Скрыть изображения, которые выходят за пределы */
-    position: relative; /* Для позиционирования внутренних элементов */
+    display: flex;
+    transition: transform 1s ease-in-out; /* Плавная анимация */
 }
 
 .carousel-images img {
-    width: 100%; /* Ширина изображения */
-    height: auto; /* Автоматическая высота */
-    border-radius: 5px; /* Закругленные углы */
-    display: none; /* Скрываем все изображения по умолчанию */
-}
-
-.carousel-images img.active {
-    display: block; /* Показываем только активное изображение */
+    width: calc(100% - 20px); /* Уменьшаем ширину на размер отступа */
+    height: auto;
+    border-radius: 5px;
+    display: block; /* Убираем display: none для изображений */
+    margin-right: 1px; /* Отступ между изображениями */
 }
 
 /* Стили для кнопок навигации */
 button.prev, button.next {
-    position: absolute; /* Абсолютное позиционирование кнопок */
-    top: 50%; /* Центрирование по вертикали */
-    background-color: rgba(255, 255, 255, 0.7); /* Полупрозрачный фон */
-    border: none; /* Без рамки */
-    cursor: pointer; /* Указатель при наведении */
-    padding: 10px 15px; /* Отступы для кнопок */
-    border-radius: 5px; /* Закругленные углы */
-    transform: translateY(-50%); /* Центрирование по вертикали */
+    position: absolute;
+    top: 50%;
+    background-color: rgba(196, 213, 179, 0.7);
+    cursor: pointer;
+    padding: 10px 15px;
+    border-radius: 5px;
+    transform: translateY(-50%);
 }
 
 button.prev {
-    left: 10px; /* Отступ от левого края */
+    left: 10px;
 }
 
 button.next {
-    right: 10px; /* Отступ от правого края */
+    right: 10px;
 }
 
 button:hover {
-    background-color: rgba(255, 255, 255, 0.9); /* Более яркий фон при наведении */
+    background-color: rgba(231, 120, 120, 0.9);
 }
+
 
 body {
     font-family: 'Roboto', sans-serif;
@@ -215,4 +260,241 @@ body {
     margin: 0;
     padding: 0;
     color: #333;
+}
+
+*::-webkit-scrollbar{
+    width: 8px;
+}
+*::-webkit-scrollbar-thumb{
+    background-color: #b4acac;
+    border: 1px solid #443d3d;
+}
+
+*::-webkit-scrollbar-track{
+    background-color: #ccd9e8;
+}
+
+/* Стили для иконки корзины */
+nav ul li a[href*="basked"] {
+    display: inline-block;
+    font-size: 1.5rem; /* Размер иконки */
+    text-decoration: none;
+    position: relative;
+    transition: transform 0.3s ease;
+}
+
+/* Стиль при наведении на корзину */
+nav ul li a:hover {
+    transform: scale(1.1);
+}
+
+/* Адаптация для мобильных устройств */
+@media screen and (max-width: 768px) {
+    /* Стиль для блока о ресторане */
+    .about {
+        padding: 20px;
+        margin: 10px auto; /* Центрируем блок */
+        width: 90%; /* Устанавливаем ширину блока 90% от доступной */
+        box-sizing: border-box; /* Учитываем отступы в размерах */
+    }
+
+    .about h2 {
+        font-size: 24px; /* Уменьшаем размер заголовка */
+        text-align: center; /* Центрируем заголовок */
+    }
+
+    .about p {
+        font-size: 16px; /* Уменьшаем размер текста */
+        text-align: justify; /* Выравнивание текста по ширине */
+    }
+
+    /* Галерея */
+    .gallery {
+        margin-top: 20px;
+        text-align: center; /* Центрируем галерею */
+    }
+
+    /* Карусель для мобильных устройств */
+    .carousel {
+        width: 100%; /* Карусель будет занимать 100% ширины */
+        max-width: none; /* Убираем ограничение по ширине */
+        margin: 0 auto; /* Центрируем карусель */
+    }
+
+    .carousel-images {
+        display: flex;
+        transition: transform 1s ease-in-out; /* Плавная анимация */
+        margin: 0 auto; /* Центрируем контейнер с изображениями */
+    }
+
+    .carousel-images img {
+        width: 100%; /* Изображения будут занимать всю ширину */
+        height: auto;
+        margin-right: 10px; /* Отступ между изображениями */
+    }
+
+    /* Отзывы */
+    .reviews {
+        padding: 20px;
+        margin: 20px auto; /* Центрируем блок с отзывами */
+        width: 90%;
+        box-sizing: border-box;
+        overflow: hidden; /* Скрываем лишнее */
+    }
+
+    .review-list {
+        display: flex;
+        flex-wrap: nowrap; /* Прокрутка в одну строку */
+        gap: 15px;
+        animation: scrollReviews 30s linear infinite; /* Анимация прокрутки */
+    }
+
+    .review-card {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        position: relative;
+        min-width: 280px; /* Минимальная ширина для карточек */
+        flex-shrink: 0; /* Карточки не будут сжиматься */
+    }
+
+    .review-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    .review-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 6px;
+        background: linear-gradient(to right, #f8cdda, #1e3c72);
+    }
+
+    .review-card .review-user {
+        font-size: 16px;
+        font-weight: bold;
+        color: #444;
+    }
+
+    .review-card .review-date {
+        font-size: 14px;
+        color: #bbb;
+        margin-top: 5px;
+    }
+
+    .review-card .review-rating {
+        font-size: 20px;
+        color: #ff9f00;
+        margin-top: 10px;
+    }
+
+    .review-card .review-text {
+        font-size: 16px;
+        color: #666;
+        margin-top: 15px;
+        line-height: 1.6;
+    }
+
+    /* Анимация прокрутки */
+    @keyframes scrollReviews {
+        0% {
+            transform: translateX(0);
+        }
+        100% {
+            transform: translateX(-100%); /* Прокрутка на 100% */
+        }
+    }
+}
+
+/* Стиль для бургерного меню */
+.burger-menu {
+    display: none; /* Скрыто по умолчанию */
+    font-size: 30px;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.burger-menu:hover {
+    transform: scale(1.1);
+}
+
+/* Для мобильных устройств */
+@media (max-width: 768px) {
+    nav ul {
+        display: none; /* Меню скрыто по умолчанию на мобильных */
+        flex-direction: column;
+        align-items: center;
+        position: absolute;
+        top: 60px;
+        left: 0;
+        right: 0;
+        background-color: #333;
+        padding: 20px 0;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    nav.active ul {
+        display: flex; /* Меню показывается при добавлении класса active */
+    }
+
+    nav ul li {
+        margin: 15px 0;
+    }
+
+    .burger-menu {
+        display: block; /* Показываем бургер-меню на мобильных */
+    }
+}
+
+/* Стиль для активного меню */
+nav.active {
+    transform: translateX(0);
+    transition: transform 0.3s ease;
+}
+/* Убедитесь, что навигация и бургерное меню имеют правильное позиционирование */
+header {
+    position: relative; /* Для правильного наложения элементов */
+    z-index: 10; /* Устанавливаем более высокий слой для меню */
+}
+
+/* Убедитесь, что карусель не перекрывает меню */
+.carousel {
+    z-index: 1; /* Задаем карусели меньший z-index, чтобы она не перекрывала меню */
+}
+
+/* Позиционирование для меню на мобильных */
+nav ul {
+    z-index: 11; /* Навигация должна быть выше карусели */
+}
+
+
+
+
+/* Адаптация футера */
+@media screen and (max-width: 768px) {
+    footer {
+        padding: 20px;
+        text-align: center;
+    }
+
+    .footer-content {
+        display: block; /* Убираем горизонтальное распределение */
+        text-align: center;
+    }
+
+    .footer-section {
+        margin-bottom: 20px; /* Отступ между секциями */
+        padding: 10px;
+    }
+
+    .social-media li {
+        display: inline-block;
+        margin: 5px;
+    }
 }

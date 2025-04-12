@@ -139,6 +139,14 @@ fetch('/страницы/footer.html')
         console.error('Ошибка загрузки footer:', err);
     });
 
+    
+    document.querySelector('.burger-menu').addEventListener('click', function() {
+    const nav = document.querySelector('nav');
+    const burgerMenu = document.querySelector('.burger-menu');
+    nav.classList.toggle('active');
+    burgerMenu.classList.toggle('active');
+});
+
     </script>
 </body>
 </html>

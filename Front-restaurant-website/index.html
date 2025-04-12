@@ -18,13 +18,11 @@
     <main>
         <section class="gallery">
             <div class="carousel">
-                <button class="prev" onclick="changeImage(-1)">&#10094;</button>
                 <div class="carousel-images">
-                    <img src="images/restaurant_interior1.png" alt="Интерьер ресторана 1" class="active">
+                    <img src="images/restaurant_interior1.png" alt="Интерьер ресторана 1">
                     <img src="images/restaurant_interior2.png" alt="Интерьер ресторана 2">
                     <img src="images/restaurant_interior3.png" alt="Интерьер ресторана 3">
                 </div>
-                <button class="next" onclick="changeImage(1)">&#10095;</button>
             </div>
         </section>
 
@@ -50,7 +48,7 @@
         <h2>Отзывы наших гостей</h2>
         <div id="review-list" class="review-list"></div>
     </section>
-    
+
     
     <script src="/js/script.js"></script>
 
@@ -72,6 +70,8 @@
  
     return JSON.parse(jsonPayload);
 }
+
+
  fetch('/страницы/header.html')
     .then(response => response.text())
     .then(data => {
@@ -102,6 +102,18 @@ fetch('/страницы/footer.html')
     .catch(err => {
         console.error('Ошибка загрузки footer:', err);
     });
+
+
+    // ===================================================
+
+    // Функция для переключения бургерного меню
+function toggleMenu() {
+    const nav = document.querySelector('nav');
+    nav.classList.toggle('active');  // Переключаем класс для анимации меню
+}
+
+
+
 
     </script>
 

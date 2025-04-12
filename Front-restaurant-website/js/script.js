@@ -17,10 +17,6 @@ function changeImage(direction) {
 document.addEventListener("DOMContentLoaded", () => {
     const images = document.querySelectorAll('.carousel-images img');
     images[currentImageIndex].classList.add('active'); // Установить первое изображение как активное
-
-    // Обработчики событий для кнопок
-    document.querySelector('button.prev').addEventListener('click', () => changeImage(-1));
-    document.querySelector('button.next').addEventListener('click', () => changeImage(1));
 });
 
 async function loadReviews() {
@@ -60,3 +56,23 @@ async function loadReviews() {
 }
 
 document.addEventListener('DOMContentLoaded', loadReviews);
+
+let currentIndex = 0;
+
+function changeImage(direction) {
+    const images = document.querySelectorAll('.carousel-images img');
+    const totalImages = images.length;
+
+    currentIndex = (currentIndex + direction + totalImages) % totalImages; // Цикличность индекса
+
+    const newOffset = currentIndex * images[0].clientWidth; // Позиция сдвига
+    const carouselImages = document.querySelector('.carousel-images');
+    
+    // Плавно перемещаем карусель
+    carouselImages.style.transform = `translateX(-${newOffset}px)`;
+}
+
+// Автоматическая прокрутка с плавным эффектом
+setInterval(() => {
+    changeImage(1); // 1 означает прокрутку вправо (перелистывание)
+}, 10000); // Интервал 10000 миллисекунд (10 секунды)
