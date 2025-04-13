@@ -61,18 +61,15 @@ public class MenuController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    // Загрузка изображения в Cloudinary и обновление меню
+    // Загрузка изображения для элемента меню
     @PostMapping("/menu/{id}/upload-image")
     public ResponseEntity<String> uploadImage(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
         try {
-            // Преобразуем MultipartFile в byte[]
-            byte[] fileData = file.getBytes();
-
             // Загружаем изображение в Cloudinary
-            String imageUrl = cloudinaryService.uploadImage(fileData); // Загружаем изображение в Cloudinary
+            String imageUrl = cloudinaryService.uploadImage(file);
 
             // Получаем меню по ID
-            MenuItem menuItem = menuItemRepository.findById(id).orElseThrow(() -> new RuntimeException("Menu item not found"));
+            MenuItem menuItem = menuItemRepository.findById(id).orElseThrow(() -> new Exception());
 
             // Создаем объект изображения и связываем с блюдом
             MenuItemImage menuItemImage = new MenuItemImage();
@@ -86,7 +83,8 @@ public class MenuController {
             return ResponseEntity.ok("Изображение успешно загружено");
         } catch (IOException e) {
             return ResponseEntity.status(500).body("Ошибка загрузки изображения");
+        } catch (Exception e) {
+            return ResponseEntity.status(404).body("Меню не найдено");
         }
     }
-
 }
