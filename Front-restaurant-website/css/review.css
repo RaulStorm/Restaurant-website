@@ -79,3 +79,45 @@ main {
 .full-stars label:hover ~ label svg {
     fill: #f0b70b;
 }
+
+body {
+    font-family: sans-serif;
+    background-color: #f4f4f4;
+    padding: 40px;
+    text-align: center;
+  }
+
+  h1 {
+    margin-bottom: 30px;
+  }
+
+  .table-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 120px);
+    gap: 20px;
+    justify-content: center;
+  }
+
+  .table {
+    width: 100px;
+    height: 100px;
+    background-color: #90ee90; /* зеленый - свободен */
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    border: 2px solid #555;
+  }
+
+  .occupied {
+    background-color: #f08080; /* красный - занят */
+  }
+
+  .status {
+    font-size: 0.9em;
+    margin-top: 6px;
+  }

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Расписание бронирования столиков</title>
+<style>
+    body {
+      font-family: sans-serif;
+      background-color: #f4f4f4;
+      padding: 40px;
+      text-align: center;
+    }
+ 
+    h1 {
+      margin-bottom: 30px;
+    }
+ 
+    .table-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 140px);
+      gap: 20px;
+      justify-content: center;
+    }
+ 
+    .table {
+      width: 120px;
+      min-height: 120px;
+      background-color: #90ee90;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      border: 2px solid #555;
+      padding: 10px;
+    }
+ 
+    .occupied {
+      background-color: #f08080;
+    }
+ 
+    .title {
+      font-size: 1.1em;
+      margin-bottom: 5px;
+    }
+ 
+    .schedule {
+      font-size: 0.85em;
+      margin-top: 6px;
+      text-align: center;
+    }
+ 
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+    }
+ 
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      width: 300px;
+      text-align: center;
+    }
+ 
+    .modal-content input {
+      margin: 10px 0;
+    }
+ 
+    .modal-content button {
+      margin-top: 10px;
+      padding: 5px 10px;
+    }
+</style>
+</head>
+<body>
+ 
+  <h1>Бронирование столиков</h1>
+<div class="table-grid" id="tableGrid"></div>
+ 
+  <!-- Модальное окно -->
+<div class="modal" id="modal">
+<div class="modal-content">
+<h3>Забронировать столик</h3>
+<label>С: <input type="time" id="startTime"></label><br>
+<label>До: <input type="time" id="endTime"></label><br>
+<button onclick="saveReservation()">Сохранить</button>
+<button onclick="closeModal()">Отмена</button>
+</div>
+</div>
+ 
+  <script>
+    const tableGrid = document.getElementById('tableGrid');
+    const modal = document.getElementById('modal');
+    const startTimeInput = document.getElementById('startTime');
+    const endTimeInput = document.getElementById('endTime');
+ 
+    let selectedTable = null;
+    const numTables = 12;
+    const tableData = [];
+ 
+    for (let i = 1; i <= numTables; i++) {
+      const table = document.createElement('div');
+      table.classList.add('table');
+ 
+      const title = document.createElement('div');
+      title.classList.add('title');
+      title.textContent = `Столик ${i}`;
+ 
+      const schedule = document.createElement('div');
+      schedule.classList.add('schedule');
+ 
+      table.appendChild(title);
+      table.appendChild(schedule);
+ 
+      const data = {
+        element: table,
+        scheduleDiv: schedule,
+        reservations: []
+      };
+ 
+      table.addEventListener('click', () => {
+        selectedTable = data;
+        openModal();
+      });
+ 
+      tableData.push(data);
+      tableGrid.appendChild(table);
+    }
+ 
+    function openModal() {
+      startTimeInput.value = '';
+      endTimeInput.value = '';
+      modal.style.display = 'flex';
+    }
+ 
+    function closeModal() {
+      modal.style.display = 'none';
+    }
+ 
+    function timeToMinutes(time) {
+      const [hours, minutes] = time.split(':').map(Number);
+      return hours * 60 + minutes;
+    }
+ 
+    function hasConflict(start, end, reservations) {
+      const newStart = timeToMinutes(start);
+      const newEnd = timeToMinutes(end);
+ 
+      return reservations.some(r => {
+        const existingStart = timeToMinutes(r.start);
+        const existingEnd = timeToMinutes(r.end);
+        return newStart < existingEnd && newEnd > existingStart;
+      });
+    }
+ 
+    function saveReservation() {
+      const start = startTimeInput.value;
+      const end = endTimeInput.value;
+ 
+      if (!start || !end || start >= end) {
+        alert('Укажите корректное время бронирования.');
+        return;
+      }
+ 
+      if (hasConflict(start, end, selectedTable.reservations)) {
+        alert('Ошибка: это время уже занято!');
+        return;
+      }
+ 
+      selectedTable.reservations.push({ start, end });
+      updateTableUI(selectedTable);
+      closeModal();
+    }
+ 
+    function updateTableUI(table) {
+      table.element.classList.toggle('occupied', table.reservations.length > 0);
+ 
+      // Сортировка по времени
+      table.reservations.sort((a, b) => timeToMinutes(a.start) - timeToMinutes(b.start));
+ 
+      table.scheduleDiv.innerHTML = table.reservations
+        .map(r => `с ${r.start} до ${r.end}`)
+        .join('<br>');
+    }
+</script>
+</body>
+</html>

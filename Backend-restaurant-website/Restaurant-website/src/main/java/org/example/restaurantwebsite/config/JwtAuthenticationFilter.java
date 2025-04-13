@@ -39,3 +39,46 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return null;
     }
 }
+
+//try {
+//
+//            File file = new File("image.jpg");
+//
+//            FileInputStream fis = new FileInputStream(file);
+//
+//            byte[] bytes = new byte[(int) file.length()];
+//
+//            fis.read(bytes);
+//
+//            fis.close();
+//
+//            String base64 = Base64.getEncoder().encodeToString(bytes);
+//
+//            System.out.println("Base64 код:\n" + base64);
+//
+//        } catch (Exception e) {
+//
+//            e.printStackTrace();
+//
+//        }
+//
+//try {
+//
+//            String base64 = "ТВОЙ_БАЗА64_КОД_ТУТ";
+//
+//            byte[] imageBytes = Base64.getDecoder().decode(base64);
+//
+//            FileOutputStream fos = new FileOutputStream("output.jpg");
+//
+//            fos.write(imageBytes);
+//
+//            fos.close();
+//
+//            System.out.println("Файл сохранён как output.jpg");
+//
+//        } catch (Exception e) {
+//
+//            e.printStackTrace();
+//
+//        }
+//
