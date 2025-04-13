@@ -70,7 +70,6 @@ function showItems(category) {
     renderItems(category);
 }
 
-// Перерисовка карточек
 function renderItems(selectedCategory) {
     const menuItemsContainer = document.getElementById('menu-items');
     menuItemsContainer.innerHTML = '';
@@ -80,7 +79,7 @@ function renderItems(selectedCategory) {
         : allMenuItems.filter(item => item.category === selectedCategory);
 
     itemsToShow.forEach(item => {
-        const imageUrl = item.images?.[0] || '/default-image.jpg';
+        const imageUrl = item.images?.[0] || '/default-image.jpg';  // Ссылка на изображение из Cloudinary
 
         const menuItemDiv = document.createElement('div');
         menuItemDiv.className = 'menu-item flip-card';

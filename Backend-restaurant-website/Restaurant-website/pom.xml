@@ -108,6 +108,13 @@
             <artifactId>mysql-connector-j</artifactId>
             <scope>runtime</scope>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/com.cloudinary/cloudinary-core -->
+        <dependency>
+            <groupId>com.cloudinary</groupId>
+            <artifactId>cloudinary-core</artifactId>
+            <version>2.2.0</version>
+        </dependency>
+
     </dependencies>
 
 
@@ -119,5 +126,11 @@
             </plugin>
         </plugins>
     </build>
+    <repositories>
+        <repository>
+            <id>cloudinary</id>
+            <url>https://repo.cloudinary.com</url>
+        </repository>
+    </repositories>
 
 </project>

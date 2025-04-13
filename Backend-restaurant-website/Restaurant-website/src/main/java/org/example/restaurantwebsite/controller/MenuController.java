@@ -1,19 +1,17 @@
 package org.example.restaurantwebsite.controller;
 
-import org.example.restaurantwebsite.model.MenuItemDto;
 import org.example.restaurantwebsite.model.MenuItem;
+import org.example.restaurantwebsite.model.MenuItemDto;
 import org.example.restaurantwebsite.model.MenuItemImage;
 import org.example.restaurantwebsite.repository.MenuItemRepository;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.example.restaurantwebsite.service.CloudinaryService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.bind.annotation.CrossOrigin;
-
 
 @RestController
 @RequestMapping("/api")
@@ -21,16 +19,20 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 public class MenuController {
 
     private final MenuItemRepository menuItemRepository;
+    private final CloudinaryService cloudinaryService;
 
-    public MenuController(MenuItemRepository menuItemRepository) {
+    // Внедрение зависимостей
+    public MenuController(MenuItemRepository menuItemRepository, CloudinaryService cloudinaryService) {
         this.menuItemRepository = menuItemRepository;
+        this.cloudinaryService = cloudinaryService;
     }
 
+    // Получение всех меню
     @GetMapping("/menu")
     public ResponseEntity<List<MenuItemDto>> getMenu() {
-        List<MenuItem> menuItems = menuItemRepository.findAllWithImages();
+        List<MenuItem> menuItems = menuItemRepository.findAll();
         if (menuItems.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No menu items found");
+            return ResponseEntity.notFound().build();
         }
         List<MenuItemDto> dtos = menuItems.stream()
                 .map(this::convertToDto)
@@ -39,11 +41,8 @@ public class MenuController {
         return ResponseEntity.ok(dtos);
     }
 
+    // Преобразование MenuItem в DTO
     private MenuItemDto convertToDto(MenuItem menuItem) {
-        return getMenuItemDto(menuItem);
-    }
-
-    public static MenuItemDto getMenuItemDto(MenuItem menuItem) {
         MenuItemDto dto = new MenuItemDto();
         dto.setId(menuItem.getId());
         dto.setName(menuItem.getName());
@@ -53,4 +52,41 @@ public class MenuController {
         dto.setImages(menuItem.getImages().stream().map(MenuItemImage::getImageUrl).collect(Collectors.toList()));
         return dto;
     }
+
+    // Получение одного элемента меню
+    @GetMapping("/menu/{id}")
+    public ResponseEntity<MenuItem> getMenuItem(@PathVariable Long id) {
+        return menuItemRepository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    // Загрузка изображения в Cloudinary и обновление меню
+    @PostMapping("/menu/{id}/upload-image")
+    public ResponseEntity<String> uploadImage(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
+        try {
+            // Преобразуем MultipartFile в byte[]
+            byte[] fileData = file.getBytes();
+
+            // Загружаем изображение в Cloudinary
+            String imageUrl = cloudinaryService.uploadImage(fileData); // Загружаем изображение в Cloudinary
+
+            // Получаем меню по ID
+            MenuItem menuItem = menuItemRepository.findById(id).orElseThrow(() -> new RuntimeException("Menu item not found"));
+
+            // Создаем объект изображения и связываем с блюдом
+            MenuItemImage menuItemImage = new MenuItemImage();
+            menuItemImage.setMenuItemId(menuItem.getId());
+            menuItemImage.setImageUrl(imageUrl);  // URL изображения из Cloudinary
+            menuItem.getImages().add(menuItemImage);  // Добавляем в список изображений
+
+            // Сохраняем меню с обновленными изображениями
+            menuItemRepository.save(menuItem);
+
+            return ResponseEntity.ok("Изображение успешно загружено");
+        } catch (IOException e) {
+            return ResponseEntity.status(500).body("Ошибка загрузки изображения");
+        }
+    }
+
 }

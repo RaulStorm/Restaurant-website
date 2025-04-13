@@ -16,9 +16,10 @@ public class Category {
     private Long id;
 
     private String name;
-
+    public Category() {
+    }
     // Конструкторы
-    public Category() {} // Пустой конструктор
+    public Category(Long categoryId) {} // Пустой конструктор
 
 
 }

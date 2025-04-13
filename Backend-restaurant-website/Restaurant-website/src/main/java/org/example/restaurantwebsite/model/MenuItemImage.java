@@ -14,15 +14,14 @@ public class MenuItemImage {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Если ты НЕ хочешь загружать всю модель MenuItem — просто храни id:
     @Column(name = "menu_item_id")
-    private Long menuItemId;
+    private Long menuItemId;  // ID блюда
 
-    // Если хочешь получать полную информацию о блюде — подключай объект:
+    // Связь с объектом MenuItem
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "menu_item_id", insertable = false, updatable = false)
     private MenuItem menuItem;
 
     @Column(name = "image_url")
-    private String imageUrl;
+    private String imageUrl;  // URL изображения, загруженного в Cloudinary
 }
