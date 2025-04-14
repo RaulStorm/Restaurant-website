@@ -353,29 +353,30 @@ h2 {
     background-color: #cc0000;
 }
 
-/* Скрыть вкладку "Все" на мобильных устройствах */
-@media (max-width: 768px) {
+ @media (max-width: 770px) {
     .tabs .tab-button[data-category="all"] {
         display: none;
     }
+    .tab-button {
+        padding: 6px 10px; /* Уменьшенные отступы (было 10px 20px) */
+        font-size: 13px; /* Уменьшенный размер шрифта (было 14px) */
+        margin: 0 3px; /* Уменьшенные отступы между кнопками */
+    }
 
-    /* Адаптируем сетку меню для мобильных */
     .category {
         grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     }
 
-    /* Карточки */
     .flip-card {
-        width: 180px; /* Уменьшаем размер карточек */
+        width: 160px;
         height: 280px;
     }
 
     .flip-card-front img,
     .flip-card-back img {
-        height: 120px; /* Уменьшаем изображения в карточках */
+        height: 120px; 
     }
 
-    /* Описание блюда и цена */
     .flip-card-front h4,
     .flip-card-back h4 {
         font-size: 14px;
@@ -386,163 +387,13 @@ h2 {
         font-size: 16px;
     }
 
-    /* Уменьшаем отступы и шрифты для мобильных */
     .flip-card-front .description {
         font-size: 12px;
     }
 
-    /* Кол-во */
     .flip-card-back input.item-quantity {
         width: 40px;
         padding: 4px;
     }
-}
+} 
 
-
-/* Добавляем в menu.css */
-
-/* Мобильная версия - основные стили */
-@media (max-width: 768px) {
-    /* Скрываем вкладку "Все" */
-    .tabs .tab-button[data-category="all"] {
-        display: none !important;
-    }
-    
-    /* Адаптируем контейнер с вкладками */
-    .tabs {
-        flex-wrap: wrap;
-        gap: 5px;
-        padding: 0 10px;
-    }
-    
-    .tab-button {
-        padding: 8px 12px;
-        font-size: 14px;
-        margin: 2px;
-        flex-grow: 1;
-        min-width: calc(50% - 10px);
-    }
-    
-    /* Адаптация карточек блюд */
-    .category {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 10px;
-        padding: 0 5px;
-    }
-    
-    .flip-card {
-        width: 100%;
-        height: 250px;
-        margin: 0;
-    }
-    
-    .flip-card-front img,
-    .flip-card-back img {
-        height: 100px;
-    }
-    
-    .flip-card-front h4,
-    .flip-card-back h4 {
-        font-size: 14px;
-        margin: 3px 0;
-    }
-    
-    .flip-card-front .price,
-    .flip-card-back .price {
-        font-size: 16px;
-    }
-    
-    .flip-card-front .description {
-        font-size: 12px;
-        margin-top: 5px;
-        display: -webkit-box;
-        -webkit-line: 3;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-    
-    /* Корзина */
-    #cart {
-        margin: 20px 10px;
-        padding: 15px;
-    }
-    
-    #table-number, #order-notes {
-        width: calc(100% - 20px);
-    }
-    
-    /* Заголовки */
-    h2 {
-        font-size: 24px;
-        padding: 15px 0;
-    }
-    
-    /* Бургерное меню */
-    .burger-menu {
-        display: block;
-        position: absolute;
-        right: 15px;
-        top: 20px;
-        z-index: 1000;
-    }
-    
-    nav {
-        position: fixed;
-        top: 70px;
-        left: 0;
-        width: 100%;
-        background-color: #7e5656;
-        z-index: 999;
-        transform: translateY(-150%);
-        transition: transform 0.3s ease;
-    }
-    
-    nav.active {
-        transform: translateY(0);
-    }
-    
-    nav ul {
-        flex-direction: column;
-        padding: 10px 0;
-    }
-    
-    nav ul li {
-        margin: 5px 0;
-    }
-    
-    nav ul li a {
-        display: block;
-        padding: 10px 20px;
-    }
-    
-    /* Заголовок */
-    header {
-        position: relative;
-        height: 70px;
-    }
-    
-    .restaurant-name {
-        font-size: 28px;
-        margin-left: 15px;
-    }
-}
-
-/* Для очень маленьких экранов */
-@media (max-width: 480px) {
-    .category {
-        grid-template-columns: 1fr;
-    }
-    
-    .tab-button {
-        min-width: 100%;
-    }
-    
-    .flip-card {
-        height: 230px;
-    }
-    
-    #cart {
-        margin: 15px 5px;
-        padding: 10px;
-    }
-}
