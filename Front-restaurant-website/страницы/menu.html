@@ -3,6 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Меню ресторана</title>
     <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
     <link rel="icon" href="/authorization/img/web-icon.png">
@@ -115,12 +116,48 @@ fetch('/страницы/footer.html')
     }
 });
 
-document.querySelector('.burger-menu').addEventListener('click', function() {
-    const nav = document.querySelector('nav');
-    const burgerMenu = document.querySelector('.burger-menu');
-    nav.classList.toggle('active');
-    burgerMenu.classList.toggle('active');
-});
+fetch('/страницы/header.html')
+        .then(response => response.text())
+        .then(data => {
+            document.querySelector('header').innerHTML = data;
+            let a = document.getElementById("url-auth");
+            let token = localStorage.getItem("token");
+            if(token){
+                let payload = parseJwt(token);
+                console.log(payload);
+                if(payload){
+                    a.href= "/страницы/profile.html";
+                    a.firstElementChild.src='/authorization/img/avatar-icon.png';
+                } 
+            }else{
+                a.href= "/authorization/auth.html";
+                a.firstElementChild.src='/authorization/img/auth.png';
+            }
+            
+            // Инициализируем бургер-меню после загрузки header
+            initBurgerMenu();
+        })
+        .catch(err => {
+            console.error('Ошибка загрузки header:', err);
+        });
+        function initBurgerMenu() {
+        const burgerMenu = document.querySelector('.burger-menu');
+        if (burgerMenu) {
+            burgerMenu.addEventListener('click', function() {
+                const nav = document.querySelector('nav');
+                burgerMenu.classList.toggle('active');
+                if (nav) {
+                    nav.classList.toggle('active');
+                }
+            });
+        }
+    }
+// document.querySelector('.burger-menu').addEventListener('click', function() {
+//     const nav = document.querySelector('nav');
+//     const burgerMenu = document.querySelector('.burger-menu');
+//     nav.classList.toggle('active');
+//     burgerMenu.classList.toggle('active');
+// });
 
     </script>
 

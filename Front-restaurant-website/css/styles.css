@@ -116,10 +116,6 @@ nav ul li a:hover {
     color: #333;
 }
 
-
-
-
-
 /* Мобильная версия */
 @media screen and (max-width: 768px) {
     .about {
@@ -198,59 +194,6 @@ footer {
     margin-top: 15px; /* Отступ сверху */
     font-size: 14px; /* Размер шрифта */
 }
-/* 
-
-.gallery {
-    margin-top: 20px; 
-    text-align: center; 
-}
-
-
-.carousel {
-    width: 650px;
-    overflow-x: hidden;
-    scroll-snap-type: x mandatory;
-    position: relative;
-    max-width: 800px;
-    margin: auto;
-    overflow: hidden;
-    scroll-behavior: smooth; 
-}
-
-.carousel-images {
-    display: flex;
-    transition: transform 1s ease-in-out; 
-
-.carousel-images img {
-    width: calc(100% - 20px); 
-    height: auto;
-    border-radius: 5px;
-    display: block; 
-    margin-right: 1px; 
-}
-
-button.prev, button.next {
-    position: absolute;
-    top: 50%;
-    background-color: rgba(196, 213, 179, 0.7);
-    cursor: pointer;
-    padding: 10px 15px;
-    border-radius: 5px;
-    transform: translateY(-50%);
-}
-
-button.prev {
-    left: 10px;
-}
-
-button.next {
-    right: 10px;
-}
-
-button:hover {
-    background-color: rgba(231, 120, 120, 0.9);
-} */
-
 
 body {
     font-family: 'Roboto', sans-serif;
@@ -352,3 +295,4 @@ nav ul li a:hover {
         margin: 5px;
     }
 }
+
