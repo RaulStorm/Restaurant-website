@@ -316,3 +316,84 @@ h2 {
 .flip-card-back button.add-to-cart:hover {
     background-color: #218838;
 }
+
+/* Кнопка удаления отдельного товара из корзины */
+.remove-item {
+    background-color: #ff4d4d;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 16px;
+    width: 28px;
+    height: 28px;
+    margin-left: 10px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.remove-item:hover {
+    background-color: #e60000;
+}
+
+/* Кнопка очистки всей корзины */
+#clear-cart {
+    background-color: #ff6666;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-size: 14px;
+    margin-top: 10px;
+    cursor: pointer;
+    display: block;
+    transition: background-color 0.2s ease;
+}
+
+#clear-cart:hover {
+    background-color: #cc0000;
+}
+
+/* Скрыть вкладку "Все" на мобильных устройствах */
+@media (max-width: 768px) {
+    .tabs .tab-button[data-category="all"] {
+        display: none;
+    }
+
+    /* Адаптируем сетку меню для мобильных */
+    .category {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+
+    /* Карточки */
+    .flip-card {
+        width: 180px; /* Уменьшаем размер карточек */
+        height: 280px;
+    }
+
+    .flip-card-front img,
+    .flip-card-back img {
+        height: 120px; /* Уменьшаем изображения в карточках */
+    }
+
+    /* Описание блюда и цена */
+    .flip-card-front h4,
+    .flip-card-back h4 {
+        font-size: 14px;
+    }
+
+    .flip-card-front .price,
+    .flip-card-back .price {
+        font-size: 16px;
+    }
+
+    /* Уменьшаем отступы и шрифты для мобильных */
+    .flip-card-front .description {
+        font-size: 12px;
+    }
+
+    /* Кол-во */
+    .flip-card-back input.item-quantity {
+        width: 40px;
+        padding: 4px;
+    }
+}

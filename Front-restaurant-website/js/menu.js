@@ -147,8 +147,12 @@ function handleAddToCart(event) {
 
     updateCart();
 }
+function handleRemoveItem(event) {
+    const itemId = event.target.dataset.id;
+    cart = cart.filter(item => item.id !== itemId);
+    updateCart();
+}
 
-// Отображение корзины
 function updateCart() {
     const cartItemsContainer = document.querySelector('#cart-items');
     const totalPriceContainer = document.querySelector('#total-price');
@@ -159,13 +163,28 @@ function updateCart() {
 
     cart.forEach(item => {
         const itemRow = document.createElement('div');
-        itemRow.textContent = `${item.name} x ${item.quantity} — ${(item.price * item.quantity).toFixed(2)} ₽`;
+        itemRow.className = 'cart-item';
+
+        itemRow.innerHTML = `
+            ${item.name} x ${item.quantity} — ${(item.price * item.quantity).toFixed(2)} ₽
+            <button class="remove-item" data-id="${item.id}">−</button>
+        `;
+
         cartItemsContainer.appendChild(itemRow);
         totalPrice += item.price * item.quantity;
     });
 
     totalPriceContainer.textContent = totalPrice.toFixed(2);
+
+    // Назначаем обработчики на кнопки "−"
+    const removeButtons = document.querySelectorAll('.remove-item');
+    removeButtons.forEach(button => {
+        button.addEventListener('click', handleRemoveItem);
+    });
+
+    toggleClearCartIcon(cart.length > 0);
 }
+
 
 // Отправка заказа
 document.getElementById('place-order').addEventListener('click', async () => {
@@ -225,3 +244,16 @@ document.getElementById('place-order').addEventListener('click', async () => {
         alert("Ошибка оформления заказа.");
     }
 });
+
+document.getElementById('clear-cart').addEventListener('click', () => {
+    cart = [];
+    updateCart();
+    document.getElementById('table-number').value = '';
+    document.getElementById('order-notes').value = '';
+});
+
+function toggleClearCartIcon(show) {
+    const clearButton = document.getElementById('clear-cart');
+    clearButton.style.display = show ? 'block' : 'none';
+}
+
