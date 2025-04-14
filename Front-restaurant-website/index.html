@@ -7,12 +7,11 @@
     <link rel="icon" href="/authorization/img/web-icon.png">
     <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/index.css">
     <link rel="stylesheet" href="/css/review-index.css">
 </head>
 <body>
-    <header>
- <!-- загрузка header -->
-    </header>
+    <header></header>
      
     
     <main>
@@ -52,9 +51,7 @@
     
     <script src="/js/script.js"></script>
 
-    <footer>
-        <!-- Здесь будет загружен footer.html -->
-    </footer>
+    <footer></footer>
     
     <script>
         function parseJwt(token) {
@@ -71,7 +68,6 @@
     return JSON.parse(jsonPayload);
 }
 
-
  fetch('/страницы/header.html')
     .then(response => response.text())
     .then(data => {
@@ -85,7 +81,7 @@
                 a.href= "/страницы/profile.html";
               a.firstElementChild.src='/authorization/img/avatar-icon.png';
             } 
-        }else{ //изменить!
+        }else{ 
             a.href= "/authorization/auth.html";
             a.firstElementChild.src='/authorization/img/auth.png';
         }
@@ -102,20 +98,11 @@ fetch('/страницы/footer.html')
     .catch(err => {
         console.error('Ошибка загрузки footer:', err);
     });
-
-
-    // ===================================================
-
-    // Функция для переключения бургерного меню
+    
 function toggleMenu() {
     const nav = document.querySelector('nav');
     nav.classList.toggle('active');  // Переключаем класс для анимации меню
 }
-
-
-
-
     </script>
-
 </body>
 </html>

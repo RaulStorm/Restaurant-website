@@ -1,0 +1,194 @@
+
+/* Стили для галереи */
+.gallery {
+    margin-top: 20px; /* Отступ сверху */
+    text-align: center; /* Центрирование заголовка */
+}
+
+/* Карусель и изображения */
+.carousel {
+    width: 650px;
+    overflow-x: hidden;
+    scroll-snap-type: x mandatory;
+    position: relative;
+    max-width: 800px;
+    margin: auto;
+    overflow: hidden;
+    scroll-behavior: smooth; /* Плавная прокрутка */
+}
+
+.carousel-images {
+    display: flex;
+    transition: transform 1s ease-in-out; /* Плавная анимация */
+}
+
+.carousel-images img {
+    width: calc(100% - 20px); /* Уменьшаем ширину на размер отступа */
+    height: auto;
+    border-radius: 5px;
+    display: block; /* Убираем display: none для изображений */
+    margin-right: 1px; /* Отступ между изображениями */
+}
+
+/* Стили для кнопок навигации */
+button.prev, button.next {
+    position: absolute;
+    top: 50%;
+    background-color: rgba(196, 213, 179, 0.7);
+    cursor: pointer;
+    padding: 10px 15px;
+    border-radius: 5px;
+    transform: translateY(-50%);
+}
+
+button.prev {
+    left: 10px;
+}
+
+button.next {
+    right: 10px;
+}
+
+button:hover {
+    background-color: rgba(231, 120, 120, 0.9);
+}
+
+/* Адаптация для мобильных устройств */
+@media screen and (max-width: 768px) {
+    /* Стиль для блока о ресторане */
+    .about {
+        padding: 20px;
+        margin: 10px auto; /* Центрируем блок */
+        width: 90%; /* Устанавливаем ширину блока 90% от доступной */
+        box-sizing: border-box; /* Учитываем отступы в размерах */
+    }
+
+    .about h2 {
+        font-size: 24px; /* Уменьшаем размер заголовка */
+        text-align: center; /* Центрируем заголовок */
+    }
+
+    .about p {
+        font-size: 16px; /* Уменьшаем размер текста */
+        text-align: justify; /* Выравнивание текста по ширине */
+    }
+
+    /* Галерея */
+    .gallery {
+        margin-top: 20px;
+        text-align: center; /* Центрируем галерею */
+    }
+
+    /* Карусель для мобильных устройств */
+    .carousel {
+        width: 100%; /* Карусель будет занимать 100% ширины */
+        max-width: none; /* Убираем ограничение по ширине */
+        margin: 0 auto; /* Центрируем карусель */
+    }
+
+    .carousel-images {
+        display: flex;
+        transition: transform 1s ease-in-out; /* Плавная анимация */
+        margin: 0 auto; /* Центрируем контейнер с изображениями */
+    }
+
+    .carousel-images img {
+        width: 100%; /* Изображения будут занимать всю ширину */
+        height: auto;
+        margin-right: 10px; /* Отступ между изображениями */
+    }
+
+    /* Отзывы */
+    .reviews {
+        padding: 20px;
+        margin: 20px auto; /* Центрируем блок с отзывами */
+        width: 90%;
+        box-sizing: border-box;
+        overflow: hidden; /* Скрываем лишнее */
+    }
+
+    .review-list {
+        display: flex;
+        flex-wrap: nowrap; /* Прокрутка в одну строку */
+        gap: 15px;
+        animation: scrollReviews 30s linear infinite; /* Анимация прокрутки */
+    }
+
+    .review-card {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        position: relative;
+        min-width: 280px; /* Минимальная ширина для карточек */
+        flex-shrink: 0; /* Карточки не будут сжиматься */
+    }
+
+    .review-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    .review-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 6px;
+        background: linear-gradient(to right, #f8cdda, #1e3c72);
+    }
+
+    .review-card .review-user {
+        font-size: 16px;
+        font-weight: bold;
+        color: #444;
+    }
+
+    .review-card .review-date {
+        font-size: 14px;
+        color: #bbb;
+        margin-top: 5px;
+    }
+
+    .review-card .review-rating {
+        font-size: 20px;
+        color: #ff9f00;
+        margin-top: 10px;
+    }
+
+    .review-card .review-text {
+        font-size: 16px;
+        color: #666;
+        margin-top: 15px;
+        line-height: 1.6;
+    }
+
+    /* Анимация прокрутки */
+    @keyframes scrollReviews {
+        0% {
+            transform: translateX(0);
+        }
+        100% {
+            transform: translateX(-100%); /* Прокрутка на 100% */
+        }
+    }
+}
+
+nav.active {
+    transform: translateX(0);
+    transition: transform 0.3s ease;
+}
+header {
+    position: relative; 
+    z-index: 10; 
+}
+
+.carousel {
+    z-index: 1; 
+}
+
+nav ul {
+    z-index: 11; 
+}
