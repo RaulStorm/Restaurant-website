@@ -205,9 +205,14 @@ document.addEventListener("DOMContentLoaded", () => {
   })
   .catch(err => console.error("Ошибка загрузки отзыва:", err));
   
-  // Обработка кнопки выхода
   document.getElementById("logout-btn").addEventListener("click", () => {
+    // Удаление токена и имени пользователя
     localStorage.removeItem("token");
-    window.location.href = "/index.html";
+    localStorage.removeItem("name");  // Удаляем имя пользователя
+
+    // Перенаправление на главную страницу или страницу авторизации
+    window.location.href = "/index.html"; // Перенаправление на главную страницу
   });
 });
+
+
