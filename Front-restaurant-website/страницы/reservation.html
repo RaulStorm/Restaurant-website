@@ -2,6 +2,8 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <!-- Ключевой мета-тег для мобильных устройств -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Бронирование стола</title>
     <link rel="icon" href="/authorization/img/web-icon.png">
     <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
@@ -18,20 +20,19 @@
         }
 
         .reservation-form {
-    flex: 1;
-    padding: 20px;
-    background-color: #f4f4f4;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    height: 370px;
+            flex: 1;
+            padding: 20px;
+            background-color: #f4f4f4;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            height: 370px;
+            max-width: 500px; /* Максимальная ширина для десктопа */
+        }
 
-    max-width: 500px; /* ← Вот это строка отвечает за максимальную ширину */
-}
         /* Правая колонка - столики */
         .tables-section {
             flex: 1;
-            padding-right: 20px; /* Добавляем отступ справа */
-
+            padding-right: 20px;
         }
 
         /* Сетка столиков */
@@ -91,6 +92,31 @@
             border-radius: 10px;
             width: 300px;
             text-align: center;
+        }
+
+        /* Адаптация для мобильных устройств */
+        @media screen and (max-width: 768px) {
+            .reservation-container {
+                flex-direction: column;  /* Переводим колонки в один столбец */
+                padding: 15px;
+                gap: 20px;
+            }
+            .reservation-form,
+            .tables-section {
+                max-width: 100%;
+                width: 100%;
+                padding: 10px;
+            }
+            .reservation-form {
+                height: auto;  /* Высота подстраивается под содержимое */
+            }
+            .table-grid {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            }
+            .table {
+                width: 90px;
+                height: 90px;
+            }
         }
     </style>
 </head>
@@ -162,12 +188,12 @@
                     let payload = parseJwt(token);
                     console.log(payload);
                     if(payload){
-                        a.href= "/страницы/profile.html";
-                        a.firstElementChild.src='/authorization/img/avatar-icon.png';
+                        a.href = "/страницы/profile.html";
+                        a.firstElementChild.src = '/authorization/img/avatar-icon.png';
                     } 
-                }else{
-                    a.href= "/authorization/auth.html";
-                    a.firstElementChild.src='/authorization/img/auth.png';
+                } else {
+                    a.href = "/authorization/auth.html";
+                    a.firstElementChild.src = '/authorization/img/auth.png';
                 }
             });
         
@@ -176,13 +202,6 @@
             .then(data => {
                 document.querySelector('footer').innerHTML = data;
             });
-        
-        document.querySelector('.burger-menu').addEventListener('click', function() {
-            const nav = document.querySelector('nav');
-            const burgerMenu = document.querySelector('.burger-menu');
-            nav.classList.toggle('active');
-            burgerMenu.classList.toggle('active');
-        });
     </script>
     <script src="/js/reservation.js"></script>
 </body>

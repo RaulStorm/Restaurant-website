@@ -233,7 +233,7 @@ nav ul li a:hover {
 .burger-menu {
     display: none; /* Скрыто по умолчанию */
     font-size: 30px;
-    color: #fff;
+    color: #ffffff;
     cursor: pointer;
     transition: all 0.3s ease;
 }
