@@ -236,6 +236,10 @@ nav ul li a:hover {
     color: #ffffff;
     cursor: pointer;
     transition: all 0.3s ease;
+    position: absolute;  
+    right: 1px;         /* Расстояние от правого края */
+    top: -30px;    
+    
 }
 
 .burger-menu:hover {

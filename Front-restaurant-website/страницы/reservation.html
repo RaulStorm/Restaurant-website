@@ -12,8 +12,9 @@
     <style>
         /* Основной контейнер для двух колонок */
         .reservation-container {
+            /* align-content: center; */
             display: flex;
-            width: 100%;
+            width: 85%;
             padding: 35px;
             font-family: sans-serif;
             gap: 30px; /* Расстояние между колонками */
@@ -202,6 +203,10 @@
             .then(data => {
                 document.querySelector('footer').innerHTML = data;
             });
+            function toggleMenu() {
+    const nav = document.querySelector('nav');
+    nav.classList.toggle('active');
+}
     </script>
     <script src="/js/reservation.js"></script>
 </body>

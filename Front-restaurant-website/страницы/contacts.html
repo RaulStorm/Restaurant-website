@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Контакты</title>
     <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
     <link rel="icon" href="/authorization/img/web-icon.png">
@@ -104,12 +105,10 @@ fetch('/страницы/footer.html')
     });
 
     
-    document.querySelector('.burger-menu').addEventListener('click', function() {
+    function toggleMenu() {
     const nav = document.querySelector('nav');
-    const burgerMenu = document.querySelector('.burger-menu');
     nav.classList.toggle('active');
-    burgerMenu.classList.toggle('active');
-});
+}
 
     </script>
 
