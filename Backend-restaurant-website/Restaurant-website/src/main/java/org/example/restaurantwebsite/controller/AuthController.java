@@ -53,7 +53,7 @@ public class AuthController {
             responseBody.put("success", true);
             responseBody.put("message", "Регистрация успешна");
             responseBody.put("token", token);
-            responseBody.put("name", userDto.getName()); // 👈 фронт может отобразить имя
+            responseBody.put("name", userDto.getName());
             responseBody.put("email", userDto.getEmail());
 
             return ResponseEntity.ok(responseBody);
