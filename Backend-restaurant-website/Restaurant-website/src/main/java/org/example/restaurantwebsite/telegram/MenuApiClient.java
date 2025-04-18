@@ -28,7 +28,7 @@ public class MenuApiClient {
                 categorizedCache.computeIfAbsent(category, k -> new ArrayList<>()).add(item);
             }
         }
-        return null;
+        return cachedMenu;
     }
 
     public List<MenuItemDto> fetchMenuByCategory(String category) {
@@ -48,5 +48,13 @@ public class MenuApiClient {
                 .distinct()
                 .sorted()
                 .collect(Collectors.toList());
+    }
+
+    // Новый метод для получения всех блюд по категориям
+    public Map<String, List<MenuItemDto>> fetchAllMenuItemsGroupedByCategory() {
+        if (cachedMenu.isEmpty()) {
+            fetchAllMenuItems();
+        }
+        return categorizedCache;
     }
 }

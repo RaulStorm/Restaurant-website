@@ -7,11 +7,10 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
-import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageMedia;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.api.objects.media.InputMediaPhoto;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -60,6 +59,7 @@ public class RestaurantBot extends TelegramLongPollingBot {
                 Long chatId = update.getCallbackQuery().getMessage().getChatId();
                 Integer messageId = update.getCallbackQuery().getMessage().getMessageId();
 
+                // Обработка нажатий на кнопки меню
                 if (callbackData.startsWith("menuCategory_")) {
                     String category = callbackData.substring("menuCategory_".length());
                     List<MenuItemDto> filtered = menuApiClient.fetchMenuByCategory(category);
@@ -71,18 +71,28 @@ public class RestaurantBot extends TelegramLongPollingBot {
                     } else {
                         sendSimpleMessage(chatId, "❌ Нет блюд в категории " + category);
                     }
-                } else if (callbackData.equals("menu_prev")) {
+                }
+                // Обработка переключения блюд
+                else if (callbackData.equals("menu_prev")) {
                     updateMenuItem(chatId, -1);
                 } else if (callbackData.equals("menu_next")) {
                     updateMenuItem(chatId, 1);
-                } else if (callbackData.equals("prev")) {
+                }
+                // Обработка переключения отзывов
+                else if (callbackData.equals("prev")) {
                     editReview(update, -1);
                 } else if (callbackData.equals("next")) {
                     editReview(update, 1);
                 }
+                // Обработка "Все блюда"
+                else if (callbackData.equals("showAll")) {
+                    sendAllDishes(chatId);
+                }
+
                 return;
             }
 
+            // Обработка команд от пользователя
             if (update.hasMessage() && update.getMessage().hasText()) {
                 Long chatId = update.getMessage().getChatId();
                 String text = update.getMessage().getText();
@@ -105,23 +115,30 @@ public class RestaurantBot extends TelegramLongPollingBot {
     private void editReview(Update update, int direction) {
         Long chatId = update.getCallbackQuery().getMessage().getChatId();
         Integer messageId = update.getCallbackQuery().getMessage().getMessageId();
+
         List<ReviewBot> reviews = userReviews.get(chatId);
         if (reviews == null || reviews.isEmpty()) return;
+
         int index = (userReviewIndexes.getOrDefault(chatId, 0) + direction + reviews.size()) % reviews.size();
         userReviewIndexes.put(chatId, index);
         ReviewBot review = reviews.get(index);
+
+        String text = formatReviewText(review);
+
         EditMessageText editMessage = new EditMessageText();
         editMessage.setChatId(chatId.toString());
         editMessage.setMessageId(messageId);
-        editMessage.setText(formatReviewText(review));
+        editMessage.setText(text);
         editMessage.setParseMode("Markdown");
         editMessage.setReplyMarkup(getReviewKeyboard());
+
         try {
             execute(editMessage);
-        } catch (org.telegram.telegrambots.meta.exceptions.TelegramApiException e) {
+        } catch (TelegramApiException e) {
             e.printStackTrace();
         }
     }
+
     private void sendMainMenu(Long chatId) {
         SendMessage message = new SendMessage(chatId.toString(), "👋 Привет! Я бот ресторана. Выберите, что вас интересует:");
 
@@ -130,7 +147,6 @@ public class RestaurantBot extends TelegramLongPollingBot {
         keyboard.setOneTimeKeyboard(false);
 
         List<KeyboardRow> rows = new ArrayList<>();
-
         rows.add(new KeyboardRow(List.of(new KeyboardButton("О ресторане"), new KeyboardButton("Меню"))));
         rows.add(new KeyboardRow(List.of(new KeyboardButton("Бронь"), new KeyboardButton("Оставить отзыв"))));
         rows.add(new KeyboardRow(List.of(new KeyboardButton("Контакты"), new KeyboardButton("Профиль"))));
@@ -216,6 +232,12 @@ public class RestaurantBot extends TelegramLongPollingBot {
             btn.setCallbackData("menuCategory_" + category);
             rows.add(Collections.singletonList(btn));
         }
+
+        // Add the "Все блюда" button
+        InlineKeyboardButton showAllBtn = new InlineKeyboardButton("Все блюда");
+        showAllBtn.setCallbackData("showAll");
+        rows.add(Collections.singletonList(showAllBtn));
+
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup(rows);
         SendMessage message = new SendMessage(chatId.toString(), "🍽 Выберите категорию меню:");
         message.setReplyMarkup(markup);
@@ -226,20 +248,51 @@ public class RestaurantBot extends TelegramLongPollingBot {
         }
     }
 
+    private void sendAllDishes(Long chatId) {
+        // Получаем все блюда по категориям
+        Map<String, List<MenuItemDto>> allDishesGrouped = menuApiClient.fetchAllMenuItemsGroupedByCategory();
+
+        if (allDishesGrouped.isEmpty()) {
+            sendSimpleMessage(chatId, "❌ Нет доступных блюд.");
+            return;
+        }
+
+        // Строим сообщение
+        StringBuilder messageText = new StringBuilder("🍽 Все блюда:\n\n");
+
+        // Для каждой категории выводим название и список блюд
+        for (String category : allDishesGrouped.keySet()) {
+            messageText.append("\n🍴 ").append(category).append(":\n");
+
+            List<MenuItemDto> categoryDishes = allDishesGrouped.get(category);
+            for (MenuItemDto dish : categoryDishes) {
+                messageText.append(String.format(
+                        "🍽 %s\n💬 %s\n💵 Цена: %.0f₽\n\n", // Убираем копейки
+                        dish.getName(),
+                        dish.getDescription(),
+                        dish.getPrice()
+                ));
+            }
+        }
+
+        // Отправляем сообщение с блюдами всех категорий
+        sendSimpleMessage(chatId, messageText.toString());
+    }
+
     private void sendMenuItem(Long chatId, MenuItemDto item) {
         // Удалить предыдущее сообщение, если было
         if (lastMenuMessageIds.containsKey(chatId)) {
             Integer lastMessageId = lastMenuMessageIds.get(chatId);
             try {
-                execute(new org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage(chatId.toString(), lastMessageId));
+                execute(new DeleteMessage(chatId.toString(), lastMessageId));
             } catch (TelegramApiException e) {
                 e.printStackTrace(); // если не удалось удалить — просто идём дальше
             }
         }
 
         String text = String.format("""
-            🍽 *%s*
-            💬 _%s_
+            🍽 %s
+            💬 %s
             💵 Цена: %.2f₽
             """, item.getName(), item.getDescription(), item.getPrice());
 
@@ -264,19 +317,18 @@ public class RestaurantBot extends TelegramLongPollingBot {
     }
 
     private InlineKeyboardMarkup getMenuKeyboard() {
-        InlineKeyboardButton prev = new InlineKeyboardButton();
-        prev.setText("<<");
+        InlineKeyboardButton prev = new InlineKeyboardButton("<<");
         prev.setCallbackData("menu_prev");
-        InlineKeyboardButton next = new InlineKeyboardButton();
-        next.setText(">>");
+
+        InlineKeyboardButton next = new InlineKeyboardButton(">>");
         next.setCallbackData("menu_next");
-        List<InlineKeyboardButton> row = new ArrayList<>();
-        row.add(prev);
-        row.add(next);
+
+        List<InlineKeyboardButton> row = List.of(prev, next);
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
-        markup.setKeyboard(Collections.singletonList(row));
+        markup.setKeyboard(List.of(row));
         return markup;
     }
+
     private void updateMenuItem(Long chatId, int direction) {
         List<MenuItemDto> dishes = categoryDishesCache.get(chatId);
         if (dishes == null || dishes.isEmpty()) return;
