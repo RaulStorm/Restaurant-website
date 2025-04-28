@@ -2,6 +2,8 @@ package org.example.restaurantwebsite.model;
 
 public class ReservationWithIdDto extends ReservationDto {
     private Long id;
+    private Integer durationHours;
+
 
     public ReservationWithIdDto() {
         super();
@@ -14,4 +16,13 @@ public class ReservationWithIdDto extends ReservationDto {
     public void setId(Long id) {
         this.id = id;
     }
+    public Integer getDurationHours() {
+        return durationHours;
+    }
+
+    public void setDurationHours(Integer durationHours) {
+        this.durationHours = durationHours;
+    }
+
 }
+
