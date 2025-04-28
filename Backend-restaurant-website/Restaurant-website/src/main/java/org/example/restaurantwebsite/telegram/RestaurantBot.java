@@ -7,11 +7,13 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -1258,58 +1260,58 @@ public class RestaurantBot extends TelegramLongPollingBot {
 //        }
 //    }
 
-    private void suggestAlternativeTimes(Long chatId, int people, int duration) {
-        try {
-            String originalDateStr = reservationDateCache.get(chatId);
-            SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
-            Date originalDate = dateFormat.parse(originalDateStr);
-
-            List<String> alternatives = new ArrayList<>();
-            Calendar cal = Calendar.getInstance();
-
-            for (int i = -4; i <= 4; i++) {
-                if (i == 0) continue;
-
-                cal.setTime(originalDate);
-                cal.add(Calendar.MINUTE, 30 * i);
-
-                int hour = cal.get(Calendar.HOUR_OF_DAY);
-                if (hour < 10 || hour >= 23) continue;
-
-                String timeStr = dateFormat.format(cal.getTime());
-                List<RestaurantTableDto> tables = findAvailableTables(chatId, people, timeStr, duration);
-
-                if (!tables.isEmpty()) {
-                    alternatives.add(timeStr);
-                    if (alternatives.size() >= 3) break;
-                }
-            }
-
-            if (alternatives.isEmpty()) {
-                sendSimpleMessage(chatId, "❌ На выбранную дату и ближайшее время нет свободных столиков.");
-                return;
-            }
-
-            InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
-            List<List<InlineKeyboardButton>> rows = new ArrayList<>();
-
-            for (String time : alternatives) {
-                rows.add(Collections.singletonList(createInlineButton(time, "alt_time_" + time)));
-            }
-
-            rows.add(Collections.singletonList(createInlineButton("📅 Выбрать другую дату", "change_date")));
-            markup.setKeyboard(rows);
-
-            SendMessage message = new SendMessage(chatId.toString(),
-                    "⏰ На выбранное время нет свободных столиков. Доступные альтернативы:");
-            message.setReplyMarkup(markup);
-            execute(message);
-
-        } catch (Exception e) {
-            log.error("Error suggesting alternative times", e);
-            sendSimpleMessage(chatId, "❌ Ошибка при поиске альтернатив. Попробуйте позже.");
-        }
-    }
+//    private void suggestAlternativeTimes(Long chatId, int people, int duration) {
+//        try {
+//            String originalDateStr = reservationDateCache.get(chatId);
+//            SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
+//            Date originalDate = dateFormat.parse(originalDateStr);
+//
+//            List<String> alternatives = new ArrayList<>();
+//            Calendar cal = Calendar.getInstance();
+//
+//            for (int i = -4; i <= 4; i++) {
+//                if (i == 0) continue;
+//
+//                cal.setTime(originalDate);
+//                cal.add(Calendar.MINUTE, 30 * i);
+//
+//                int hour = cal.get(Calendar.HOUR_OF_DAY);
+//                if (hour < 10 || hour >= 23) continue;
+//
+//                String timeStr = dateFormat.format(cal.getTime());
+//                List<RestaurantTableDto> tables = findAvailableTables(chatId, people, timeStr, duration);
+//
+//                if (!tables.isEmpty()) {
+//                    alternatives.add(timeStr);
+//                    if (alternatives.size() >= 3) break;
+//                }
+//            }
+//
+//            if (alternatives.isEmpty()) {
+//                sendSimpleMessage(chatId, "❌ На выбранную дату и ближайшее время нет свободных столиков.");
+//                return;
+//            }
+//
+//            InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+//            List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+//
+//            for (String time : alternatives) {
+//                rows.add(Collections.singletonList(createInlineButton(time, "alt_time_" + time)));
+//            }
+//
+//            rows.add(Collections.singletonList(createInlineButton("📅 Выбрать другую дату", "change_date")));
+//            markup.setKeyboard(rows);
+//
+//            SendMessage message = new SendMessage(chatId.toString(),
+//                    "⏰ На выбранное время нет свободных столиков. Доступные альтернативы:");
+//            message.setReplyMarkup(markup);
+//            execute(message);
+//
+//        } catch (Exception e) {
+//            log.error("Error suggesting alternative times", e);
+//            sendSimpleMessage(chatId, "❌ Ошибка при поиске альтернатив. Попробуйте позже.");
+//        }
+//    }
 
     private void handleReservationName(Long chatId, String name) {
         if (name.trim().isEmpty()) {
@@ -1327,65 +1329,65 @@ public class RestaurantBot extends TelegramLongPollingBot {
         return button;
     }
     //====================================
-    private List<RestaurantTableDto> findAvailableTables(Long chatId, int people, String dateStr, int durationHours) {
-        try {
-            // Парсим дату из пользовательского ввода
-            SimpleDateFormat inputFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
-            Date date = inputFormat.parse(dateStr);
-
-            // Форматируем дату для API
-            SimpleDateFormat serverFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm");
-            String startTime = serverFormat.format(date);
-
-            // Рассчитываем время окончания брони
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTime(date);
-            calendar.add(Calendar.HOUR, durationHours);
-            String endTime = serverFormat.format(calendar.getTime());
-
-            // Получаем все столики из базы
-            List<RestaurantTable> allTables = restaurantTableRepository.findAll();
-
-            // Получаем конфликтующие бронирования
-            List<Reservation> conflicts = restaurantTableRepository.findConflictingReservations(startTime, endTime);
-
-            // Преобразуем в Set для быстрого поиска
-            Set<Long> occupiedTableIds = conflicts.stream()
-                    .map(res -> res.getTable().getId())
-                    .collect(Collectors.toSet());
-
-            // Фильтруем столики
-            return allTables.stream()
-                    .filter(table -> {
-                        // Проверяем, что столик не занят
-                        if (occupiedTableIds.contains(table.getId())) {
-                            return false;
-                        }
-
-                        // Проверяем соответствие по количеству мест
-                        int seats = table.getSeats();
-                        return (seats == people) || (seats > people && seats <= people + 2);
-                    })
-                    // Сортируем: сначала точное совпадение по местам, затем по возрастанию разницы
-                    .sorted((t1, t2) -> {
-                        int diff1 = Math.abs(t1.getSeats() - people);
-                        int diff2 = Math.abs(t2.getSeats() - people);
-                        return Integer.compare(diff1, diff2);
-                    })
-                    // Преобразуем в DTO
-                    .map(table -> new RestaurantTableDto(table.getId(), table.getTableNumber()))
-                    .collect(Collectors.toList());
-
-        } catch (ParseException e) {
-            log.error("Error parsing date: " + dateStr, e);
-            sendSimpleMessage(chatId, "❌ Ошибка обработки даты. Попробуйте снова.");
-        } catch (Exception e) {
-            log.error("Error finding available tables", e);
-            sendSimpleMessage(chatId, "⚠️ Ошибка при поиске столиков. Попробуйте позже.");
-        }
-
-        return Collections.emptyList();
-    }
+//    private List<RestaurantTableDto> findAvailableTables(Long chatId, int people, String dateStr, int durationHours) {
+//        try {
+//            // Парсим дату из пользовательского ввода
+//            SimpleDateFormat inputFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
+//            Date date = inputFormat.parse(dateStr);
+//
+//            // Форматируем дату для API
+//            SimpleDateFormat serverFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm");
+//            String startTime = serverFormat.format(date);
+//
+//            // Рассчитываем время окончания брони
+//            Calendar calendar = Calendar.getInstance();
+//            calendar.setTime(date);
+//            calendar.add(Calendar.HOUR, durationHours);
+//            String endTime = serverFormat.format(calendar.getTime());
+//
+//            // Получаем все столики из базы
+//            List<RestaurantTable> allTables = restaurantTableRepository.findAll();
+//
+//            // Получаем конфликтующие бронирования
+//            List<Reservation> conflicts = restaurantTableRepository.findConflictingReservations(startTime, endTime);
+//
+//            // Преобразуем в Set для быстрого поиска
+//            Set<Long> occupiedTableIds = conflicts.stream()
+//                    .map(res -> res.getTable().getId())
+//                    .collect(Collectors.toSet());
+//
+//            // Фильтруем столики
+//            return allTables.stream()
+//                    .filter(table -> {
+//                        // Проверяем, что столик не занят
+//                        if (occupiedTableIds.contains(table.getId())) {
+//                            return false;
+//                        }
+//
+//                        // Проверяем соответствие по количеству мест
+//                        int seats = table.getSeats();
+//                        return (seats == people) || (seats > people && seats <= people + 2);
+//                    })
+//                    // Сортируем: сначала точное совпадение по местам, затем по возрастанию разницы
+//                    .sorted((t1, t2) -> {
+//                        int diff1 = Math.abs(t1.getSeats() - people);
+//                        int diff2 = Math.abs(t2.getSeats() - people);
+//                        return Integer.compare(diff1, diff2);
+//                    })
+//                    // Преобразуем в DTO
+//                    .map(table -> new RestaurantTableDto(table.getId(), table.getTableNumber()))
+//                    .collect(Collectors.toList());
+//
+//        } catch (ParseException e) {
+//            log.error("Error parsing date: " + dateStr, e);
+//            sendSimpleMessage(chatId, "❌ Ошибка обработки даты. Попробуйте снова.");
+//        } catch (Exception e) {
+//            log.error("Error finding available tables", e);
+//            sendSimpleMessage(chatId, "⚠️ Ошибка при поиске столиков. Попробуйте позже.");
+//        }
+//
+//        return Collections.emptyList();
+//    }
 
     private void handleTableSelection(Long chatId, Long tableId) throws TelegramApiException {
         try {
@@ -1401,47 +1403,47 @@ public class RestaurantBot extends TelegramLongPollingBot {
         }
     }
 
-    private void showAvailableTables(Long chatId) throws TelegramApiException {
-        List<RestaurantTableDto> tables = availableTablesCache.get(chatId);
-        if (tables == null || tables.isEmpty()) {
-            sendSimpleMessage(chatId, "❌ Нет доступных столиков. Попробуйте другое время.");
-            return;
-        }
-
-        // Получаем полную информацию о столиках из базы для отображения мест
-        List<RestaurantTable> fullTablesInfo = restaurantTableRepository.findAllById(
-                tables.stream().map(RestaurantTableDto::getId).collect(Collectors.toList())
-        );
-
-        // Группируем по количеству мест
-        Map<Integer, List<RestaurantTable>> grouped = fullTablesInfo.stream()
-                .collect(Collectors.groupingBy(RestaurantTable::getSeats));
-
-        List<Integer> seatsCounts = new ArrayList<>(grouped.keySet());
-        Collections.sort(seatsCounts);
-
-        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
-        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
-
-        for (Integer seats : seatsCounts) {
-            for (RestaurantTable table : grouped.get(seats)) {
-                String buttonText = String.format("🍽 Столик #%s (%d мест)", table.getTableNumber(), table.getSeats());
-                rows.add(Collections.singletonList(createInlineButton(buttonText, "select_table_" + table.getId())));
-            }
-        }
-
-        rows.add(Arrays.asList(
-                createInlineButton("🕒 Изменить время", "change_time"),
-                createInlineButton("👥 Изменить количество гостей", "change_people")
-        ));
-
-        markup.setKeyboard(rows);
-
-        SendMessage message = new SendMessage(chatId.toString(),
-                "🪑 Доступные столики (выбрано " + reservationPeopleCache.get(chatId) + " гостей):");
-        message.setReplyMarkup(markup);
-        execute(message);
-    }
+//    private void showAvailableTables(Long chatId) throws TelegramApiException {
+//        List<RestaurantTableDto> tables = availableTablesCache.get(chatId);
+//        if (tables == null || tables.isEmpty()) {
+//            sendSimpleMessage(chatId, "❌ Нет доступных столиков. Попробуйте другое время.");
+//            return;
+//        }
+//
+//        // Получаем полную информацию о столиках из базы для отображения мест
+//        List<RestaurantTable> fullTablesInfo = restaurantTableRepository.findAllById(
+//                tables.stream().map(RestaurantTableDto::getId).collect(Collectors.toList())
+//        );
+//
+//        // Группируем по количеству мест
+//        Map<Integer, List<RestaurantTable>> grouped = fullTablesInfo.stream()
+//                .collect(Collectors.groupingBy(RestaurantTable::getSeats));
+//
+//        List<Integer> seatsCounts = new ArrayList<>(grouped.keySet());
+//        Collections.sort(seatsCounts);
+//
+//        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+//        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+//
+//        for (Integer seats : seatsCounts) {
+//            for (RestaurantTable table : grouped.get(seats)) {
+//                String buttonText = String.format("🍽 Столик #%s (%d мест)", table.getTableNumber(), table.getSeats());
+//                rows.add(Collections.singletonList(createInlineButton(buttonText, "select_table_" + table.getId())));
+//            }
+//        }
+//
+//        rows.add(Arrays.asList(
+//                createInlineButton("🕒 Изменить время", "change_time"),
+//                createInlineButton("👥 Изменить количество гостей", "change_people")
+//        ));
+//
+//        markup.setKeyboard(rows);
+//
+//        SendMessage message = new SendMessage(chatId.toString(),
+//                "🪑 Доступные столики (выбрано " + reservationPeopleCache.get(chatId) + " гостей):");
+//        message.setReplyMarkup(markup);
+//        execute(message);
+//    }
 
     private void confirmReservation(Long chatId) {
         try {
@@ -1622,13 +1624,23 @@ public class RestaurantBot extends TelegramLongPollingBot {
                 return false;
             }
 
+            // --- Вот это ключевое исправление ---
+            // Конвертируем сразу дату в формат сервера и сохраняем
+            SimpleDateFormat serverFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm");
+            String serverDateStr = serverFormat.format(date);
+
+            pendingReservations.get(chatId).setReservationTime(serverDateStr);
+
+            // Если хочешь, можешь также сохранить пользовательский текст для показа
             reservationDateCache.put(chatId, dateStr);
+
             return true;
         } catch (ParseException e) {
             sendSimpleMessage(chatId, "❌ Неверная дата или время. Используйте ДД.ММ.ГГГГ ЧЧ:ММ\nПример: 30.12.2025 19:00");
             return false;
         }
     }
+
     private void handleReservationFlow(Long chatId, String text) throws TelegramApiException {
         if (text.equals(CANCEL_COMMAND)) {
             resetReservationState(chatId);
@@ -1658,44 +1670,44 @@ public class RestaurantBot extends TelegramLongPollingBot {
             handleReservationName(chatId, text);
         }
     }
-    private void handleReservationPeople(Long chatId, String peopleStr) {
-        try {
-            int people = Integer.parseInt(peopleStr);
-            if (people <= 0) {
-                sendSimpleMessage(chatId, "❌ Количество гостей должно быть больше 0. Введите снова:");
-                return;
-            }
-            if (people > 20) {
-                sendSimpleMessage(chatId, "❌ Для компаний более 20 человек звоните по телефону +7 (XXX) XXX-XX-XX");
-                return;
-            }
-
-            // Сохраняем количество людей
-            pendingReservations.get(chatId).setNumberOfPeople(people);
-            reservationPeopleCache.put(chatId, people);
-
-            // Ищем доступные столики
-            String dateStr = reservationDateCache.get(chatId);
-            List<RestaurantTableDto> availableTables = findAvailableTables(
-                    chatId,
-                    people,
-                    dateStr,
-                    reservationDurationCache.getOrDefault(chatId, 3)
-            );
-
-            if (availableTables.isEmpty()) {
-                suggestAlternativeTimes(chatId, people, 3);
-            } else {
-                availableTablesCache.put(chatId, availableTables);
-                showAvailableTables(chatId);
-            }
-        } catch (NumberFormatException e) {
-            sendSimpleMessage(chatId, "❌ Введите корректное число гостей:");
-        } catch (Exception e) {
-            log.error("Error in handleReservationPeople", e);
-            sendSimpleMessage(chatId, "⚠️ Ошибка при обработке запроса. Попробуйте позже.");
-        }
-    }
+//    private void handleReservationPeople(Long chatId, String peopleStr) {
+//        try {
+//            int people = Integer.parseInt(peopleStr);
+//            if (people <= 0) {
+//                sendSimpleMessage(chatId, "❌ Количество гостей должно быть больше 0. Введите снова:");
+//                return;
+//            }
+//            if (people > 20) {
+//                sendSimpleMessage(chatId, "❌ Для компаний более 20 человек звоните по телефону +7 (XXX) XXX-XX-XX");
+//                return;
+//            }
+//
+//            // Сохраняем количество людей
+//            pendingReservations.get(chatId).setNumberOfPeople(people);
+//            reservationPeopleCache.put(chatId, people);
+//
+//            // Ищем доступные столики
+//            String dateStr = reservationDateCache.get(chatId);
+//            List<RestaurantTableDto> availableTables = findAvailableTables(
+//                    chatId,
+//                    people,
+//                    dateStr,
+//                    reservationDurationCache.getOrDefault(chatId, 3)
+//            );
+//
+//            if (availableTables.isEmpty()) {
+//                suggestAlternativeTimes(chatId, people, 3);
+//            } else {
+//                availableTablesCache.put(chatId, availableTables);
+//                showAvailableTables(chatId);
+//            }
+//        } catch (NumberFormatException e) {
+//            sendSimpleMessage(chatId, "❌ Введите корректное число гостей:");
+//        } catch (Exception e) {
+//            log.error("Error in handleReservationPeople", e);
+//            sendSimpleMessage(chatId, "⚠️ Ошибка при обработке запроса. Попробуйте позже.");
+//        }
+//    }
     private void handleReservationCommand(Long chatId) throws TelegramApiException {
         if (!userTokens.containsKey(chatId)) {
             sendAuthOptions(chatId);
@@ -1851,6 +1863,166 @@ public class RestaurantBot extends TelegramLongPollingBot {
             log.error("Error sending error message", ex);
         }
     }
+
+
+    // бронь отображение кнопок
+    private void handleReservationPeople(Long chatId, String peopleStr) {
+        try {
+            int people = Integer.parseInt(peopleStr);
+            if (people <= 0) {
+                sendSimpleMessage(chatId, "❌ Количество гостей должно быть больше 0. Введите снова:");
+                return;
+            }
+            if (people > 20) {
+                sendSimpleMessage(chatId, "❌ Для компаний более 20 человек звоните по телефону +7 (XXX) XXX-XX-XX");
+                return;
+            }
+
+            pendingReservations.get(chatId).setNumberOfPeople(people);
+            reservationPeopleCache.put(chatId, people);
+
+            String dateStr = reservationDateCache.get(chatId);
+            int duration = reservationDurationCache.getOrDefault(chatId, 3);
+
+            List<RestaurantTableDto> availableTables = findAvailableTables(chatId, people, dateStr, duration);
+
+            if (availableTables.isEmpty()) {
+                suggestAlternativeTimes(chatId, people, duration);
+            } else {
+                availableTablesCache.put(chatId, availableTables);
+                showAvailableTables(chatId);
+            }
+        } catch (NumberFormatException e) {
+            sendSimpleMessage(chatId, "❌ Введите корректное число гостей:");
+        } catch (Exception e) {
+            log.error("Ошибка при обработке количества гостей", e);
+            sendSimpleMessage(chatId, "⚠️ Ошибка при поиске столиков. Попробуйте позже.");
+        }
+    }
+
+    private void showAvailableTables(Long chatId) throws TelegramApiException {
+        List<RestaurantTableDto> tables = availableTablesCache.get(chatId);
+        if (tables == null || tables.isEmpty()) {
+            sendSimpleMessage(chatId, "❌ Нет доступных столиков. Попробуйте выбрать другое время.");
+            return;
+        }
+
+        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+
+        for (RestaurantTableDto table : tables) {
+            String text = "Столик #" + table.getTableNumber();
+            InlineKeyboardButton button = new InlineKeyboardButton(text);
+            button.setCallbackData("select_table_" + table.getId());
+            rows.add(Collections.singletonList(button));
+        }
+
+        // Кнопки для изменения параметров
+        rows.add(Arrays.asList(
+                createInlineButton("🕒 Изменить время", "change_time"),
+                createInlineButton("👥 Изменить количество гостей", "change_people")
+        ));
+
+        markup.setKeyboard(rows);
+
+        SendMessage message = new SendMessage();
+        message.setChatId(chatId.toString());
+        message.setText("🪑 Доступные столики (гостей: " + reservationPeopleCache.get(chatId) + "):");
+        message.setReplyMarkup(markup);
+
+        execute(message);
+    }
+    private void suggestAlternativeTimes(Long chatId, int people, int duration) {
+        try {
+            String originalDateStr = reservationDateCache.get(chatId);
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
+            Date originalDate = dateFormat.parse(originalDateStr);
+
+            List<String> alternatives = new ArrayList<>();
+            Calendar cal = Calendar.getInstance();
+
+            for (int i = -4; i <= 4; i++) {
+                if (i == 0) continue;
+
+                cal.setTime(originalDate);
+                cal.add(Calendar.MINUTE, 30 * i);
+
+                int hour = cal.get(Calendar.HOUR_OF_DAY);
+                if (hour < 10 || hour >= 23) continue;
+
+                String timeStr = dateFormat.format(cal.getTime());
+                List<RestaurantTableDto> tables = findAvailableTables(chatId, people, timeStr, duration);
+
+                if (!tables.isEmpty()) {
+                    alternatives.add(timeStr);
+                    if (alternatives.size() >= 3) break;
+                }
+            }
+
+            if (alternatives.isEmpty()) {
+                sendSimpleMessage(chatId, "❌ На выбранное время нет доступных столиков. Попробуйте выбрать другой день.");
+                return;
+            }
+
+            InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+            List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+
+            for (String time : alternatives) {
+                rows.add(Collections.singletonList(createInlineButton("⏰ " + time, "alt_time_" + time)));
+            }
+
+            rows.add(Collections.singletonList(createInlineButton("📅 Выбрать другую дату", "change_time")));
+
+            markup.setKeyboard(rows);
+
+            SendMessage message = new SendMessage(chatId.toString(),
+                    "❌ Нет доступных столиков. Вот альтернативные варианты:");
+            message.setReplyMarkup(markup);
+
+            execute(message);
+
+        } catch (Exception e) {
+            log.error("Ошибка при поиске альтернативных времен", e);
+            sendSimpleMessage(chatId, "⚠️ Ошибка при поиске альтернатив. Попробуйте позже.");
+        }
+    }
+
+    private List<RestaurantTableDto> findAvailableTables(Long chatId, int people, String dateStr, int durationHours) {
+        try {
+            DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+            LocalDateTime startDateTime = LocalDateTime.parse(dateStr, inputFormatter);
+            LocalDateTime endDateTime = startDateTime.plusHours(durationHours);
+
+            // ПЕРЕВОДИМ в Date
+            Date startDate = Date.from(startDateTime.atZone(ZoneId.systemDefault()).toInstant());
+            Date endDate = Date.from(endDateTime.atZone(ZoneId.systemDefault()).toInstant());
+
+            // Теперь передаем Date
+            List<Reservation> conflictingReservations = restaurantTableRepository.findConflictingReservations(startDate, endDate);
+
+            List<RestaurantTable> allTables = restaurantTableRepository.findAll();
+
+            Set<Long> occupiedTableIds = conflictingReservations.stream()
+                    .map(r -> r.getRestaurantTable().getId())
+                    .collect(Collectors.toSet());
+
+            return allTables.stream()
+                    .filter(table -> !occupiedTableIds.contains(table.getId()))
+                    .filter(table -> {
+                        int seats = table.getSeats();
+                        return (seats == people) || (seats > people && seats <= people + 2);
+                    })
+                    .sorted(Comparator.comparingInt(table -> Math.abs(table.getSeats() - people)))
+                    .map(table -> new RestaurantTableDto(table.getId(), table.getTableNumber()))
+                    .collect(Collectors.toList());
+
+        } catch (Exception e) {
+            log.error("Ошибка при поиске доступных столиков", e);
+            sendSimpleMessage(chatId, "⚠️ Ошибка обработки запроса. Попробуйте позже.");
+            return Collections.emptyList();
+        }
+    }
+
 }
 
 

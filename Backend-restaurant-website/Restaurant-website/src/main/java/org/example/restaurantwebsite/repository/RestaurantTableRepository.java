@@ -12,12 +12,15 @@ import java.util.List;
 
 @Repository
 public interface RestaurantTableRepository extends JpaRepository<RestaurantTable, Long> {
-    @Query("SELECT r FROM Reservation r WHERE " +
-            "(:startTime BETWEEN r.reservationTime AND r.reservationEndTime OR " +
-            ":endTime BETWEEN r.reservationTime AND r.reservationEndTime OR " +
-            "r.reservationTime BETWEEN :startTime AND :endTime)")
-    List<Reservation> findConflictingReservations(
-            @Param("startTime") String startTime,
-            @Param("endTime") String endTime
-    );
+//    @Query("SELECT r FROM Reservation r WHERE " +
+//            "(:startTime BETWEEN r.reservationTime AND r.reservationEndTime OR " +
+//            ":endTime BETWEEN r.reservationTime AND r.reservationEndTime OR " +
+//            "r.reservationTime BETWEEN :startTime AND :endTime)")
+//    List<Reservation> findConflictingReservations(
+//            @Param("startTime") String startTime,
+//            @Param("endTime") String endTime
+//    );
+    @Query("SELECT r FROM Reservation r WHERE r.reservationTime < :endTime AND r.reservationEndTime > :startTime")
+    List<Reservation> findConflictingReservations(@Param("startTime") Date startTime, @Param("endTime") Date endTime);
+
 }

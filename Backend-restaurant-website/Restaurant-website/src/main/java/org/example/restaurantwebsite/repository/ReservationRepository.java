@@ -22,6 +22,8 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                                                       @Param("endTime") Date endTime);
     List<Reservation> findByUser(User user);
 
+    @Query("SELECT r FROM Reservation r WHERE r.reservationTime < :endDate AND r.reservationEndTime > :startDate")
+    List<Reservation> findConflictingReservations(@Param("startDate") Date startDate, @Param("endDate") Date endDate);
 
 //
     List<Reservation> findByReservationTimeBetween(Timestamp start, Timestamp end);
