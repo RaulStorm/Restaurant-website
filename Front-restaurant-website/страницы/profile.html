@@ -80,7 +80,7 @@
           const token = localStorage.getItem("token");
           if(token){
               let payload = parseJwt(token);
-              console.log("Payload:", payload);
+           //   console.log("Payload:", payload);
               if(payload){
                   a.href = "/страницы/profile.html";
                   a.firstElementChild.src = '/authorization/img/avatar-icon.png';

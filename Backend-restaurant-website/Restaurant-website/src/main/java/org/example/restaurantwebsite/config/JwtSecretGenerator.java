@@ -1,6 +1,7 @@
 package org.example.restaurantwebsite.config;
 
 import io.jsonwebtoken.security.Keys;
+
 import java.util.Base64;
 import javax.crypto.SecretKey;
 

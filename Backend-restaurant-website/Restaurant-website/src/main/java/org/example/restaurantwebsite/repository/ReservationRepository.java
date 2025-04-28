@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.sql.Date;  // Импортируем java.sql.Date
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,4 +22,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                                                       @Param("endTime") Date endTime);
     List<Reservation> findByUser(User user);
 
+
+//
+    List<Reservation> findByReservationTimeBetween(Timestamp start, Timestamp end);
 }

@@ -62,6 +62,7 @@ function toggleTableSelection(data) {
     }
 }
 
+
 // Обработчик отправки формы
 reservationForm.addEventListener('submit', async function(event) {
     event.preventDefault();

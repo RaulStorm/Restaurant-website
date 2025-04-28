@@ -6,6 +6,7 @@ import lombok.Setter;
 import org.example.restaurantwebsite.repository.TableStatus;
 
 @Getter
+@Setter
 @Entity
 @Table(name = "restaurant_tables") // Название таблицы в БД
 public class RestaurantTable {

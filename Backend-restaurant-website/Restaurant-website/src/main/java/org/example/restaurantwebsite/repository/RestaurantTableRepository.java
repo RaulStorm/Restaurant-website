@@ -1,9 +1,23 @@
 package org.example.restaurantwebsite.repository;
 
+import org.example.restaurantwebsite.model.Reservation;
 import org.example.restaurantwebsite.model.RestaurantTable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import java.util.Date;
+import java.util.List;
 
 @Repository
 public interface RestaurantTableRepository extends JpaRepository<RestaurantTable, Long> {
+    @Query("SELECT r FROM Reservation r WHERE " +
+            "(:startTime BETWEEN r.reservationTime AND r.reservationEndTime OR " +
+            ":endTime BETWEEN r.reservationTime AND r.reservationEndTime OR " +
+            "r.reservationTime BETWEEN :startTime AND :endTime)")
+    List<Reservation> findConflictingReservations(
+            @Param("startTime") String startTime,
+            @Param("endTime") String endTime
+    );
 }

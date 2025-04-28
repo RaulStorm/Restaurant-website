@@ -12,19 +12,14 @@ import java.util.Map;
 @Service
 public class CloudinaryService {
 
-    private Cloudinary cloudinary;
+    private final Cloudinary cloudinary;
 
-    // Получаем данные из application.properties
-    @Value("${cloudinary.cloud_name}")
-    private String cloudName;
+    // Конструктор для CloudinaryService, использующий параметры из application.properties
+    public CloudinaryService(
+            @Value("${cloudinary.cloud_name}") String cloudName,
+            @Value("${cloudinary.api_key}") String apiKey,
+            @Value("${cloudinary.api_secret}") String apiSecret) {
 
-    @Value("${cloudinary.api_key}")
-    private String apiKey;
-
-    @Value("${cloudinary.api_secret}")
-    private String apiSecret;
-
-    public CloudinaryService() {
         cloudinary = new Cloudinary(ObjectUtils.asMap(
                 "cloud_name", cloudName,
                 "api_key", apiKey,
@@ -32,8 +27,9 @@ public class CloudinaryService {
         ));
     }
 
+    // Метод для загрузки изображения в Cloudinary и получения URL
     public String uploadImage(MultipartFile file) throws IOException {
-        Map uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
-        return (String) uploadResult.get("url");
+        Map<String, String> uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
+        return uploadResult.get("url");  // Возвращаем URL изображения
     }
 }

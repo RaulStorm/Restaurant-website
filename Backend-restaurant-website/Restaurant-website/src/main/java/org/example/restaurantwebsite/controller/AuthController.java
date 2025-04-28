@@ -64,9 +64,6 @@ public class AuthController {
     }
 
 
-
-
-
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody @Valid UserDto userDto, BindingResult result) {
         logger.info("Пришёл запрос на вход: {}", userDto);
@@ -87,7 +84,7 @@ public class AuthController {
                     responseBody.put("message", "Вход выполнен");
                     responseBody.put("token", token);
                     responseBody.put("name", user.getName());
-
+                    String jwtToken = token.replace("Bearer ", "");
                     return ResponseEntity.ok(responseBody);
                 }
             }
@@ -144,7 +141,6 @@ public class AuthController {
                     .body(new Response(false, "Неверный токен"));
         }
     }
-
 
 
 }

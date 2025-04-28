@@ -60,7 +60,7 @@
         let token = localStorage.getItem("token");
         if(token){
             let payload = parseJwt(token);
-            console.log(payload);
+         //   console.log(payload);
             if(payload){
                 a.href= "/страницы/profile.html";
               a.firstElementChild.src='/authorization/img/avatar-icon.png';
@@ -124,7 +124,7 @@ fetch('/страницы/header.html')
             let token = localStorage.getItem("token");
             if(token){
                 let payload = parseJwt(token);
-                console.log(payload);
+              //  console.log(payload);
                 if(payload){
                     a.href= "/страницы/profile.html";
                     a.firstElementChild.src='/authorization/img/avatar-icon.png';

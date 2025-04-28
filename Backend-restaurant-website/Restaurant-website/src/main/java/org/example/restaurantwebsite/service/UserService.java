@@ -115,4 +115,16 @@ public class UserService {
     public boolean isTokenBlacklisted(String token) {
         return blacklistedTokens.contains(token);
     }
+    public String extractEmailFromToken(String token) {
+        try {
+            return Jwts.parserBuilder()
+                    .setSigningKey(getSigningKey())
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody()
+                    .getSubject();
+        } catch (Exception e) {
+            return null;
+        }
+    }
 }

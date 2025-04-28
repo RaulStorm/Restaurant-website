@@ -18,4 +18,7 @@ public interface MenuItemRepository extends JpaRepository<MenuItem, Long> {
     // Убираем LEFT JOIN FETCH, так как атрибут images больше не существует
     @Query("SELECT mi FROM MenuItem mi")
     List<MenuItem> findAllWithImages();
+
+    Optional<MenuItem> findByName(String name);
+
 }

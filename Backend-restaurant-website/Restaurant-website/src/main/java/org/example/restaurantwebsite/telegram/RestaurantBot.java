@@ -1,12 +1,33 @@
 package org.example.restaurantwebsite.telegram;
 
-import org.example.restaurantwebsite.model.MenuItemDto;
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.text.SimpleDateFormat;
+import java.text.ParseException;
+import java.util.Date;
+import java.util.*;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
+import org.telegram.telegrambots.meta.api.methods.send.SendLocation;
+import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
+import org.example.restaurantwebsite.model.*;
+import org.example.restaurantwebsite.repository.RestaurantTableRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
@@ -17,9 +38,9 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
-
+@Slf4j
 @Component
 public class RestaurantBot extends TelegramLongPollingBot {
 
@@ -33,14 +54,26 @@ public class RestaurantBot extends TelegramLongPollingBot {
     private ReviewApiClient reviewApiClient;
     @Autowired
     private MenuApiClient menuApiClient;
-
+    @Autowired
+    private AuthService authService;
+    @Autowired
+    private RestaurantTableRepository restaurantTableRepository;
+    private static final String CANCEL_COMMAND = "❌ Отменить";
     private final Map<Long, String> userSelectedCategory = new HashMap<>();
     private final Map<Long, List<MenuItemDto>> categoryDishesCache = new HashMap<>();
     private final Map<Long, Integer> categoryDishIndexes = new HashMap<>();
     private final Map<Long, Integer> lastMenuMessageIds = new HashMap<>();
     private final Map<Long, Integer> userReviewIndexes = new HashMap<>();
     private final Map<Long, List<ReviewBot>> userReviews = new HashMap<>();
-
+    private final Map<Long, String> userTokens = new HashMap<>();
+    private final Set<Long> awaitingCredentials = new HashSet<>();
+    private final Map<Long, ReservationDto> pendingReservations = new HashMap<>();
+    //после
+    private final Map<Long, List<RestaurantTableDto>> availableTablesCache = new HashMap<>();
+    private final Map<Long, String> reservationDateCache = new HashMap<>();
+    private final Map<Long, Integer> reservationDurationCache = new HashMap<>();
+    private final Map<Long, Integer> reservationPeopleCache = new HashMap<>();
+    private static final Pattern DATE_TIME_PATTERN = Pattern.compile("^\\d{2}\\.\\d{2}\\.\\d{4} \\d{2}:\\d{2}$");
     @Override
     public String getBotUsername() {
         return botUsername;
@@ -51,67 +84,605 @@ public class RestaurantBot extends TelegramLongPollingBot {
         return botToken;
     }
 
-    @Override
-    public void onUpdateReceived(Update update) {
+//    @Override
+//    public void onUpdateReceived(Update update) {
+//        try {
+//            // 1. Обработка callback-запросов (нажатия кнопок)
+//            if (update.hasCallbackQuery()) {
+//                String callbackData = update.getCallbackQuery().getData();
+//                Long chatId = update.getCallbackQuery().getMessage().getChatId();
+//
+//                // Обработка новых callback'ов для бронирования
+//                if (callbackData.startsWith("duration_")) {
+//                    int hours = Integer.parseInt(callbackData.substring("duration_".length()));
+//                    reservationDurationCache.put(chatId, hours);
+//                    sendSimpleMessage(chatId, "👥 Введите количество гостей:");
+//                }
+//                else if (callbackData.startsWith("select_table_")) {
+//                    Long tableId = Long.parseLong(callbackData.substring("select_table_".length()));
+//                    handleTableSelection(chatId, tableId);
+//                }
+//                else if (callbackData.startsWith("alt_time_")) {
+//                    String newTime = callbackData.substring("alt_time_".length());
+//                    updateReservationTime(chatId, newTime);
+//                }
+//                else if (callbackData.equals("change_time")) {
+//                    sendSimpleMessage(chatId, "📅 Введите новое время в формате ДД.ММ.ГГГГ ЧЧ:ММ");
+//                }
+//                else if (callbackData.equals("change_people")) {
+//                    sendSimpleMessage(chatId, "👥 Введите новое количество гостей:");
+//                }
+//                else if (callbackData.equals("confirm_reservation")) {
+//                    completeReservation(chatId);
+//                }
+//                else if (callbackData.equals("cancel_reservation")) {
+//                    resetReservationState(chatId);
+//                    sendMainMenu(chatId);
+//                    sendSimpleMessage(chatId, "❌ Бронирование отменено");
+//                }
+//                else {
+//                    // Остальные callback'и
+//                    handleCallback(update);
+//                }
+//                return;
+//            }
+//
+//            // 2. Обработка текстовых сообщений
+//            if (update.hasMessage() && update.getMessage().hasText()) {
+//                Long chatId = update.getMessage().getChatId();
+//                String text = update.getMessage().getText().trim();
+//
+//                // Глобальная обработка отмены
+//                if (text.equals(CANCEL_COMMAND)) {
+//                    resetUserState(chatId);
+//                    sendMainMenu(chatId);
+//                    return;
+//                }
+//
+//                // 2.1. Проверка на отмену бронирования
+//                if (text.startsWith("/cancel_")) {
+//                    try {
+//                        Long reservationId = Long.parseLong(text.substring("/cancel_".length()));
+//                        handleCancelReservation(chatId, reservationId);
+//                    } catch (NumberFormatException e) {
+//                        sendSimpleMessage(chatId, "❌ Неверный формат команды. Используйте /cancel_номер");
+//                    }
+//                    return;
+//                }
+//
+//                // 2.2. Обработка ввода учетных данных
+//                if (awaitingCredentials.contains(chatId)) {
+//                    handleCredentialsInput(chatId, text);
+//                    return;
+//                }
+//
+//                // 2.3. Обработка шагов бронирования
+//                if (pendingReservations.containsKey(chatId)) {
+//                    try {
+//                        handleReservationFlow(chatId, text);
+//                    } catch (TelegramApiException e) {
+//                        log.error("Error in reservation flow", e);
+//                        sendSimpleMessage(chatId, "⚠️ Ошибка при обработке бронирования. Попробуйте снова.");
+//                    }
+//                    return;
+//                }
+//
+//                // 2.4. Обработка отзыва
+//                if (text.matches("^[1-5]\\s.+") && userTokens.containsKey(chatId)) {
+//                    handleReviewSubmission(chatId, text);
+//                    return;
+//                }
+//
+//                // 3. Обработка команд
+//                handleCommand(chatId, text);
+//            }
+//        } catch (Exception e) {
+//            log.error("Error in onUpdateReceived", e);
+//            try {
+//                Long chatId = update.hasCallbackQuery() ?
+//                        update.getCallbackQuery().getMessage().getChatId() :
+//                        update.getMessage().getChatId();
+//                sendSimpleMessage(chatId, "⚠️ Произошла ошибка. Пожалуйста, попробуйте позже.");
+//            } catch (Exception ex) {
+//                log.error("Error sending error message", ex);
+//            }
+//        }
+//    }
+
+    // ========== Reservation Flow Methods ==========
+
+//    private void handleReservationFlow(Long chatId, String text) throws TelegramApiException {
+//        if (text.equals(CANCEL_COMMAND)) {
+//            pendingReservations.remove(chatId);
+//            sendMainMenu(chatId);
+//            sendSimpleMessage(chatId, "❌ Бронирование отменено");
+//            return;
+//        }
+//        ReservationDto res = pendingReservations.get(chatId);
+//        if (res.getReservationTime() == null) {
+//            handleReservationDate(chatId, text);
+//        } else if (res.getNumberOfPeople() == null) {
+//            handleReservationPeople(chatId, text);
+//        } else if (res.getName() == null) {
+//            handleReservationName(chatId, text);
+//        } else {
+//            handleReservationTable(chatId, text);
+//        }
+//    }
+
+//    private void handleReservationName(Long chatId, String name) {
+//        if (name.trim().isEmpty()) {
+//            sendSimpleMessage(chatId, "❌ Имя не может быть пустым. Введите снова:");
+//            return;
+//        }
+//
+//        pendingReservations.get(chatId).setName(name.trim());
+//
+//        // Отправляем фото столика перед запросом ID
+//        try {
+//            SendPhoto photo = new SendPhoto();
+//            photo.setChatId(chatId.toString());
+//            photo.setPhoto(new InputFile("https://res.cloudinary.com/drixmxite/image/upload/v1745345310/table-reservation_vx5s9b_q8i7no.png"));
+//            photo.setCaption("📋 Отлично, " + name + "! Теперь введите ID столика:");
+//            execute(photo);
+//        } catch (TelegramApiException e) {
+//            // Если не удалось отправить фото, отправляем текстовое сообщение
+//            sendSimpleMessage(chatId, "📋 Отлично, " + name + "! Теперь введите ID столика:");
+//        }
+//    }
+
+    private void handleReservationTable(Long chatId, String tableIdStr) {
         try {
-            if (update.hasCallbackQuery()) {
-                String callbackData = update.getCallbackQuery().getData();
-                Long chatId = update.getCallbackQuery().getMessage().getChatId();
-                Integer messageId = update.getCallbackQuery().getMessage().getMessageId();
+            Long tableId = Long.parseLong(tableIdStr);
+            RestaurantTable rt = restaurantTableRepository.findById(tableId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Table not found"));
 
-                // Обработка нажатий на кнопки меню
-                if (callbackData.startsWith("menuCategory_")) {
-                    String category = callbackData.substring("menuCategory_".length());
-                    List<MenuItemDto> filtered = menuApiClient.fetchMenuByCategory(category);
-                    if (!filtered.isEmpty()) {
-                        userSelectedCategory.put(chatId, category);
-                        categoryDishesCache.put(chatId, filtered);
-                        categoryDishIndexes.put(chatId, 0);
-                        sendMenuItem(chatId, filtered.get(0));
-                    } else {
-                        sendSimpleMessage(chatId, "❌ Нет блюд в категории " + category);
-                    }
-                }
-                // Обработка переключения блюд
-                else if (callbackData.equals("menu_prev")) {
-                    updateMenuItem(chatId, -1);
-                } else if (callbackData.equals("menu_next")) {
-                    updateMenuItem(chatId, 1);
-                }
-                // Обработка переключения отзывов
-                else if (callbackData.equals("prev")) {
-                    editReview(update, -1);
-                } else if (callbackData.equals("next")) {
-                    editReview(update, 1);
-                }
-                // Обработка "Все блюда"
-                else if (callbackData.equals("showAll")) {
-                    sendAllDishes(chatId);
-                }
+            RestaurantTableDto dto = new RestaurantTableDto(rt.getId(), rt.getTableNumber());
+            pendingReservations.get(chatId).setTable(dto);
 
-                return;
-            }
+            sendReservationRequestToServer(chatId, pendingReservations.remove(chatId));
+        } catch (NumberFormatException e) {
+            sendSimpleMessage(chatId, "❌ Введите корректный номер столика:");
+        }
+    }
 
-            // Обработка команд от пользователя
-            if (update.hasMessage() && update.getMessage().hasText()) {
-                Long chatId = update.getMessage().getChatId();
-                String text = update.getMessage().getText();
+    private void sendReservationRequestToServer(Long chatId, ReservationDto reservation) {
+        String token = userTokens.get(chatId);
+        if (token == null) {
+            sendSimpleMessage(chatId, "❌ Ошибка авторизации. Попробуйте снова.");
+            return;
+        }
 
-                switch (text) {
-                    case "/start" -> sendMainMenu(chatId);
-                    case "О ресторане" -> sendRestaurantInfo(chatId);
-                    case "Меню" -> sendCategorySelection(chatId);
-                    case "Бронь" -> sendSimpleMessage(chatId, "📅 Чтобы забронировать столик, напишите дату и время.");
-                    case "Оставить отзыв" -> sendSimpleMessage(chatId, "✍️ Напишите ваш отзыв, и мы обязательно его учтём.");
-                    case "Контакты" -> sendSimpleMessage(chatId, "📞 Телефон: +7 (900) 123-45-67\n📍 Адрес: ул. Вкусная, 7");
-                    case "Профиль" -> sendSimpleMessage(chatId, "👤 Профиль в разработке.");
-                    default -> sendSimpleMessage(chatId, "❓ Неизвестная команда.");
-                }
+        try {
+            // Формируем JSON с правильным форматом даты
+            String json = String.format(
+                    "{\"name\":\"%s\"," +
+                            "\"table\":{\"id\":%d}," +
+                            "\"reservationTime\":\"%s\"," +  // Уже в правильном формате
+                            "\"numberOfPeople\":%d}",
+                    reservation.getName(),
+                    reservation.getTable().getId(),
+                    reservation.getReservationTime(),  // "2025-12-30T19:00"
+                    reservation.getNumberOfPeople()
+            );
+
+            HttpResponse<String> response = HttpClient.newHttpClient()
+                    .send(HttpRequest.newBuilder()
+                                    .uri(URI.create("http://localhost:8080/api/reserve"))
+                                    .header("Content-Type", "application/json")
+                                    .header("Authorization", "Bearer " + token)
+                                    .POST(HttpRequest.BodyPublishers.ofString(json))
+                                    .build(),
+                            HttpResponse.BodyHandlers.ofString()
+                    );
+
+            if (response.statusCode() == 200) {
+                pendingReservations.remove(chatId); // Очищаем состояние
+                sendSuccess(chatId, "✅ Столик успешно забронирован!");
+                sendMainMenu(chatId); // Возвращаем в главное меню
+            } else {
+                sendSimpleMessage(chatId, "❌ Ошибка при бронировании: " + response.body());
             }
         } catch (Exception e) {
+            sendSimpleMessage(chatId, "⚠️ Ошибка при бронировании столика. Пожалуйста, попробуйте позже.");
+        }
+    }
+
+    private void resetUserState(Long chatId) {
+        pendingReservations.remove(chatId);
+        awaitingCredentials.remove(chatId);
+        // Другие состояния при необходимости
+    }
+
+    // ========== Callback & Commands Handling ==========
+
+    private void handleCallback(Update update) throws TelegramApiException {
+        String callbackData = update.getCallbackQuery().getData();
+        Long chatId = update.getCallbackQuery().getMessage().getChatId();
+
+        switch (callbackData) {
+            case "show_auth_options":
+                sendAuthOptions(chatId);
+                break;
+            case "auth_login":
+                awaitingCredentials.add(chatId);
+                sendSimpleMessage(chatId, "🔑 Введите ваш email и пароль через пробел:\n\nПример: user@example.com mypassword123");
+                break;
+            case "auth_register":
+                awaitingCredentials.add(chatId);
+                sendSimpleMessage(chatId, "📝 Введите данные для регистрации в формате:\nИмя email пароль\n\nПример: Иван user@example.com mypassword123");
+                break;
+            case "menu_prev":
+                updateMenuItem(chatId, -1);
+                break;
+            case "menu_next":
+                updateMenuItem(chatId, 1);
+                break;
+            case "prev":
+                editReview(update, -1);
+                break;
+            case "next":
+                editReview(update, 1);
+                break;
+            case "showAll":
+                sendAllDishes(chatId);
+                break;
+            default:
+                if (callbackData.startsWith("menuCategory_")) {
+                    handleMenuCategorySelection(chatId, callbackData.substring("menuCategory_".length()));
+                }
+        }
+    }
+
+    private void handleCommand(Long chatId, String text) throws TelegramApiException {
+        switch (text) {
+            case "/start":
+                sendMainMenu(chatId);
+                break;
+            case "ℹ️ О ресторане":
+                sendRestaurantInfo(chatId);
+                break;
+            case "🍽 Меню":
+                sendCategorySelection(chatId);
+                break;
+            case "🔑 Авторизоваться":
+                sendAuthOptions(chatId);
+                break;
+            case "🚪 Выйти":
+                handleLogout(chatId);
+                break;
+            case "🛎 Бронь столика":
+                handleReservationCommand(chatId);
+                break;
+            case "✍️ Оставить отзыв":
+                handleReviewCommand(chatId);
+                break;
+            case "📞 Контакты":
+                handleContactsCommand(chatId);
+                break;
+            case "👤 Профиль":
+                handleProfileCommand(chatId);
+                break;
+            default:
+                if (text.matches("^[1-5]\\s.+") && userTokens.containsKey(chatId)) {
+                    handleReviewSubmission(chatId, text);
+                } else {
+                    sendSimpleMessage(chatId, "❌ Неизвестная команда. Используйте меню ниже.");
+                }
+        }
+    }
+
+    private void handleLogout(Long chatId) throws TelegramApiException {
+        if (!userTokens.containsKey(chatId)) {
+            sendSimpleMessage(chatId, "ℹ️ Вы не авторизованы");
+            return;
+        }
+
+        userTokens.remove(chatId);
+        awaitingCredentials.remove(chatId);
+
+        // Обновляем меню
+        sendMainMenu(chatId);
+        sendSimpleMessage(chatId, "✅ Вы успешно вышли из системы");
+    }
+
+//    private void handleReservationCommand(Long chatId) throws TelegramApiException {
+//        if (!userTokens.containsKey(chatId)) {
+//            sendAuthOptions(chatId);
+//            return;
+//        }
+//
+//        pendingReservations.put(chatId, new ReservationDto());
+//        execute(createMessageWithCancel(chatId,
+//                "📅 Введите дату и время бронирования в формате: ДД.ММ.ГГГГ ЧЧ:ММ\n\nПример: 25.12.2023 19:30"));
+//    }
+
+    private void handleReviewCommand(Long chatId) throws TelegramApiException {
+        if (!userTokens.containsKey(chatId)) {
+            sendAuthOptions(chatId);
+            return;
+        }
+
+        execute(createMessageWithCancel(chatId,
+                "✍️ Напишите отзыв в формате: [Оценка 1-5] [Текст]\nПример: 5 Отличный ресторан!"));
+    }
+
+    private void handleProfileCommand(Long chatId) throws TelegramApiException {
+        if (!userTokens.containsKey(chatId)) {
+            sendSimpleMessage(chatId, "🔒 Для просмотра профиля необходимо авторизоваться.");
+            sendAuthOptions(chatId);
+            return;
+        }
+
+        // Получаем информацию о пользователе
+        UserDto userInfo = authService.getUserInfo(userTokens.get(chatId));
+        if (userInfo == null) {
+            sendSimpleMessage(chatId, "❌ Не удалось загрузить информацию о профиле.");
+            return;
+        }
+
+        // Получаем данные для профиля
+        List<ReservationWithIdDto> reservations = authService.getUserReservations(userTokens.get(chatId));
+        ReviewResponse lastReview = authService.getUserLastReview(userTokens.get(chatId));
+        List<OrderResponse> orders = authService.getUserOrders(userTokens.get(chatId));
+        List<MenuItemDto> favoriteDishes = authService.getFavoriteDishes(userTokens.get(chatId));
+
+        // Формируем текст профиля
+        StringBuilder profileText = new StringBuilder();
+        profileText.append(String.format(
+                "👤 Ваш профиль:\n\n" +
+                        "Имя: %s\n" +
+                        "Email: %s\n\n",
+                userInfo.getName(), userInfo.getEmail()));
+
+        // Добавляем информацию о последнем отзыве
+        if (lastReview != null && lastReview.getReviewText() != null) {
+            profileText.append("📝 Ваш последний отзыв:\n");
+            profileText.append("⭐ Оценка: ").append(lastReview.getRating()).append("\n");
+            profileText.append("💬 Текст: ").append(lastReview.getReviewText()).append("\n");
+            profileText.append("📅 Дата: ").append(lastReview.getFormattedDate()).append("\n\n");
+        } else {
+            profileText.append("📝 У вас пока нет отзывов\n\n");
+        }
+
+        // Добавляем информацию о любимых блюдах
+        if (!favoriteDishes.isEmpty()) {
+            profileText.append("🍽 Ваши любимые блюда:\n");
+            for (MenuItemDto dish : favoriteDishes) {
+                profileText.append(String.format(
+                        "• %s (%s) - %.0f₽\n",
+                        dish.getName(),
+                        dish.getCategoryName(),
+                        dish.getPrice()
+                ));
+            }
+            profileText.append("\n");
+        } else {
+            profileText.append("🍽 У вас пока нет любимых блюд\n\n");
+        }
+
+        // Добавляем информацию о последних заказах
+        if (!orders.isEmpty()) {
+            profileText.append("🛒 Ваши последние заказы:\n");
+            for (OrderResponse order : orders) {
+                profileText.append("📦 Заказ #").append(order.getId()).append("\n");
+                for (ItemDto item : order.getItems()) {
+                    profileText.append(String.format(
+                            "  - %s x%d\n",
+                            item.getName(),
+                            item.getQuantity()
+                    ));
+                }
+                profileText.append("\n");
+            }
+        } else {
+            profileText.append("🛒 У вас пока нет заказов\n\n");
+        }
+
+        // Добавляем информацию о бронированиях
+        if (reservations.isEmpty()) {
+            profileText.append("🛎 У вас нет активных бронирований\n");
+        } else {
+            profileText.append("🛎 Ваши бронирования:\n\n");
+
+            SimpleDateFormat displayFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
+
+            for (ReservationWithIdDto reservation : reservations) {
+                try {
+                    SimpleDateFormat apiFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+                    Date date = apiFormat.parse(reservation.getReservationTime());
+
+                    profileText.append(String.format(
+                            "📅 Дата: %s\n" +
+                                    "👥 Гости: %d\n" +
+                                    "💁 Имя: %s\n" +
+                                    "� Стол: %s (ID: %d)\n" +
+                                    "❌ Отменить: /cancel_%d\n\n",
+                            displayFormat.format(date),
+                            reservation.getNumberOfPeople(),
+                            reservation.getName(),
+                            reservation.getTable().getTableNumber(),
+                            reservation.getTable().getId(),
+                            reservation.getId()
+                    ));
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        sendSimpleMessage(chatId, profileText.toString());
+    }
+
+    private void handleCancelReservation(Long chatId, Long reservationId) {
+        try {
+            ResponseEntity<String> response = authService.cancelReservation(
+                    userTokens.get(chatId),
+                    reservationId
+            );
+
+            if (response.getStatusCode().is2xxSuccessful()) {
+                sendSimpleMessage(chatId, "✅ Бронь #" + reservationId + " успешно отменена!");
+                // Обновляем профиль после отмены
+                handleProfileCommand(chatId);
+            } else {
+                sendSimpleMessage(chatId, "❌ Ошибка при отмене брони: " + response.getBody());
+            }
+        } catch (Exception e) {
+            sendSimpleMessage(chatId, "⚠️ Ошибка при обработке запроса. Пожалуйста, попробуйте позже.");
+        }
+    }
+
+    // ========== Authorization Methods ==========
+
+    private void sendAuthOptions(Long chatId) throws TelegramApiException {
+        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+
+        List<InlineKeyboardButton> row1 = new ArrayList<>();
+        InlineKeyboardButton loginBtn = new InlineKeyboardButton("🔐 Войти");
+        loginBtn.setCallbackData("auth_login");
+        row1.add(loginBtn);
+
+        List<InlineKeyboardButton> row2 = new ArrayList<>();
+        InlineKeyboardButton registerBtn = new InlineKeyboardButton("📝 Регистрация");
+        registerBtn.setCallbackData("auth_register");
+        row2.add(registerBtn);
+
+        markup.setKeyboard(List.of(row1, row2));
+
+        SendMessage message = new SendMessage();
+        message.setChatId(chatId.toString());
+        message.setText("Выберите действие:");
+        message.setReplyMarkup(markup);
+
+        execute(message);
+    }
+
+    // ========== Menu Methods ==========
+
+    private void handleMenuCategorySelection(Long chatId, String category) {
+        List<MenuItemDto> filtered = menuApiClient.fetchMenuByCategory(category);
+        if (!filtered.isEmpty()) {
+            userSelectedCategory.put(chatId, category);
+            categoryDishesCache.put(chatId, filtered);
+            categoryDishIndexes.put(chatId, 0);
+            sendMenuItem(chatId, filtered.get(0));
+        } else {
+            sendSimpleMessage(chatId, "❌ Нет блюд в категории " + category);
+        }
+    }
+
+    private void sendCategorySelection(Long chatId) {
+        List<String> categories = menuApiClient.fetchCategories();
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+
+        for (String category : categories) {
+            InlineKeyboardButton btn = new InlineKeyboardButton(category);
+            btn.setCallbackData("menuCategory_" + category);
+            rows.add(Collections.singletonList(btn));
+        }
+
+        InlineKeyboardButton showAllBtn = new InlineKeyboardButton("Все блюда");
+        showAllBtn.setCallbackData("showAll");
+        rows.add(Collections.singletonList(showAllBtn));
+
+        InlineKeyboardMarkup markup = new InlineKeyboardMarkup(rows);
+        SendMessage message = new SendMessage(chatId.toString(), "🍽 Выберите категорию меню:");
+        message.setReplyMarkup(markup);
+
+        try {
+            execute(message);
+        } catch (TelegramApiException e) {
             e.printStackTrace();
         }
     }
+
+    private void sendAllDishes(Long chatId) {
+        Map<String, List<MenuItemDto>> allDishesGrouped = menuApiClient.fetchAllMenuItemsGroupedByCategory();
+
+        if (allDishesGrouped.isEmpty()) {
+            sendSimpleMessage(chatId, "❌ Нет доступных блюд.");
+            return;
+        }
+
+        StringBuilder messageText = new StringBuilder("🍽 Все блюда:\n\n");
+
+        for (String category : allDishesGrouped.keySet()) {
+            messageText.append("\n🍴 ").append(category).append(":\n");
+
+            List<MenuItemDto> categoryDishes = allDishesGrouped.get(category);
+            for (MenuItemDto dish : categoryDishes) {
+                messageText.append(String.format(
+                        "🍽 %s\n💬 %s\n💵 Цена: %.0f₽\n\n",
+                        dish.getName(),
+                        dish.getDescription(),
+                        dish.getPrice()
+                ));
+            }
+        }
+
+        sendSimpleMessage(chatId, messageText.toString());
+    }
+
+    private void sendMenuItem(Long chatId, MenuItemDto item) {
+        if (lastMenuMessageIds.containsKey(chatId)) {
+            try {
+                execute(new DeleteMessage(chatId.toString(), lastMenuMessageIds.get(chatId)));
+            } catch (TelegramApiException e) {
+                e.printStackTrace();
+            }
+        }
+
+        String text = String.format(
+                "🍽 %s\n💬 %s\n💵 Цена: %.2f₽",
+                item.getName(),
+                item.getDescription(),
+                item.getPrice()
+        );
+
+        SendPhoto photo = new SendPhoto();
+        photo.setChatId(chatId.toString());
+        photo.setParseMode("Markdown");
+        photo.setCaption(text);
+        photo.setReplyMarkup(getMenuKeyboard());
+
+        String imageUrl = (item.getImages() != null && !item.getImages().isEmpty())
+                ? item.getImages().get(0)
+                : "https://via.placeholder.com/300x200.png?text=Нет+фото";
+
+        photo.setPhoto(new InputFile(imageUrl));
+
+        try {
+            org.telegram.telegrambots.meta.api.objects.Message sentMessage = execute(photo);
+            lastMenuMessageIds.put(chatId, sentMessage.getMessageId());
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private InlineKeyboardMarkup getMenuKeyboard() {
+        InlineKeyboardButton prev = new InlineKeyboardButton("<<");
+        prev.setCallbackData("menu_prev");
+
+        InlineKeyboardButton next = new InlineKeyboardButton(">>");
+        next.setCallbackData("menu_next");
+
+        return new InlineKeyboardMarkup(List.of(List.of(prev, next)));
+    }
+
+    private void updateMenuItem(Long chatId, int direction) {
+        List<MenuItemDto> dishes = categoryDishesCache.get(chatId);
+        if (dishes == null || dishes.isEmpty()) return;
+
+        int currentIndex = categoryDishIndexes.getOrDefault(chatId, 0);
+        int newIndex = (currentIndex + direction + dishes.size()) % dishes.size();
+        categoryDishIndexes.put(chatId, newIndex);
+
+        sendMenuItem(chatId, dishes.get(newIndex));
+    }
+
+    // ========== Review Methods ==========
+
     private void editReview(Update update, int direction) {
         Long chatId = update.getCallbackQuery().getMessage().getChatId();
         Integer messageId = update.getCallbackQuery().getMessage().getMessageId();
@@ -139,20 +710,11 @@ public class RestaurantBot extends TelegramLongPollingBot {
         }
     }
 
-    private void sendMainMenu(Long chatId) {
-        SendMessage message = new SendMessage(chatId.toString(), "👋 Привет! Я бот ресторана. Выберите, что вас интересует:");
-
-        ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup();
-        keyboard.setResizeKeyboard(true);
-        keyboard.setOneTimeKeyboard(false);
-
-        List<KeyboardRow> rows = new ArrayList<>();
-        rows.add(new KeyboardRow(List.of(new KeyboardButton("О ресторане"), new KeyboardButton("Меню"))));
-        rows.add(new KeyboardRow(List.of(new KeyboardButton("Бронь"), new KeyboardButton("Оставить отзыв"))));
-        rows.add(new KeyboardRow(List.of(new KeyboardButton("Контакты"), new KeyboardButton("Профиль"))));
-
-        keyboard.setKeyboard(rows);
-        message.setReplyMarkup(keyboard);
+    private void sendReviewMessage(Long chatId, ReviewBot review) {
+        String text = formatReviewText(review);
+        SendMessage message = new SendMessage(chatId.toString(), text);
+        message.setParseMode("Markdown");
+        message.setReplyMarkup(getReviewKeyboard());
 
         try {
             execute(message);
@@ -160,6 +722,122 @@ public class RestaurantBot extends TelegramLongPollingBot {
             e.printStackTrace();
         }
     }
+
+    private String formatReviewText(ReviewBot review) {
+        String stars = "⭐".repeat(review.getRating());
+        return String.format(
+                "❤️ *Вот отзывы от любимых клиентов:*\n\n" +
+                        "👤 *%s*\n" +
+                        "📅 %s\n" +
+                        "%s\n" +
+                        "_%s_",
+                review.getUserName(),
+                review.getFormattedDate(),
+                stars,
+                review.getReviewText()
+        );
+    }
+
+    private InlineKeyboardMarkup getReviewKeyboard() {
+        InlineKeyboardButton prev = new InlineKeyboardButton("<<");
+        prev.setCallbackData("prev");
+
+        InlineKeyboardButton next = new InlineKeyboardButton(">>");
+        next.setCallbackData("next");
+
+        return new InlineKeyboardMarkup(List.of(List.of(prev, next)));
+    }
+
+    private void handleReviewSubmission(Long chatId, String text) throws TelegramApiException {
+        if (text.equals(CANCEL_COMMAND)) {
+            sendMainMenu(chatId);
+            sendSimpleMessage(chatId, "❌ Создание отзыва отменено");
+            return;
+        }
+
+        try {
+            int rating = Integer.parseInt(text.substring(0, 1));
+            String reviewText = text.substring(1).trim();
+
+            // Проверка на нецензурную лексику
+            if (containsProfanity(reviewText)) {
+                sendSimpleMessage(chatId, "❌ Ваш отзыв содержит недопустимые слова. Пожалуйста, измените текст.");
+                return;
+            }
+
+            ReviewDto reviewDto = new ReviewDto();
+            reviewDto.setRating(rating);
+            reviewDto.setReviewText(reviewText);
+
+            ResponseEntity<?> response = reviewApiClient.submitReview(reviewDto, userTokens.get(chatId));
+
+            if (response.getStatusCode().is2xxSuccessful()) {
+                sendSimpleMessage(chatId, "✅ Спасибо за ваш отзыв!");
+            } else {
+                sendSimpleMessage(chatId, "❌ Ошибка при сохранении отзыва.");
+            }
+        } catch (IOException e) {
+            sendSimpleMessage(chatId, "⚠️ Ошибка проверки текста. Попробуйте позже.");
+        } catch (Exception e) {
+            sendSimpleMessage(chatId, "⚠️ Неверный формат отзыва. Пример: '5 Отличный ресторан'");
+        }
+    }
+
+    // ========== Utility Methods ==========
+
+    private void sendMainMenu(Long chatId) throws TelegramApiException {
+        boolean isAuthenticated = userTokens.containsKey(chatId);
+
+        ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup();
+        keyboard.setResizeKeyboard(true);
+        keyboard.setOneTimeKeyboard(false);
+        keyboard.setSelective(true);
+
+        List<KeyboardRow> rows = new ArrayList<>();
+
+        // Первая строка
+        KeyboardRow row1 = new KeyboardRow();
+        row1.add(new KeyboardButton("🍽 Меню"));
+        row1.add(new KeyboardButton("ℹ️ О ресторане"));
+        rows.add(row1);
+
+        // Вторая строка
+        KeyboardRow row2 = new KeyboardRow();
+        row2.add(new KeyboardButton("🛎 Бронь столика"));
+        row2.add(new KeyboardButton("✍️ Оставить отзыв"));
+        rows.add(row2);
+
+        // Третья строка
+        KeyboardRow row3 = new KeyboardRow();
+        row3.add(new KeyboardButton("📞 Контакты"));
+        row3.add(new KeyboardButton(isAuthenticated ? "👤 Профиль" : "🔑 Авторизоваться"));
+        rows.add(row3);
+
+        // Если авторизован, добавляем кнопку выхода
+        if (isAuthenticated) {
+            KeyboardRow row4 = new KeyboardRow();
+            row4.add(new KeyboardButton("🚪 Выйти"));
+            rows.add(row4);
+        }
+
+        // Добавляем кнопку отмены в активные процессы
+        if (pendingReservations.containsKey(chatId) || awaitingCredentials.contains(chatId)) {
+            KeyboardRow cancelRow = new KeyboardRow();
+            cancelRow.add(new KeyboardButton(CANCEL_COMMAND));
+            rows.add(cancelRow);
+        }
+
+        keyboard.setKeyboard(rows);
+
+        String greeting = isAuthenticated
+                ? "👋 С возвращением! Чем могу помочь?"
+                : "👋 Добро пожаловать! Для доступа ко всем функциям авторизуйтесь";
+
+        SendMessage message = new SendMessage(chatId.toString(), greeting);
+        message.setReplyMarkup(keyboard);
+        execute(message);
+    }
+
 
     private void sendSimpleMessage(Long chatId, String text) {
         try {
@@ -172,12 +850,14 @@ public class RestaurantBot extends TelegramLongPollingBot {
     private void sendRestaurantInfo(Long chatId) {
         String info = """
                 Мы готовы предложить вам уникальный гастрономический опыт с блюдами, которые мы готовим с любовью и вниманием к деталям. Наши повара используют только свежие и качественные ингредиенты.
-
+                
                 В "Деливия" вас ждет уютная атмосфера, где каждый гость чувствует себя по-особенному. Мы уверены, что каждый визит станет для вас запоминающимся событием.
-
+                
                 Мы предлагаем как классические блюда, так и авторские творения, чтобы удовлетворить любой вкус. Обязательно посетите наше меню и узнайте о специальных предложениях.
                 """;
+
         sendSimpleMessage(chatId, info);
+
         List<ReviewBot> reviews = reviewApiClient.fetchLatestPositiveReviews();
         if (!reviews.isEmpty()) {
             userReviews.put(chatId, reviews);
@@ -188,155 +868,989 @@ public class RestaurantBot extends TelegramLongPollingBot {
         }
     }
 
-    private void sendReviewMessage(Long chatId, ReviewBot review) {
-        String text = formatReviewText(review);
+    private void handleContactsCommand(Long chatId) throws TelegramApiException {
+        try {
+            // Отправляем текстовую информацию с контактами
+            sendSimpleMessage(chatId, """
+                    🏢 *Ресторан «Деливия»*
+                    
+                    📍 *Адрес:* г. Воронеж, ул. Примерная, д.1
+                    🕒 *Часы работы:* 10:00 - 23:00 (без выходных)
+                    📞 *Телефон:* +7 (951) 567-83-73
+                    ✉️ *Email:* info@delivia.ru
+                    """);
+
+            // Отправляем статическое изображение карты
+            sendMapImage(chatId);
+
+            SendLocation location = new SendLocation();
+            location.setChatId(chatId.toString());
+            location.setLatitude(51.6615);
+            location.setLongitude(39.2003);
+            location.setLivePeriod(3600);
+            execute(location);
+
+            InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+
+            InlineKeyboardButton routeBtn = new InlineKeyboardButton("🚖 Построить маршрут");
+            routeBtn.setUrl("https://yandex.ru/maps/?pt=39.2003,51.6615&z=15&l=map&rtext=~51.6615,39.2003");
+
+            // Кнопка сайта
+            InlineKeyboardButton websiteBtn = new InlineKeyboardButton("🌐 Наш сайт");
+            //http://localhost:5500/index.html
+            websiteBtn.setUrl("https://delivia.ru"); // Замените на реальный URL
+
+            markup.setKeyboard(List.of(
+                    List.of(routeBtn),
+                    List.of(websiteBtn)
+            ));
+
+            SendMessage message = new SendMessage(chatId.toString(), "Выберите действие:");
+            message.setReplyMarkup(markup);
+            message.setParseMode("Markdown");
+            execute(message);
+
+        } catch (TelegramApiException e) {
+            log.error("Ошибка при отправке контактов", e);
+            sendSimpleMessage(chatId, "⚠️ Произошла ошибка при отправке контактной информации. Пожалуйста, попробуйте позже.");
+        }
+    }
+
+    private void sendMapImage(Long chatId) throws TelegramApiException {
+        try {
+            // URL статического изображения карты из Яндекс.Карт
+            String mapUrl = "https://static-maps.yandex.ru/1.x/?ll=39.2003,51.6615&size=600,300&z=15&l=map&pt=39.2003,51.6615,pm2rdl";
+
+            SendPhoto photo = new SendPhoto();
+            photo.setChatId(chatId.toString());
+            photo.setPhoto(new InputFile(mapUrl));
+            photo.setCaption("📍 Мы находимся здесь!");
+            execute(photo);
+        } catch (TelegramApiException e) {
+            log.warn("Не удалось отправить изображение карты", e);
+            // Если не удалось отправить фото, отправляем ссылку
+            sendSimpleMessage(chatId, "📍 Ссылка на карту: https://yandex.ru/maps/?pt=39.2003,51.6615&z=15&l=map");
+        }
+    }
+
+    private void sendSuccess(Long chatId, String message) {
+        try {
+            SendMessage msg = new SendMessage(chatId.toString(), "✅ " + message);
+            msg.setParseMode("Markdown");
+            execute(msg);
+        } catch (TelegramApiException e) {
+            log.error("Ошибка отправки сообщения", e);
+        }
+    }
+
+    private SendMessage createMessageWithCancel(Long chatId, String text) {
+        ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup();
+        keyboard.setResizeKeyboard(true);
+
+        KeyboardRow row = new KeyboardRow();
+        row.add(new KeyboardButton(CANCEL_COMMAND));
+
+        keyboard.setKeyboard(List.of(row));
+
         SendMessage message = new SendMessage(chatId.toString(), text);
-        message.setParseMode("Markdown");
-        message.setReplyMarkup(getReviewKeyboard());
+        message.setReplyMarkup(keyboard);
+        return message;
+    }
+
+    // Метод для проверки валидности email
+    private boolean isValidEmail(String email) {
+        String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
+        Pattern pattern = Pattern.compile(emailRegex);
+        return pattern.matcher(email).matches();
+    }
+
+
+    // Модифицированный метод handleReservationDate с дополнительными проверками
+//    private void handleReservationDate(Long chatId, String dateStr) {
+//        try {
+//            // Проверка формата даты
+//            if (!dateStr.matches("^\\d{2}\\.\\d{2}\\.\\d{4} \\d{2}:\\d{2}$")) {
+//                sendSimpleMessage(chatId, "❌ Неверный формат даты. Используйте формат ДД.ММ.ГГГГ ЧЧ:ММ\nПример: 30.12.2025 19:00");
+//                return;
+//            }
+//
+//            SimpleDateFormat inputFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
+//            inputFormat.setLenient(false); // Строгая проверка даты
+//            Date date = inputFormat.parse(dateStr);
+//
+//            Calendar cal = Calendar.getInstance();
+//            cal.setTime(date);
+//
+//            // Проверка что дата не в прошлом
+//            if (date.before(new Date())) {
+//                sendSimpleMessage(chatId, "❌ Нельзя забронировать столик на прошедшую дату. Введите корректную дату:");
+//                return;
+//            }
+//
+//            // Проверка на високосный год (используя Calendar)
+//            if (cal.get(Calendar.MONTH) == Calendar.FEBRUARY &&
+//                    cal.get(Calendar.DAY_OF_MONTH) == 29) {
+//                int year = cal.get(Calendar.YEAR);
+//                Calendar testCal = Calendar.getInstance();
+//                testCal.set(year, Calendar.FEBRUARY, 1);
+//                int daysInFebruary = testCal.getActualMaximum(Calendar.DAY_OF_MONTH);
+//
+//                if (daysInFebruary < 29) {
+//                    sendSimpleMessage(chatId, "❌ 29 февраля существует только в високосном году. Введите корректную дату.");
+//                    return;
+//                }
+//            }
+//
+//            // Проверка что время в пределах рабочего дня (10:00 - 23:00)
+//            int hour = cal.get(Calendar.HOUR_OF_DAY);
+//            if (hour < 10 || hour >= 23) {
+//                sendSimpleMessage(chatId, "❌ Ресторан работает с 10:00 до 23:00. Выберите время в этом интервале.");
+//                return;
+//            }
+//
+//            // Проверка что бронь не более чем на 3 месяца вперед
+//            Calendar maxDate = Calendar.getInstance();
+//            maxDate.add(Calendar.MONTH, 3);
+//            if (date.after(maxDate.getTime())) {
+//                sendSimpleMessage(chatId, "❌ Бронирование возможно не более чем на 3 месяца вперед.");
+//                return;
+//            }
+//
+//            // Конвертируем в формат сервера
+//            SimpleDateFormat serverFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm");
+//            String serverDateStr = serverFormat.format(date);
+//
+//            pendingReservations.get(chatId).setReservationTime(serverDateStr);
+//            sendSimpleMessage(chatId, "👥 Введите количество гостей (максимальное допустимое кол-во гостей - 6. " +
+//                    "Если Вы хотите сделать бронь на большее кол-во гостей, позвоните менеджеру):");
+//
+//        } catch (ParseException e) {
+//            sendSimpleMessage(chatId, "❌ Неверная дата или время. Используйте формат ДД.ММ.ГГГГ ЧЧ:ММ\nПример: 30.12.2025 19:00");
+//        }
+//    }
+
+    private boolean containsProfanity(String text) throws IOException {
+        CloseableHttpClient httpClient = HttpClients.createDefault();
+        String encodedText = java.net.URLEncoder.encode(text, "UTF-8");
+        String apiUrl = "https://api.api-ninjas.com/v1/profanityfilter?text=" + encodedText;
+
+        HttpGet request = new HttpGet(apiUrl);
+        request.setHeader("X-Api-Key", "eisuPl+PoXUgT20d4sR3rw==EMRv5XGYaiA3wAlu"); // Замените на реальный ключ
+
         try {
-            execute(message);
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }
-    }
+            org.apache.http.HttpResponse response = httpClient.execute(request);
+            String jsonResponse = EntityUtils.toString(response.getEntity());
 
-    private String formatReviewText(ReviewBot review) {
-        String stars = "⭐".repeat(review.getRating());
-        return String.format("""
-                ❤️ *Вот отзывы от любимых клиентов:*
-
-                👤 *%s*
-                📅 %s
-                %s
-                _%s_
-                """,
-                review.getUserName(), review.getFormattedDate(), stars, review.getReviewText());
-    }
-
-    private InlineKeyboardMarkup getReviewKeyboard() {
-        InlineKeyboardButton prev = new InlineKeyboardButton("<<");
-        prev.setCallbackData("prev");
-        InlineKeyboardButton next = new InlineKeyboardButton(">>");
-        next.setCallbackData("next");
-        List<InlineKeyboardButton> row = List.of(prev, next);
-        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
-        markup.setKeyboard(List.of(row));
-        return markup;
-    }
-
-    private void sendCategorySelection(Long chatId) {
-        List<String> categories = menuApiClient.fetchCategories();
-        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
-        for (String category : categories) {
-            InlineKeyboardButton btn = new InlineKeyboardButton(category);
-            btn.setCallbackData("menuCategory_" + category);
-            rows.add(Collections.singletonList(btn));
+            // Пример ответа: {"original":"bad word","filtered":"**** word"}
+            return !jsonResponse.contains("\"filtered\":\"" + text + "\"");
+        } finally {
+            httpClient.close();
         }
 
-        // Add the "Все блюда" button
-        InlineKeyboardButton showAllBtn = new InlineKeyboardButton("Все блюда");
-        showAllBtn.setCallbackData("showAll");
-        rows.add(Collections.singletonList(showAllBtn));
-
-        InlineKeyboardMarkup markup = new InlineKeyboardMarkup(rows);
-        SendMessage message = new SendMessage(chatId.toString(), "🍽 Выберите категорию меню:");
-        message.setReplyMarkup(markup);
-        try {
-            execute(message);
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }
     }
 
-    private void sendAllDishes(Long chatId) {
-        // Получаем все блюда по категориям
-        Map<String, List<MenuItemDto>> allDishesGrouped = menuApiClient.fetchAllMenuItemsGroupedByCategory();
-
-        if (allDishesGrouped.isEmpty()) {
-            sendSimpleMessage(chatId, "❌ Нет доступных блюд.");
+    private void handleCredentialsInput(Long chatId, String input) throws TelegramApiException {
+        if (input.equals(CANCEL_COMMAND)) {
+            awaitingCredentials.remove(chatId);
+            sendMainMenu(chatId);
+            sendSimpleMessage(chatId, "❌ Авторизация отменена");
             return;
         }
 
-        // Строим сообщение
-        StringBuilder messageText = new StringBuilder("🍽 Все блюда:\n\n");
-
-        // Для каждой категории выводим название и список блюд
-        for (String category : allDishesGrouped.keySet()) {
-            messageText.append("\n🍴 ").append(category).append(":\n");
-
-            List<MenuItemDto> categoryDishes = allDishesGrouped.get(category);
-            for (MenuItemDto dish : categoryDishes) {
-                messageText.append(String.format(
-                        "🍽 %s\n💬 %s\n💵 Цена: %.0f₽\n\n", // Убираем копейки
-                        dish.getName(),
-                        dish.getDescription(),
-                        dish.getPrice()
-                ));
-            }
-        }
-
-        // Отправляем сообщение с блюдами всех категорий
-        sendSimpleMessage(chatId, messageText.toString());
-    }
-
-    private void sendMenuItem(Long chatId, MenuItemDto item) {
-        // Удалить предыдущее сообщение, если было
-        if (lastMenuMessageIds.containsKey(chatId)) {
-            Integer lastMessageId = lastMenuMessageIds.get(chatId);
-            try {
-                execute(new DeleteMessage(chatId.toString(), lastMessageId));
-            } catch (TelegramApiException e) {
-                e.printStackTrace(); // если не удалось удалить — просто идём дальше
-            }
-        }
-
-        String text = String.format("""
-            🍽 %s
-            💬 %s
-            💵 Цена: %.2f₽
-            """, item.getName(), item.getDescription(), item.getPrice());
-
-        SendPhoto photo = new SendPhoto();
-        photo.setChatId(chatId.toString());
-        photo.setParseMode("Markdown");
-        photo.setCaption(text);
-        photo.setReplyMarkup(getMenuKeyboard());
-
-        String imageUrl = (item.getImages() != null && !item.getImages().isEmpty())
-                ? item.getImages().get(0)
-                : "https://via.placeholder.com/300x200.png?text=Нет+фото";
-
-        photo.setPhoto(new InputFile(imageUrl));
-
         try {
-            org.telegram.telegrambots.meta.api.objects.Message sentMessage = execute(photo);
-            lastMenuMessageIds.put(chatId, sentMessage.getMessageId()); // сохраняем ID нового фото
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
+            if (input.split("\\s+").length == 2) {
+                // Логин
+                String[] credentials = input.split("\\s+", 2);
+                if (!isValidEmail(credentials[0])) {
+                    sendSimpleMessage(chatId, "❌ Неверный формат email. Пожалуйста, введите корректный email.");
+                    // Не удаляем awaitingCredentials, чтобы продолжать ожидать ввод
+                    return;
+                }
+                handleLogin(chatId, credentials[0], credentials[1]);
+            } else if (input.split("\\s+").length >= 3) {
+                // Регистрация
+                String[] parts = input.split("\\s+", 3);
+                if (!isValidEmail(parts[1])) {
+                    sendSimpleMessage(chatId, "❌ Неверный формат email. Пожалуйста, введите корректный email.");
+                    // Не удаляем awaitingCredentials, чтобы продолжать ожидать ввод
+                    return;
+                }
+                handleRegistration(chatId, parts[0], parts[1], parts[2]);
+            } else {
+                sendSimpleMessage(chatId, """
+                        ❌ Неверный формат. 
+                        Для входа: email пароль
+                        Для регистрации: имя email пароль
+                        """);
+                // Не удаляем awaitingCredentials, чтобы продолжать ожидать ввод
+            }
+        } catch (Exception e) {
+            sendSimpleMessage(chatId, "⚠️ Ошибка обработки данных. Попробуйте снова.");
+            // Не удаляем awaitingCredentials, чтобы продолжать ожидать ввод
         }
     }
 
-    private InlineKeyboardMarkup getMenuKeyboard() {
-        InlineKeyboardButton prev = new InlineKeyboardButton("<<");
-        prev.setCallbackData("menu_prev");
-
-        InlineKeyboardButton next = new InlineKeyboardButton(">>");
-        next.setCallbackData("menu_next");
-
-        List<InlineKeyboardButton> row = List.of(prev, next);
-        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
-        markup.setKeyboard(List.of(row));
-        return markup;
+    private void handleLogin(Long chatId, String email, String password) {
+        try {
+            String token = authService.login(email, password);
+            if (token != null) {
+                userTokens.put(chatId, token);
+                awaitingCredentials.remove(chatId); // Успешная авторизация - сбрасываем ожидание
+                sendSimpleMessage(chatId, "✅ Вход выполнен успешно!");
+                sendMainMenu(chatId);
+            } else {
+                sendSimpleMessage(chatId, "❌ Неверный email или пароль. Попробуйте снова или введите '" + CANCEL_COMMAND + "' для отмены.");
+                // Оставляем awaitingCredentials для повторной попытки
+            }
+        } catch (Exception e) {
+            sendSimpleMessage(chatId, "⚠️ Ошибка при входе. Попробуйте позже.");
+            // Оставляем awaitingCredentials для повторной попытки
+        }
     }
 
-    private void updateMenuItem(Long chatId, int direction) {
-        List<MenuItemDto> dishes = categoryDishesCache.get(chatId);
-        if (dishes == null || dishes.isEmpty()) return;
+    private void handleRegistration(Long chatId, String name, String email, String password) {
+        try {
+            String token = authService.register(name, email, password);
+            if (token != null) {
+                userTokens.put(chatId, token);
+                awaitingCredentials.remove(chatId); // Успешная регистрация - сбрасываем ожидание
+                sendSimpleMessage(chatId, "✅ Регистрация прошла успешно! Вы автоматически вошли в систему.");
+                sendMainMenu(chatId);
+            } else {
+                sendSimpleMessage(chatId, "❌ Ошибка регистрации. Возможно, email уже занят. Попробуйте снова или введите '" + CANCEL_COMMAND + "' для отмены.");
+                // Оставляем awaitingCredentials для повторной попытки
+            }
+        } catch (Exception e) {
+            sendSimpleMessage(chatId, "⚠️ Ошибка при регистрации. Попробуйте позже.");
+            // Оставляем awaitingCredentials для повторной попытки
+        }
+    }
 
-        int currentIndex = categoryDishIndexes.getOrDefault(chatId, 0);
-        int newIndex = (currentIndex + direction + dishes.size()) % dishes.size();
-        categoryDishIndexes.put(chatId, newIndex);
+//    private void handleReservationPeople(Long chatId, String peopleStr) {
+//        try {
+//            int people = Integer.parseInt(peopleStr);
+//            if (people <= 0) {
+//                sendSimpleMessage(chatId, "❌ Количество гостей должно быть больше 0. Введите снова:");
+//                return;
+//            }
+//            if (people >= 7) {
+//                sendSimpleMessage(chatId, "⚠️ Максимальное количество гостей — 6 человек. " +
+//                        "Для бронирования на большее количество гостей, пожалуйста, свяжитесь с менеджером по телефону: +7 (951) 567-83-73");
+//                return;
+//            }
+//            pendingReservations.get(chatId).setNumberOfPeople(people);
+//            sendSimpleMessage(chatId, "💁 Введите ваше имя для брони:");
+//        } catch (NumberFormatException e) {
+//            sendSimpleMessage(chatId, "❌ Введите корректное число гостей:");
+//        }
+//    }
+    //=======================================
+//    private void handleReservationFlow(Long chatId, String text) throws TelegramApiException {
+//        if (text.equals(CANCEL_COMMAND)) {
+//            resetReservationState(chatId);
+//            sendMainMenu(chatId);
+//            sendSimpleMessage(chatId, "❌ Бронирование отменено");
+//            return;
+//        }
+//
+//        ReservationDto res = pendingReservations.get(chatId);
+//        if (res.getReservationTime() == null) {
+//            handleReservationDate(chatId, text);
+//        } else if (res.getNumberOfPeople() == null) {
+//            handleReservationPeople(chatId, text);
+//        } else if (res.getName() == null) {
+//            handleReservationName(chatId, text);
+//        }
+//    }
+    private void resetReservationState(Long chatId) {
+        pendingReservations.remove(chatId);
+        availableTablesCache.remove(chatId);
+        reservationDateCache.remove(chatId);
+        reservationDurationCache.remove(chatId);
+        reservationPeopleCache.remove(chatId);
+    }
 
-        sendMenuItem(chatId, dishes.get(newIndex));
+    private void handleReservationDate(Long chatId, String dateStr) {
+        try {
+            if (!DATE_TIME_PATTERN.matcher(dateStr).matches()) {
+                sendSimpleMessage(chatId, "❌ Неверный формат даты. Используйте ДД.ММ.ГГГГ ЧЧ:ММ\nПример: 30.12.2025 19:00");
+                return;
+            }
+
+            SimpleDateFormat inputFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
+            inputFormat.setLenient(false);
+            Date date = inputFormat.parse(dateStr);
+
+            if (date.before(new Date())) {
+                sendSimpleMessage(chatId, "❌ Нельзя забронировать на прошедшую дату. Введите корректную дату:");
+                return;
+            }
+
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(date);
+            int hour = cal.get(Calendar.HOUR_OF_DAY);
+            if (hour < 10 || hour >= 23) {
+                sendSimpleMessage(chatId, "❌ Ресторан работает с 10:00 до 23:00. Выберите время в этом интервале.");
+                return;
+            }
+
+            // Сохраняем дату в кэше
+            reservationDateCache.put(chatId, dateStr);
+
+            // Сразу переходим к запросу количества гостей
+            sendSimpleMessage(chatId, "👥 Введите количество гостей:");
+
+        } catch (ParseException e) {
+            sendSimpleMessage(chatId, "❌ Неверная дата или время. Используйте ДД.ММ.ГГГГ ЧЧ:ММ\nПример: 30.12.2025 19:00");
+        }
+    }
+
+
+//    private void handleReservationPeople(Long chatId, String peopleStr) {
+//        try {
+//            int people = Integer.parseInt(peopleStr);
+//            if (people <= 0) {
+//                sendSimpleMessage(chatId, "❌ Количество гостей должно быть больше 0. Введите снова:");
+//                return;
+//            }
+//            if (people > 20) {
+//                sendSimpleMessage(chatId, "❌ Для компаний более 20 человек звоните по телефону +7 (XXX) XXX-XX-XX");
+//                return;
+//            }
+//
+//            // Сохраняем количество людей
+//            pendingReservations.get(chatId).setNumberOfPeople(people);
+//            reservationPeopleCache.put(chatId, people);
+//
+//            // Получаем сохраненную дату из кэша
+//            String dateStr = reservationDateCache.get(chatId);
+//            if (dateStr == null) {
+//                sendSimpleMessage(chatId, "❌ Ошибка: дата бронирования не найдена. Начните процесс заново.");
+//                resetReservationState(chatId);
+//                return;
+//            }
+//
+//            // Получаем продолжительность (по умолчанию 3 часа)
+//            int duration = reservationDurationCache.getOrDefault(chatId, 3);
+//
+//            // Ищем доступные столики
+//            try {
+//                List<RestaurantTableDto> availableTables = findAvailableTables(
+//                        chatId,
+//                        people,
+//                        dateStr,
+//                        duration
+//                );
+//
+//                if (availableTables.isEmpty()) {
+//                    suggestAlternativeTimes(chatId, people, duration);
+//                } else {
+//                    availableTablesCache.put(chatId, availableTables);
+//                    showAvailableTables(chatId);
+//                }
+//            } catch (Exception e) {
+//                log.error("Error finding tables", e);
+//                sendSimpleMessage(chatId, "⚠️ Ошибка при поиске столиков. Попробуйте позже.");
+//            }
+//
+//        } catch (NumberFormatException e) {
+//            sendSimpleMessage(chatId, "❌ Введите корректное число гостей:");
+//        }
+//    }
+
+    private void suggestAlternativeTimes(Long chatId, int people, int duration) {
+        try {
+            String originalDateStr = reservationDateCache.get(chatId);
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
+            Date originalDate = dateFormat.parse(originalDateStr);
+
+            List<String> alternatives = new ArrayList<>();
+            Calendar cal = Calendar.getInstance();
+
+            for (int i = -4; i <= 4; i++) {
+                if (i == 0) continue;
+
+                cal.setTime(originalDate);
+                cal.add(Calendar.MINUTE, 30 * i);
+
+                int hour = cal.get(Calendar.HOUR_OF_DAY);
+                if (hour < 10 || hour >= 23) continue;
+
+                String timeStr = dateFormat.format(cal.getTime());
+                List<RestaurantTableDto> tables = findAvailableTables(chatId, people, timeStr, duration);
+
+                if (!tables.isEmpty()) {
+                    alternatives.add(timeStr);
+                    if (alternatives.size() >= 3) break;
+                }
+            }
+
+            if (alternatives.isEmpty()) {
+                sendSimpleMessage(chatId, "❌ На выбранную дату и ближайшее время нет свободных столиков.");
+                return;
+            }
+
+            InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+            List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+
+            for (String time : alternatives) {
+                rows.add(Collections.singletonList(createInlineButton(time, "alt_time_" + time)));
+            }
+
+            rows.add(Collections.singletonList(createInlineButton("📅 Выбрать другую дату", "change_date")));
+            markup.setKeyboard(rows);
+
+            SendMessage message = new SendMessage(chatId.toString(),
+                    "⏰ На выбранное время нет свободных столиков. Доступные альтернативы:");
+            message.setReplyMarkup(markup);
+            execute(message);
+
+        } catch (Exception e) {
+            log.error("Error suggesting alternative times", e);
+            sendSimpleMessage(chatId, "❌ Ошибка при поиске альтернатив. Попробуйте позже.");
+        }
+    }
+
+    private void handleReservationName(Long chatId, String name) {
+        if (name.trim().isEmpty()) {
+            sendSimpleMessage(chatId, "❌ Имя не может быть пустым. Введите снова:");
+            return;
+        }
+
+        pendingReservations.get(chatId).setName(name.trim());
+        confirmReservation(chatId);
+    }
+
+    private InlineKeyboardButton createInlineButton(String text, String callbackData) {
+        InlineKeyboardButton button = new InlineKeyboardButton(text);
+        button.setCallbackData(callbackData);
+        return button;
+    }
+    //====================================
+    private List<RestaurantTableDto> findAvailableTables(Long chatId, int people, String dateStr, int durationHours) {
+        try {
+            // Парсим дату из пользовательского ввода
+            SimpleDateFormat inputFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
+            Date date = inputFormat.parse(dateStr);
+
+            // Форматируем дату для API
+            SimpleDateFormat serverFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm");
+            String startTime = serverFormat.format(date);
+
+            // Рассчитываем время окончания брони
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(date);
+            calendar.add(Calendar.HOUR, durationHours);
+            String endTime = serverFormat.format(calendar.getTime());
+
+            // Получаем все столики из базы
+            List<RestaurantTable> allTables = restaurantTableRepository.findAll();
+
+            // Получаем конфликтующие бронирования
+            List<Reservation> conflicts = restaurantTableRepository.findConflictingReservations(startTime, endTime);
+
+            // Преобразуем в Set для быстрого поиска
+            Set<Long> occupiedTableIds = conflicts.stream()
+                    .map(res -> res.getTable().getId())
+                    .collect(Collectors.toSet());
+
+            // Фильтруем столики
+            return allTables.stream()
+                    .filter(table -> {
+                        // Проверяем, что столик не занят
+                        if (occupiedTableIds.contains(table.getId())) {
+                            return false;
+                        }
+
+                        // Проверяем соответствие по количеству мест
+                        int seats = table.getSeats();
+                        return (seats == people) || (seats > people && seats <= people + 2);
+                    })
+                    // Сортируем: сначала точное совпадение по местам, затем по возрастанию разницы
+                    .sorted((t1, t2) -> {
+                        int diff1 = Math.abs(t1.getSeats() - people);
+                        int diff2 = Math.abs(t2.getSeats() - people);
+                        return Integer.compare(diff1, diff2);
+                    })
+                    // Преобразуем в DTO
+                    .map(table -> new RestaurantTableDto(table.getId(), table.getTableNumber()))
+                    .collect(Collectors.toList());
+
+        } catch (ParseException e) {
+            log.error("Error parsing date: " + dateStr, e);
+            sendSimpleMessage(chatId, "❌ Ошибка обработки даты. Попробуйте снова.");
+        } catch (Exception e) {
+            log.error("Error finding available tables", e);
+            sendSimpleMessage(chatId, "⚠️ Ошибка при поиске столиков. Попробуйте позже.");
+        }
+
+        return Collections.emptyList();
+    }
+
+    private void handleTableSelection(Long chatId, Long tableId) throws TelegramApiException {
+        try {
+            RestaurantTable table = restaurantTableRepository.findById(tableId)
+                    .orElseThrow(() -> new Exception("Столик не найден"));
+
+            pendingReservations.get(chatId).setTable(new RestaurantTableDto(table.getId(), table.getTableNumber()));
+
+            sendSimpleMessage(chatId, "💁 Введите ваше имя для брони:");
+        } catch (Exception e) {
+            sendSimpleMessage(chatId, "❌ Ошибка: " + e.getMessage());
+            log.error("Error selecting table", e);
+        }
+    }
+
+    private void showAvailableTables(Long chatId) throws TelegramApiException {
+        List<RestaurantTableDto> tables = availableTablesCache.get(chatId);
+        if (tables == null || tables.isEmpty()) {
+            sendSimpleMessage(chatId, "❌ Нет доступных столиков. Попробуйте другое время.");
+            return;
+        }
+
+        // Получаем полную информацию о столиках из базы для отображения мест
+        List<RestaurantTable> fullTablesInfo = restaurantTableRepository.findAllById(
+                tables.stream().map(RestaurantTableDto::getId).collect(Collectors.toList())
+        );
+
+        // Группируем по количеству мест
+        Map<Integer, List<RestaurantTable>> grouped = fullTablesInfo.stream()
+                .collect(Collectors.groupingBy(RestaurantTable::getSeats));
+
+        List<Integer> seatsCounts = new ArrayList<>(grouped.keySet());
+        Collections.sort(seatsCounts);
+
+        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+
+        for (Integer seats : seatsCounts) {
+            for (RestaurantTable table : grouped.get(seats)) {
+                String buttonText = String.format("🍽 Столик #%s (%d мест)", table.getTableNumber(), table.getSeats());
+                rows.add(Collections.singletonList(createInlineButton(buttonText, "select_table_" + table.getId())));
+            }
+        }
+
+        rows.add(Arrays.asList(
+                createInlineButton("🕒 Изменить время", "change_time"),
+                createInlineButton("👥 Изменить количество гостей", "change_people")
+        ));
+
+        markup.setKeyboard(rows);
+
+        SendMessage message = new SendMessage(chatId.toString(),
+                "🪑 Доступные столики (выбрано " + reservationPeopleCache.get(chatId) + " гостей):");
+        message.setReplyMarkup(markup);
+        execute(message);
+    }
+
+    private void confirmReservation(Long chatId) {
+        try {
+            ReservationDto reservation = pendingReservations.get(chatId);
+            int duration = reservationDurationCache.getOrDefault(chatId, 3);
+            String token = userTokens.get(chatId);
+
+            if (token == null) {
+                sendSimpleMessage(chatId, "❌ Ошибка авторизации. Пожалуйста, войдите снова.");
+                return;
+            }
+
+            // Получаем полную информацию о столике для отображения мест
+            RestaurantTable table = restaurantTableRepository.findById(reservation.getTable().getId())
+                    .orElseThrow(() -> new Exception("Столик не найден"));
+
+            SimpleDateFormat serverFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm");
+            SimpleDateFormat displayFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
+            Date date = serverFormat.parse(reservation.getReservationTime());
+
+            Calendar endTime = Calendar.getInstance();
+            endTime.setTime(date);
+            endTime.add(Calendar.HOUR, duration);
+
+            String confirmation = String.format(
+                    "✅ Подтвердите бронирование:\n\n" +
+                            "📅 Дата: %s\n" +
+                            "⏳ Продолжительность: %d часа\n" +
+                            "🕒 До: %s\n" +
+                            "👥 Гости: %d\n" +
+                            "💁 Имя: %s\n" +
+                            "🪑 Столик: #%s (%d мест)",
+                    displayFormat.format(date),
+                    duration,
+                    displayFormat.format(endTime.getTime()),
+                    reservation.getNumberOfPeople(),
+                    reservation.getName(),
+                    table.getTableNumber(),
+                    table.getSeats()
+            );
+
+            InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+            markup.setKeyboard(List.of(
+                    List.of(createInlineButton("✅ Подтвердить", "confirm_reservation")),
+                    List.of(createInlineButton("❌ Отменить", "cancel_reservation"))
+            ));
+
+            SendMessage message = new SendMessage(chatId.toString(), confirmation);
+            message.setReplyMarkup(markup);
+            execute(message);
+
+        } catch (Exception e) {
+            log.error("Error confirming reservation", e);
+            sendSimpleMessage(chatId, "❌ Ошибка при подтверждении брони. Попробуйте снова.");
+        }
+    }
+    private String calculateEndTime(String startTime, int durationHours) throws ParseException {
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm");
+        Date date = format.parse(startTime);
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        calendar.add(Calendar.HOUR, durationHours);
+
+        return format.format(calendar.getTime());
+    }
+
+    //=======fdb
+    private void updateReservationTime(Long chatId, String newTime) {
+        try {
+            reservationDateCache.put(chatId, newTime);
+
+            SimpleDateFormat inputFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
+            SimpleDateFormat serverFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm");
+            Date date = inputFormat.parse(newTime);
+
+            ReservationDto reservation = pendingReservations.get(chatId);
+            reservation.setReservationTime(serverFormat.format(date));
+
+            int people = reservation.getNumberOfPeople();
+            int duration = reservationDurationCache.getOrDefault(chatId, 3);
+            List<RestaurantTableDto> tables = findAvailableTables(chatId, people, newTime, duration);
+
+            if (tables.isEmpty()) {
+                suggestAlternativeTimes(chatId, people, duration);
+            } else {
+                availableTablesCache.put(chatId, tables);
+                showAvailableTables(chatId);
+            }
+        } catch (ParseException e) {
+            sendSimpleMessage(chatId, "❌ Неверный формат времени. Используйте ДД.ММ.ГГГГ ЧЧ:ММ");
+        } catch (Exception e) {
+            log.error("Error updating reservation time", e);
+            sendSimpleMessage(chatId, "⚠️ Ошибка при обновлении времени. Попробуйте снова.");
+        }
+    }
+
+    private void completeReservation(Long chatId) {
+        try {
+            ReservationDto reservation = pendingReservations.get(chatId);
+            int duration = reservationDurationCache.getOrDefault(chatId, 3);
+            String token = userTokens.get(chatId);
+
+            if (token == null) {
+                sendSimpleMessage(chatId, "❌ Ошибка авторизации. Пожалуйста, войдите снова.");
+                return;
+            }
+
+            // Получаем полную информацию о столике
+            RestaurantTable table = restaurantTableRepository.findById(reservation.getTable().getId())
+                    .orElseThrow(() -> new Exception("Столик не найден"));
+
+            // Формируем JSON запрос
+            String json = String.format(
+                    "{\"name\":\"%s\"," +
+                            "\"table\":{\"id\":%d}," +
+                            "\"reservationTime\":\"%s\"," +
+                            "\"numberOfPeople\":%d," +
+                            "\"durationHours\":%d}",
+                    reservation.getName(),
+                    table.getId(),
+                    reservation.getReservationTime(),
+                    reservation.getNumberOfPeople(),
+                    duration
+            );
+
+            // Отправляем запрос на сервер
+            HttpResponse<String> response = HttpClient.newHttpClient()
+                    .send(HttpRequest.newBuilder()
+                                    .uri(URI.create("http://localhost:8080/api/reserve"))
+                                    .header("Content-Type", "application/json")
+                                    .header("Authorization", "Bearer " + token)
+                                    .POST(HttpRequest.BodyPublishers.ofString(json))
+                                    .build(),
+                            HttpResponse.BodyHandlers.ofString()
+                    );
+
+            if (response.statusCode() == 200) {
+                resetReservationState(chatId);
+                sendSimpleMessage(chatId, "✅ Столик успешно забронирован!");
+                sendMainMenu(chatId);
+            } else {
+                sendSimpleMessage(chatId, "❌ Ошибка бронирования: " + response.body());
+            }
+        } catch (Exception e) {
+            log.error("Error completing reservation", e);
+            sendSimpleMessage(chatId, "❌ Ошибка при бронировании. Попробуйте позже.");
+        }
+    }
+
+    // esgrs
+    private void startReservationProcess(Long chatId) throws TelegramApiException {
+        pendingReservations.put(chatId, new ReservationDto());
+        sendSimpleMessage(chatId, "📅 Введите дату и время бронирования в формате: ДД.ММ.ГГГГ ЧЧ:ММ\n\nПример: 25.12.2023 19:30");
+    }
+
+    private boolean validateAndSaveDate(Long chatId, String dateStr) {
+        try {
+            if (!DATE_TIME_PATTERN.matcher(dateStr).matches()) {
+                sendSimpleMessage(chatId, "❌ Неверный формат даты. Используйте ДД.ММ.ГГГГ ЧЧ:ММ\nПример: 30.12.2025 19:00");
+                return false;
+            }
+
+            SimpleDateFormat inputFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
+            inputFormat.setLenient(false);
+            Date date = inputFormat.parse(dateStr);
+
+            if (date.before(new Date())) {
+                sendSimpleMessage(chatId, "❌ Нельзя забронировать на прошедшую дату. Введите корректную дату:");
+                return false;
+            }
+
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(date);
+            int hour = cal.get(Calendar.HOUR_OF_DAY);
+            if (hour < 10 || hour >= 23) {
+                sendSimpleMessage(chatId, "❌ Ресторан работает с 10:00 до 23:00. Выберите время в этом интервале.");
+                return false;
+            }
+
+            reservationDateCache.put(chatId, dateStr);
+            return true;
+        } catch (ParseException e) {
+            sendSimpleMessage(chatId, "❌ Неверная дата или время. Используйте ДД.ММ.ГГГГ ЧЧ:ММ\nПример: 30.12.2025 19:00");
+            return false;
+        }
+    }
+    private void handleReservationFlow(Long chatId, String text) throws TelegramApiException {
+        if (text.equals(CANCEL_COMMAND)) {
+            resetReservationState(chatId);
+            sendMainMenu(chatId);
+            sendSimpleMessage(chatId, "❌ Бронирование отменено");
+            return;
+        }
+
+        ReservationDto res = pendingReservations.get(chatId);
+        if (res.getReservationTime() == null) {
+            // Этап ввода даты
+            if (validateAndSaveDate(chatId, text)) {
+                // Сохраняем дату в формате API
+                SimpleDateFormat inputFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
+                SimpleDateFormat serverFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm");
+                try {
+                    Date date = inputFormat.parse(reservationDateCache.get(chatId));
+                    res.setReservationTime(serverFormat.format(date));
+                    sendSimpleMessage(chatId, "👥 Введите количество гостей:");
+                } catch (ParseException e) {
+                    sendSimpleMessage(chatId, "❌ Ошибка обработки даты. Попробуйте снова.");
+                }
+            }
+        } else if (res.getNumberOfPeople() == null) {
+            handleReservationPeople(chatId, text);
+        } else if (res.getName() == null) {
+            handleReservationName(chatId, text);
+        }
+    }
+    private void handleReservationPeople(Long chatId, String peopleStr) {
+        try {
+            int people = Integer.parseInt(peopleStr);
+            if (people <= 0) {
+                sendSimpleMessage(chatId, "❌ Количество гостей должно быть больше 0. Введите снова:");
+                return;
+            }
+            if (people > 20) {
+                sendSimpleMessage(chatId, "❌ Для компаний более 20 человек звоните по телефону +7 (XXX) XXX-XX-XX");
+                return;
+            }
+
+            // Сохраняем количество людей
+            pendingReservations.get(chatId).setNumberOfPeople(people);
+            reservationPeopleCache.put(chatId, people);
+
+            // Ищем доступные столики
+            String dateStr = reservationDateCache.get(chatId);
+            List<RestaurantTableDto> availableTables = findAvailableTables(
+                    chatId,
+                    people,
+                    dateStr,
+                    reservationDurationCache.getOrDefault(chatId, 3)
+            );
+
+            if (availableTables.isEmpty()) {
+                suggestAlternativeTimes(chatId, people, 3);
+            } else {
+                availableTablesCache.put(chatId, availableTables);
+                showAvailableTables(chatId);
+            }
+        } catch (NumberFormatException e) {
+            sendSimpleMessage(chatId, "❌ Введите корректное число гостей:");
+        } catch (Exception e) {
+            log.error("Error in handleReservationPeople", e);
+            sendSimpleMessage(chatId, "⚠️ Ошибка при обработке запроса. Попробуйте позже.");
+        }
+    }
+    private void handleReservationCommand(Long chatId) throws TelegramApiException {
+        if (!userTokens.containsKey(chatId)) {
+            sendAuthOptions(chatId);
+            return;
+        }
+
+        if (!pendingReservations.containsKey(chatId)) {
+            startReservationProcess(chatId);
+        } else {
+            // Продолжаем существующий процесс
+            ReservationDto res = pendingReservations.get(chatId);
+            if (res.getReservationTime() == null) {
+                sendSimpleMessage(chatId, "📅 Введите дату и время бронирования (ДД.ММ.ГГГГ ЧЧ:ММ):");
+            } else if (res.getNumberOfPeople() == null) {
+                sendSimpleMessage(chatId, "👥 Введите количество гостей:");
+            } else if (res.getName() == null) {
+                sendSimpleMessage(chatId, "💁 Введите ваше имя для брони:");
+            } else if (res.getTable() == null) {
+                showAvailableTables(chatId);
+            }
+        }
+    }
+
+    @Override
+    public void onUpdateReceived(Update update) {
+        try {
+            // 1. Обработка callback-запросов (нажатия кнопок)
+            if (update.hasCallbackQuery()) {
+                handleCallbackQuery(update);
+                return;
+            }
+
+            // 2. Обработка текстовых сообщений
+            if (update.hasMessage() && update.getMessage().hasText()) {
+                handleTextMessage(update);
+            }
+        } catch (Exception e) {
+            handleError(update, e);
+        }
+    }
+
+    private void handleCallbackQuery(Update update) throws TelegramApiException {
+        String callbackData = update.getCallbackQuery().getData();
+        Long chatId = update.getCallbackQuery().getMessage().getChatId();
+
+        if (callbackData.startsWith("duration_")) {
+            int hours = Integer.parseInt(callbackData.substring("duration_".length()));
+            reservationDurationCache.put(chatId, hours);
+            sendSimpleMessage(chatId, "👥 Введите количество гостей:");
+        }
+        else if (callbackData.startsWith("select_table_")) {
+            Long tableId = Long.parseLong(callbackData.substring("select_table_".length()));
+            handleTableSelection(chatId, tableId);
+        }
+        else if (callbackData.startsWith("alt_time_")) {
+            String newTime = callbackData.substring("alt_time_".length());
+            updateReservationTime(chatId, newTime);
+        }
+        else if (callbackData.equals("change_time")) {
+            sendSimpleMessage(chatId, "📅 Введите новое время в формате ДД.ММ.ГГГГ ЧЧ:ММ");
+        }
+        else if (callbackData.equals("change_people")) {
+            sendSimpleMessage(chatId, "👥 Введите новое количество гостей:");
+        }
+        else if (callbackData.equals("confirm_reservation")) {
+            completeReservation(chatId);
+        }
+        else if (callbackData.equals("cancel_reservation")) {
+            resetReservationState(chatId);
+            sendMainMenu(chatId);
+            sendSimpleMessage(chatId, "❌ Бронирование отменено");
+        }
+        else {
+            handleCallback(update);
+        }
+    }
+
+    private void handleTextMessage(Update update) throws TelegramApiException {
+        Long chatId = update.getMessage().getChatId();
+        String text = update.getMessage().getText().trim();
+
+        // Глобальная обработка отмены
+        if (text.equals(CANCEL_COMMAND)) {
+            resetUserState(chatId);
+            sendMainMenu(chatId);
+            return;
+        }
+
+        // Обработка команд бронирования
+        if (text.startsWith("/cancel_")) {
+            try {
+                Long reservationId = Long.parseLong(text.substring("/cancel_".length()));
+                handleCancelReservation(chatId, reservationId);
+            } catch (NumberFormatException e) {
+                sendSimpleMessage(chatId, "❌ Неверный формат команды. Используйте /cancel_номер");
+            }
+            return;
+        }
+
+        // Обработка ввода учетных данных
+        if (awaitingCredentials.contains(chatId)) {
+            handleCredentialsInput(chatId, text);
+            return;
+        }
+
+        // Обработка процесса бронирования
+        if (pendingReservations.containsKey(chatId)) {
+            handleReservationStep(chatId, text);
+            return;
+        }
+
+        // Обработка отзывов
+        if (text.matches("^[1-5]\\s.+") && userTokens.containsKey(chatId)) {
+            handleReviewSubmission(chatId, text);
+            return;
+        }
+
+        // Обработка обычных команд
+        handleCommand(chatId, text);
+    }
+
+    private void handleReservationStep(Long chatId, String text) throws TelegramApiException {
+        ReservationDto reservation = pendingReservations.get(chatId);
+
+        if (reservation.getReservationTime() == null) {
+            // Этап ввода даты
+            if (validateAndSaveDate(chatId, text)) {
+                sendSimpleMessage(chatId, "👥 Введите количество гостей:");
+            }
+        }
+        else if (reservation.getNumberOfPeople() == null) {
+            // Этап ввода количества гостей
+            handleReservationPeople(chatId, text);
+        }
+        else if (reservation.getName() == null) {
+            // Этап ввода имени
+            handleReservationName(chatId, text);
+        }
+        else if (reservation.getTable() == null) {
+            // Этап выбора столика (обрабатывается через кнопки)
+            sendSimpleMessage(chatId, "Пожалуйста, выберите столик из предложенных вариантов");
+        }
+    }
+
+    private void handleError(Update update, Exception e) {
+        log.error("Error processing update", e);
+        try {
+            Long chatId = update.hasCallbackQuery() ?
+                    update.getCallbackQuery().getMessage().getChatId() :
+                    update.getMessage().getChatId();
+            sendSimpleMessage(chatId, "⚠️ Произошла ошибка. Пожалуйста, попробуйте позже.");
+        } catch (Exception ex) {
+            log.error("Error sending error message", ex);
+        }
     }
 }
+
+
