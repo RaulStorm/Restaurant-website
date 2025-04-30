@@ -86,153 +86,6 @@ public class RestaurantBot extends TelegramLongPollingBot {
         return botToken;
     }
 
-//    @Override
-//    public void onUpdateReceived(Update update) {
-//        try {
-//            // 1. Обработка callback-запросов (нажатия кнопок)
-//            if (update.hasCallbackQuery()) {
-//                String callbackData = update.getCallbackQuery().getData();
-//                Long chatId = update.getCallbackQuery().getMessage().getChatId();
-//
-//                // Обработка новых callback'ов для бронирования
-//                if (callbackData.startsWith("duration_")) {
-//                    int hours = Integer.parseInt(callbackData.substring("duration_".length()));
-//                    reservationDurationCache.put(chatId, hours);
-//                    sendSimpleMessage(chatId, "👥 Введите количество гостей:");
-//                }
-//                else if (callbackData.startsWith("select_table_")) {
-//                    Long tableId = Long.parseLong(callbackData.substring("select_table_".length()));
-//                    handleTableSelection(chatId, tableId);
-//                }
-//                else if (callbackData.startsWith("alt_time_")) {
-//                    String newTime = callbackData.substring("alt_time_".length());
-//                    updateReservationTime(chatId, newTime);
-//                }
-//                else if (callbackData.equals("change_time")) {
-//                    sendSimpleMessage(chatId, "📅 Введите новое время в формате ДД.ММ.ГГГГ ЧЧ:ММ");
-//                }
-//                else if (callbackData.equals("change_people")) {
-//                    sendSimpleMessage(chatId, "👥 Введите новое количество гостей:");
-//                }
-//                else if (callbackData.equals("confirm_reservation")) {
-//                    completeReservation(chatId);
-//                }
-//                else if (callbackData.equals("cancel_reservation")) {
-//                    resetReservationState(chatId);
-//                    sendMainMenu(chatId);
-//                    sendSimpleMessage(chatId, "❌ Бронирование отменено");
-//                }
-//                else {
-//                    // Остальные callback'и
-//                    handleCallback(update);
-//                }
-//                return;
-//            }
-//
-//            // 2. Обработка текстовых сообщений
-//            if (update.hasMessage() && update.getMessage().hasText()) {
-//                Long chatId = update.getMessage().getChatId();
-//                String text = update.getMessage().getText().trim();
-//
-//                // Глобальная обработка отмены
-//                if (text.equals(CANCEL_COMMAND)) {
-//                    resetUserState(chatId);
-//                    sendMainMenu(chatId);
-//                    return;
-//                }
-//
-//                // 2.1. Проверка на отмену бронирования
-//                if (text.startsWith("/cancel_")) {
-//                    try {
-//                        Long reservationId = Long.parseLong(text.substring("/cancel_".length()));
-//                        handleCancelReservation(chatId, reservationId);
-//                    } catch (NumberFormatException e) {
-//                        sendSimpleMessage(chatId, "❌ Неверный формат команды. Используйте /cancel_номер");
-//                    }
-//                    return;
-//                }
-//
-//                // 2.2. Обработка ввода учетных данных
-//                if (awaitingCredentials.contains(chatId)) {
-//                    handleCredentialsInput(chatId, text);
-//                    return;
-//                }
-//
-//                // 2.3. Обработка шагов бронирования
-//                if (pendingReservations.containsKey(chatId)) {
-//                    try {
-//                        handleReservationFlow(chatId, text);
-//                    } catch (TelegramApiException e) {
-//                        log.error("Error in reservation flow", e);
-//                        sendSimpleMessage(chatId, "⚠️ Ошибка при обработке бронирования. Попробуйте снова.");
-//                    }
-//                    return;
-//                }
-//
-//                // 2.4. Обработка отзыва
-//                if (text.matches("^[1-5]\\s.+") && userTokens.containsKey(chatId)) {
-//                    handleReviewSubmission(chatId, text);
-//                    return;
-//                }
-//
-//                // 3. Обработка команд
-//                handleCommand(chatId, text);
-//            }
-//        } catch (Exception e) {
-//            log.error("Error in onUpdateReceived", e);
-//            try {
-//                Long chatId = update.hasCallbackQuery() ?
-//                        update.getCallbackQuery().getMessage().getChatId() :
-//                        update.getMessage().getChatId();
-//                sendSimpleMessage(chatId, "⚠️ Произошла ошибка. Пожалуйста, попробуйте позже.");
-//            } catch (Exception ex) {
-//                log.error("Error sending error message", ex);
-//            }
-//        }
-//    }
-
-    // ========== Reservation Flow Methods ==========
-
-//    private void handleReservationFlow(Long chatId, String text) throws TelegramApiException {
-//        if (text.equals(CANCEL_COMMAND)) {
-//            pendingReservations.remove(chatId);
-//            sendMainMenu(chatId);
-//            sendSimpleMessage(chatId, "❌ Бронирование отменено");
-//            return;
-//        }
-//        ReservationDto res = pendingReservations.get(chatId);
-//        if (res.getReservationTime() == null) {
-//            handleReservationDate(chatId, text);
-//        } else if (res.getNumberOfPeople() == null) {
-//            handleReservationPeople(chatId, text);
-//        } else if (res.getName() == null) {
-//            handleReservationName(chatId, text);
-//        } else {
-//            handleReservationTable(chatId, text);
-//        }
-//    }
-
-//    private void handleReservationName(Long chatId, String name) {
-//        if (name.trim().isEmpty()) {
-//            sendSimpleMessage(chatId, "❌ Имя не может быть пустым. Введите снова:");
-//            return;
-//        }
-//
-//        pendingReservations.get(chatId).setName(name.trim());
-//
-//        // Отправляем фото столика перед запросом ID
-//        try {
-//            SendPhoto photo = new SendPhoto();
-//            photo.setChatId(chatId.toString());
-//            photo.setPhoto(new InputFile("https://res.cloudinary.com/drixmxite/image/upload/v1745345310/table-reservation_vx5s9b_q8i7no.png"));
-//            photo.setCaption("📋 Отлично, " + name + "! Теперь введите ID столика:");
-//            execute(photo);
-//        } catch (TelegramApiException e) {
-//            // Если не удалось отправить фото, отправляем текстовое сообщение
-//            sendSimpleMessage(chatId, "📋 Отлично, " + name + "! Теперь введите ID столика:");
-//        }
-//    }
-
     private void handleReservationTable(Long chatId, String tableIdStr) {
         try {
             Long tableId = Long.parseLong(tableIdStr);
@@ -1123,19 +976,19 @@ public class RestaurantBot extends TelegramLongPollingBot {
         return button;
     }
 
-    private void handleTableSelection(Long chatId, Long tableId) throws TelegramApiException {
-        try {
-            RestaurantTable table = restaurantTableRepository.findById(tableId)
-                    .orElseThrow(() -> new Exception("Столик не найден"));
-
-            pendingReservations.get(chatId).setTable(new RestaurantTableDto(table.getId(), table.getTableNumber()));
-
-            sendSimpleMessage(chatId, "💁 Введите ваше имя для брони:");
-        } catch (Exception e) {
-            sendSimpleMessage(chatId, "❌ Ошибка: " + e.getMessage());
-            log.error("Error selecting table", e);
-        }
-    }
+//    private void handleTableSelection(Long chatId, Long tableId) throws TelegramApiException {
+//        try {
+//            RestaurantTable table = restaurantTableRepository.findById(tableId)
+//                    .orElseThrow(() -> new Exception("Столик не найден"));
+//
+//            pendingReservations.get(chatId).setTable(new RestaurantTableDto(table.getId(), table.getTableNumber()));
+//
+//            sendSimpleMessage(chatId, "💁 Введите ваше имя для брони:");
+//        } catch (Exception e) {
+//            sendSimpleMessage(chatId, "❌ Ошибка: " + e.getMessage());
+//            log.error("Error selecting table", e);
+//        }
+//    }
 
     private void confirmReservation(Long chatId) {
         try {
@@ -1192,16 +1045,7 @@ public class RestaurantBot extends TelegramLongPollingBot {
             sendSimpleMessage(chatId, "❌ Ошибка при подтверждении брони. Попробуйте снова.");
         }
     }
-    private String calculateEndTime(String startTime, int durationHours) throws ParseException {
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm");
-        Date date = format.parse(startTime);
 
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(date);
-        calendar.add(Calendar.HOUR, durationHours);
-
-        return format.format(calendar.getTime());
-    }
 
     //=======fdb
     private void updateReservationTime(Long chatId, String newTime) {
@@ -1233,58 +1077,58 @@ public class RestaurantBot extends TelegramLongPollingBot {
         }
     }
 
-    private void completeReservation(Long chatId) {
-        try {
-            ReservationDto reservation = pendingReservations.get(chatId);
-            int duration = reservationDurationCache.getOrDefault(chatId, 3);
-            String token = userTokens.get(chatId);
-
-            if (token == null) {
-                sendSimpleMessage(chatId, "❌ Ошибка авторизации. Пожалуйста, войдите снова.");
-                return;
-            }
-
-            // Получаем полную информацию о столике
-            RestaurantTable table = restaurantTableRepository.findById(reservation.getTable().getId())
-                    .orElseThrow(() -> new Exception("Столик не найден"));
-
-            // Формируем JSON запрос
-            String json = String.format(
-                    "{\"name\":\"%s\"," +
-                            "\"table\":{\"id\":%d}," +
-                            "\"reservationTime\":\"%s\"," +
-                            "\"numberOfPeople\":%d," +
-                            "\"durationHours\":%d}",
-                    reservation.getName(),
-                    table.getId(),
-                    reservation.getReservationTime(),
-                    reservation.getNumberOfPeople(),
-                    duration
-            );
-
-            // Отправляем запрос на сервер
-            HttpResponse<String> response = HttpClient.newHttpClient()
-                    .send(HttpRequest.newBuilder()
-                                    .uri(URI.create("http://localhost:8080/api/reserve"))
-                                    .header("Content-Type", "application/json")
-                                    .header("Authorization", "Bearer " + token)
-                                    .POST(HttpRequest.BodyPublishers.ofString(json))
-                                    .build(),
-                            HttpResponse.BodyHandlers.ofString()
-                    );
-
-            if (response.statusCode() == 200) {
-                resetReservationState(chatId);
-                sendSimpleMessage(chatId, "✅ Столик успешно забронирован!");
-                sendMainMenu(chatId);
-            } else {
-                sendSimpleMessage(chatId, "❌ Ошибка бронирования: " + response.body());
-            }
-        } catch (Exception e) {
-            log.error("Error completing reservation", e);
-            sendSimpleMessage(chatId, "❌ Ошибка при бронировании. Попробуйте позже.");
-        }
-    }
+//    private void completeReservation(Long chatId) {
+//        try {
+//            ReservationDto reservation = pendingReservations.get(chatId);
+//            int duration = reservationDurationCache.getOrDefault(chatId, 3);
+//            String token = userTokens.get(chatId);
+//
+//            if (token == null) {
+//                sendSimpleMessage(chatId, "❌ Ошибка авторизации. Пожалуйста, войдите снова.");
+//                return;
+//            }
+//
+//            // Получаем полную информацию о столике
+//            RestaurantTable table = restaurantTableRepository.findById(reservation.getTable().getId())
+//                    .orElseThrow(() -> new Exception("Столик не найден"));
+//
+//            // Формируем JSON запрос
+//            String json = String.format(
+//                    "{\"name\":\"%s\"," +
+//                            "\"table\":{\"id\":%d}," +
+//                            "\"reservationTime\":\"%s\"," +
+//                            "\"numberOfPeople\":%d," +
+//                            "\"durationHours\":%d}",
+//                    reservation.getName(),
+//                    table.getId(),
+//                    reservation.getReservationTime(),
+//                    reservation.getNumberOfPeople(),
+//                    duration
+//            );
+//
+//            // Отправляем запрос на сервер
+//            HttpResponse<String> response = HttpClient.newHttpClient()
+//                    .send(HttpRequest.newBuilder()
+//                                    .uri(URI.create("http://localhost:8080/api/reserve"))
+//                                    .header("Content-Type", "application/json")
+//                                    .header("Authorization", "Bearer " + token)
+//                                    .POST(HttpRequest.BodyPublishers.ofString(json))
+//                                    .build(),
+//                            HttpResponse.BodyHandlers.ofString()
+//                    );
+//
+//            if (response.statusCode() == 200) {
+//                resetReservationState(chatId);
+//                sendSimpleMessage(chatId, "✅ Столик успешно забронирован!");
+//                sendMainMenu(chatId);
+//            } else {
+//                sendSimpleMessage(chatId, "❌ Ошибка бронирования: " + response.body());
+//            }
+//        } catch (Exception e) {
+//            log.error("Error completing reservation", e);
+//            sendSimpleMessage(chatId, "❌ Ошибка при бронировании. Попробуйте позже.");
+//        }
+//    }
 
     // esgrs
     private void startReservationProcess(Long chatId) throws TelegramApiException {
@@ -1561,60 +1405,6 @@ public class RestaurantBot extends TelegramLongPollingBot {
 
         execute(message);
     }
-    private void suggestAlternativeTimes(Long chatId, int people, int duration) {
-        try {
-            String originalDateStr = reservationDateCache.get(chatId);
-            SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
-            Date originalDate = dateFormat.parse(originalDateStr);
-
-            List<String> alternatives = new ArrayList<>();
-            Calendar cal = Calendar.getInstance();
-
-            for (int i = -4; i <= 4; i++) {
-                if (i == 0) continue;
-
-                cal.setTime(originalDate);
-                cal.add(Calendar.MINUTE, 30 * i);
-
-                int hour = cal.get(Calendar.HOUR_OF_DAY);
-                if (hour < 10 || hour >= 23) continue;
-
-                String timeStr = dateFormat.format(cal.getTime());
-                List<RestaurantTableDto> tables = findAvailableTables(chatId, people, timeStr, duration);
-
-                if (!tables.isEmpty()) {
-                    alternatives.add(timeStr);
-                    if (alternatives.size() >= 3) break;
-                }
-            }
-
-            if (alternatives.isEmpty()) {
-                sendSimpleMessage(chatId, "❌ На выбранное время нет доступных столиков. Попробуйте выбрать другой день.");
-                return;
-            }
-
-            InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
-            List<List<InlineKeyboardButton>> rows = new ArrayList<>();
-
-            for (String time : alternatives) {
-                rows.add(Collections.singletonList(createInlineButton("⏰ " + time, "alt_time_" + time)));
-            }
-
-            rows.add(Collections.singletonList(createInlineButton("📅 Выбрать другую дату", "change_time")));
-
-            markup.setKeyboard(rows);
-
-            SendMessage message = new SendMessage(chatId.toString(),
-                    "❌ Нет доступных столиков. Вот альтернативные варианты:");
-            message.setReplyMarkup(markup);
-
-            execute(message);
-
-        } catch (Exception e) {
-            log.error("Ошибка при поиске альтернативных времен", e);
-            sendSimpleMessage(chatId, "⚠️ Ошибка при поиске альтернатив. Попробуйте позже.");
-        }
-    }
 
     private List<RestaurantTableDto> findAvailableTables(Long chatId, int people, String dateStr, int durationHours) {
         try {
@@ -1725,7 +1515,213 @@ public class RestaurantBot extends TelegramLongPollingBot {
         }
     }
 
+    // 1) Обновленный метод completeReservation:
+    private void completeReservation(Long chatId) {
+        try {
+            ReservationDto reservation = pendingReservations.get(chatId);
+            int duration = reservationDurationCache.getOrDefault(chatId, 3);
+            String token = userTokens.get(chatId);
 
+            if (token == null) {
+                sendSimpleMessage(chatId, "❌ Ошибка авторизации. Пожалуйста, войдите снова.");
+                return;
+            }
+
+            // Формируем JSON с уже выбранными данными пользователя (имя, количество людей)
+            String json = String.format(
+                    "{\"name\":\"%s\"," +
+                            "\"table\":{\"id\":%d}," +
+                            "\"reservationTime\":\"%s\"," +
+                            "\"numberOfPeople\":%d," +
+                            "\"durationHours\":%d}",
+                    reservation.getName(),
+                    reservation.getTable().getId(),
+                    reservation.getReservationTime(),
+                    reservation.getNumberOfPeople(),
+                    duration
+            );
+
+            HttpResponse<String> response = HttpClient.newHttpClient()
+                    .send(HttpRequest.newBuilder()
+                                    .uri(URI.create("http://localhost:8080/api/reserve"))
+                                    .header("Content-Type", "application/json")
+                                    .header("Authorization", "Bearer " + token)
+                                    .POST(HttpRequest.BodyPublishers.ofString(json))
+                                    .build(),
+                            HttpResponse.BodyHandlers.ofString()
+                    );
+
+            if (response.statusCode() == 200) {
+                resetReservationState(chatId);
+                sendSimpleMessage(chatId, "✅ Столик успешно забронирован!");
+                sendMainMenu(chatId);
+            } else {
+                String body = response.body();
+                if (body.contains("already reserved at this time")) {
+                    // Если столик занят, ищем альтернативы
+                    handleBookingConflict(chatId);
+                } else {
+                    sendSimpleMessage(chatId, "❌ Ошибка бронирования: " + body);
+                }
+            }
+        } catch (Exception e) {
+            log.error("Error completing reservation", e);
+            sendSimpleMessage(chatId, "❌ Ошибка при бронировании. Попробуйте позже.");
+        }
+    }
+
+    // Метод-обработчик конфликта бронирования, где только время выбирается
+    private void handleBookingConflict(Long chatId) {
+        ReservationDto res = pendingReservations.get(chatId);
+        int people = reservationPeopleCache.getOrDefault(chatId, res.getNumberOfPeople());
+        int duration = reservationDurationCache.getOrDefault(chatId, 3);
+
+        // Первым делом — ближайшие слоты в тот же день
+        suggestAlternativeTimes(chatId, people, duration);
+
+        // Если нет доступных слотов в тот же день — проверяем на следующий день
+        String orig = reservationDateCache.get(chatId);
+        try {
+            DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+            LocalDateTime dt = LocalDateTime.parse(orig, fmt).plusDays(1);
+            String nextDay = dt.format(fmt);
+
+            List<RestaurantTableDto> nextDayTables = findAvailableTables(chatId, people, nextDay, duration);
+            if (!nextDayTables.isEmpty()) {
+                // Обновляем дату в кэше и показываем варианты
+                reservationDateCache.put(chatId, nextDay);
+                availableTablesCache.put(chatId, nextDayTables);
+
+                SendMessage msg = new SendMessage(chatId.toString(),
+                        "🗓️ На завтра в то же время тоже есть свободные столики: " + nextDay);
+                InlineKeyboardMarkup m = new InlineKeyboardMarkup();
+                m.setKeyboard(List.of(
+                        List.of(createInlineButton("✅ Забронировать на " + nextDay, "alt_time_" + nextDay)),
+                        List.of(createInlineButton("📅 Ввести другую дату", "change_time"))
+                ));
+                msg.setReplyMarkup(m);
+                execute(msg);
+            } else {
+                sendSimpleMessage(chatId,
+                        "❌ К сожалению, ни сегодня, ни завтра в это время нет свободных столиков. Попробуйте выбрать другое время.");
+            }
+        } catch (Exception e) {
+            log.error("Error proposing next-day slot", e);
+            sendSimpleMessage(chatId, "⚠️ Не удалось найти альтернативные варианты. Попробуйте позже.");
+        }
+    }
+
+    private void suggestAlternativeTimes(Long chatId, int people, int duration) {
+        try {
+            String originalDateStr = reservationDateCache.get(chatId);
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
+            Date originalDate = dateFormat.parse(originalDateStr);
+
+            List<String> alternatives = new ArrayList<>();
+            Calendar cal = Calendar.getInstance();
+
+            // Проверка доступности столиков на текущую дату
+            for (int i = 1; i <= 4; i++) {
+                cal.setTime(originalDate);
+                cal.add(Calendar.MINUTE, 30 * i); // 30 минут на каждый шаг
+
+                int hour = cal.get(Calendar.HOUR_OF_DAY);
+                if (hour < 10 || hour >= 23) break;  // Проверка на допустимое время (с 10:00 до 23:00)
+                String timeStr = dateFormat.format(cal.getTime());
+                boolean available = !findAvailableTables(chatId, people, timeStr, duration).isEmpty();
+                if (available) {
+                    alternatives.add(timeStr);  // Добавляем доступное время
+                }
+                // Логирование для отладки
+                log.debug("Проверка времени: {} - Доступность: {}", timeStr, available);
+            }
+
+            // Логирование результатов поиска альтернатив в текущем дне
+            log.debug("Найденные альтернативы в текущем дне: {}", alternatives);
+
+            // Если в текущем дне не найдены альтернативы, ищем на следующие дни
+            if (alternatives.isEmpty()) {
+                for (int dayOffset = 1; dayOffset <= 7; dayOffset++) {  // Проверяем следующие 7 дней
+                    cal.setTime(originalDate);
+                    cal.add(Calendar.DAY_OF_YEAR, dayOffset);  // Перемещаем на следующий день
+
+                    // Логирование для отладки
+                    log.debug("Проверка доступности на следующий день: {}", dateFormat.format(cal.getTime()));
+
+                    // Пробуем найти доступные столики на следующий день с 10:00 до 23:00
+                    for (int i = 1; i <= 4; i++) {
+                        cal.setTime(originalDate);
+                        cal.add(Calendar.DAY_OF_YEAR, dayOffset);  // Увеличиваем день на 1
+                        cal.add(Calendar.MINUTE, 30 * i);  // 30 минут на каждый шаг
+
+                        int hour = cal.get(Calendar.HOUR_OF_DAY);
+                        if (hour < 10 || hour >= 23) break;
+
+                        String timeStr = dateFormat.format(cal.getTime());
+                        boolean available = !findAvailableTables(chatId, people, timeStr, duration).isEmpty();
+
+                        if (available) {
+                            alternatives.add(timeStr);  // Добавляем доступное время
+                        }
+
+                        // Логирование для отладки
+                        log.debug("Проверка времени на следующий день: {} - Доступность: {}", timeStr, available);
+                    }
+
+                    // Если были найдены альтернативы на следующий день, выходим из цикла
+                    if (!alternatives.isEmpty()) {
+                        break;
+                    }
+                }
+            }
+
+            // Если были найдены альтернативы, отображаем их
+            if (!alternatives.isEmpty()) {
+                InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+                List<List<InlineKeyboardButton>> rows = alternatives.stream()
+                        .distinct()
+                        .map(t -> List.of(createInlineButton("⏰ " + t, "alt_time_" + t)))
+                        .collect(Collectors.toList());
+                rows.add(List.of(createInlineButton("📅 Выбрать другую дату", "change_time")));
+
+                markup.setKeyboard(rows);
+                SendMessage message = new SendMessage(chatId.toString(),
+                        "❌ Нет свободных столиков в выбранное время. Вот ближайшие варианты:");
+                message.setReplyMarkup(markup);
+                execute(message);
+            } else {
+                sendSimpleMessage(chatId, "❌ Нет доступных столиков в выбранное время.");
+            }
+        } catch (Exception e) {
+            log.error("Ошибка при поиске альтернативных времен", e);
+            sendSimpleMessage(chatId, "⚠️ Ошибка при поиске альтернатив. Попробуйте позже.");
+        }
+    }
+
+
+
+
+    private void handleTableSelection(Long chatId, Long tableId) throws TelegramApiException {
+        ReservationDto reservation = pendingReservations.get(chatId);
+        try {
+            RestaurantTable table = restaurantTableRepository.findById(tableId)
+                    .orElseThrow(() -> new Exception("Столик не найден"));
+
+            // Сохраняем выбранный столик
+            reservation.setTable(new RestaurantTableDto(table.getId(), table.getTableNumber()));
+
+            // Если имя ещё не введено — спрашиваем,
+            // иначе сразу показываем подтверждение брони
+            if (reservation.getName() == null || reservation.getName().isBlank()) {
+                sendSimpleMessage(chatId, "👤 Введите ваше имя для брони:");
+            } else {
+                confirmReservation(chatId);
+            }
+        } catch (Exception e) {
+            sendSimpleMessage(chatId, "❌ Ошибка при выборе столика: " + e.getMessage());
+            log.error("Error selecting table", e);
+        }
+    }
 }
 
 

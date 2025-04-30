@@ -21,5 +21,4 @@ public class RestaurantTable {
     private int seats; // Количество мест
 
 
-
 }

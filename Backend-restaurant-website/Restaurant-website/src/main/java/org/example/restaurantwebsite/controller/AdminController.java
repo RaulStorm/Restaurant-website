@@ -164,68 +164,63 @@ public class AdminController {
     @GetMapping("/reservations")
     public ResponseEntity<?> getReservations(@RequestParam String period) {
         try {
-            // 1. Получаем текущую дату и время
             LocalDateTime now = LocalDateTime.now();
-            LocalDateTime startDate;
+            // Начало — сегодня в 00:00
+            LocalDateTime startDate = now.toLocalDate().atStartOfDay();
+            LocalDateTime endDate;
 
-            // 2. Определяем начальную дату периода
             switch (period.toLowerCase()) {
                 case "day":
-                    startDate = now.withHour(0).withMinute(0).withSecond(0);
+                    // Сегодняшний день — до конца сегодняшнего дня
+                    endDate = startDate.plusDays(1).minusNanos(1);
                     break;
                 case "week":
-                    startDate = now.minusWeeks(1);
+                    // Следующие 7 дней — от начала сегодня до конца 7-го дня
+                    endDate = startDate.plusWeeks(1).minusNanos(1);
                     break;
                 case "month":
-                    startDate = now.minusMonths(1);
+                    // Следующие 30 дней
+                    endDate = startDate.plusDays(30).minusNanos(1);
                     break;
                 default:
-                    return ResponseEntity.badRequest().body("Неверный период. Используйте: day, week или month");
+                    return ResponseEntity.badRequest()
+                            .body("Неверный период. Используйте 'day', 'week' или 'month'.");
             }
 
-            // 3. Преобразуем в Timestamp с учетом всех миллисекунд
-            Timestamp startTimestamp = Timestamp.valueOf(startDate);
-            Timestamp endTimestamp = Timestamp.valueOf(now);
+            Timestamp startTs = Timestamp.valueOf(startDate);
+            Timestamp endTs   = Timestamp.valueOf(endDate);
 
-            // 4. Логируем диапазон дат для отладки
-            log.info("Поиск бронирований с {} по {}", startTimestamp, endTimestamp);
+            log.info("Поиск бронирований с {} по {}", startTs, endTs);
 
-            // 5. Получаем бронирования из БД
             List<Reservation> reservations = reservationRepository
-                    .findByReservationTimeBetween(startTimestamp, endTimestamp);
+                    .findByReservationTimeBetween(startTs, endTs);
 
-            // 6. Логируем количество найденных бронирований
             log.info("Найдено бронирований: {}", reservations.size());
 
-            // 7. Преобразуем в DTO
             List<ReservationWithIdDto> dtos = reservations.stream().map(reservation -> {
                 ReservationWithIdDto dto = new ReservationWithIdDto();
                 dto.setId(reservation.getId());
                 dto.setName(reservation.getName());
                 dto.setNumberOfPeople(reservation.getNumberOfPeople());
-
-                // Форматируем дату
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                dto.setReservationTime(sdf.format(reservation.getReservationTime()));
-
-                // Информация о столе
-                RestaurantTableDto tableDto = new RestaurantTableDto(
+                dto.setReservationTime(
+                        new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+                                .format(reservation.getReservationTime())
+                );
+                dto.setTable(new RestaurantTableDto(
                         reservation.getTable().getId(),
                         reservation.getTable().getTableNumber()
-                );
-                dto.setTable(tableDto);
-
+                ));
                 return dto;
             }).collect(Collectors.toList());
 
             return ResponseEntity.ok(dtos);
-
         } catch (Exception e) {
             log.error("Ошибка при получении бронирований", e);
-            return ResponseEntity.internalServerError()
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Ошибка сервера: " + e.getMessage());
         }
     }
+
 }
 
 
