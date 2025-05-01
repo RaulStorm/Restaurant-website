@@ -220,6 +220,28 @@ public class AdminController {
                     .body("Ошибка сервера: " + e.getMessage());
         }
     }
+    // Отмена бронирования администратором
+    @DeleteMapping("/reservations/{id}")
+    public ResponseEntity<?> cancelReservation(@PathVariable Long id) {
+        try {
+            // Проверяем существование брони
+//            Reservation reservation = reservationService.getReservationById(id);
+//            if (reservation == null) {
+//                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+//                        .body("Бронирование с ID " + id + " не найдено");
+//            }
+
+            // Отменяем бронирование
+            reservationService.cancelReservation(id);
+
+            return ResponseEntity.ok()
+                    .body("Бронирование с ID " + id + " успешно отменено");
+        } catch (Exception e) {
+            log.error("Ошибка при отмене бронирования", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Ошибка при отмене бронирования: " + e.getMessage());
+        }
+    }
 
 }
 

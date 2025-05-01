@@ -1,5 +1,6 @@
 package org.example.restaurantwebsite.service;
 
+import jakarta.persistence.EntityNotFoundException;
 import org.example.restaurantwebsite.model.Reservation;
 import org.example.restaurantwebsite.repository.ReservationRepository;
 import org.example.restaurantwebsite.repository.RestaurantTableRepository;
@@ -75,5 +76,11 @@ public class ReservationService {
         }
     }
 
+    public void cancelReservation(Long reservationId) {
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new EntityNotFoundException("Reservation not found"));
+
+        reservationRepository.delete(reservation);
+    }
 
 }
