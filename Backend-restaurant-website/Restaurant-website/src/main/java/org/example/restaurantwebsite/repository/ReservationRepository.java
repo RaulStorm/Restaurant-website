@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.sql.Date;  // Импортируем java.sql.Date
+import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;

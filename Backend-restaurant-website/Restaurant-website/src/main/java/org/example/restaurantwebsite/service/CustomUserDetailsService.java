@@ -1,4 +1,4 @@
-package org.example.restaurantwebsite.security;
+package org.example.restaurantwebsite.service;
 
 import org.example.restaurantwebsite.model.User;
 import org.example.restaurantwebsite.repository.UserRepository;
