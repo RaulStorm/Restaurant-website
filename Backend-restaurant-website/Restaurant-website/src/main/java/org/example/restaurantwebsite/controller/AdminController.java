@@ -1,5 +1,8 @@
 package org.example.restaurantwebsite.controller;
 
+import org.example.restaurantwebsite.dto.MenuItemDto;
+import org.example.restaurantwebsite.dto.ReservationWithIdDto;
+import org.example.restaurantwebsite.dto.RestaurantTableDto;
 import org.example.restaurantwebsite.model.*;
 import org.example.restaurantwebsite.service.*;
 import org.slf4j.Logger;
@@ -11,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.example.restaurantwebsite.service.ReservationService;
 import org.example.restaurantwebsite.repository.ReservationRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;

@@ -2,7 +2,7 @@ package org.example.restaurantwebsite.controller;
 
 import io.jsonwebtoken.Jwts;
 import org.example.restaurantwebsite.model.User;
-import org.example.restaurantwebsite.model.UserDto;
+import org.example.restaurantwebsite.dto.UserDto;
 import org.example.restaurantwebsite.model.Response;
 import org.example.restaurantwebsite.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;

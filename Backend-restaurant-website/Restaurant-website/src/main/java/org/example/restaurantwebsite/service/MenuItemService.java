@@ -15,18 +15,15 @@ public class MenuItemService {
     private final MenuItemRepository menuItemRepository;
     private final MenuItemImageRepository menuItemImageRepository;
 
-    // Внедрение зависимостей
     public MenuItemService(MenuItemRepository menuItemRepository, MenuItemImageRepository menuItemImageRepository) {
         this.menuItemRepository = menuItemRepository;
         this.menuItemImageRepository = menuItemImageRepository;
     }
 
-    // Добавление блюда
     public MenuItem addMenuItem(MenuItem menuItem) {
         return menuItemRepository.save(menuItem);
     }
 
-    // Добавление изображения для блюда
     public void addImage(MenuItemImage menuItemImage) {
         menuItemImageRepository.save(menuItemImage);
     }
@@ -36,7 +33,6 @@ public class MenuItemService {
         return menuItemRepository.findAll();
     }
 
-    // Метод для удаления по ID
     public void deleteById(Long id) {
         MenuItem item = menuItemRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Блюдо с ID='" + id + "' не найдено"));

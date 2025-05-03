@@ -1,7 +1,7 @@
 package org.example.restaurantwebsite.controller;
 
 import org.example.restaurantwebsite.model.MenuItem;
-import org.example.restaurantwebsite.model.MenuItemDto;
+import org.example.restaurantwebsite.dto.MenuItemDto;
 import org.example.restaurantwebsite.model.MenuItemImage;
 import org.example.restaurantwebsite.repository.MenuItemRepository;
 import org.example.restaurantwebsite.service.CloudinaryService;

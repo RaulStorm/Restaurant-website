@@ -1,5 +1,7 @@
 package org.example.restaurantwebsite.model;
 
+import org.example.restaurantwebsite.dto.ItemDto;
+
 import java.util.List;
 
 public class OrderResponse {

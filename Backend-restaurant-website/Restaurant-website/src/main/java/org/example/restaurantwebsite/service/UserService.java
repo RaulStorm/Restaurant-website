@@ -99,7 +99,7 @@ public class UserService {
                 .claim("name", user.getName())
                 .claim("roles", user.getRoles().stream()
                         .map(role -> role.getName())
-                        .collect(Collectors.toList())) // Теперь роли не пустые
+                        .collect(Collectors.toList()))
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + 86400000)) // 1 день
                 .signWith(getSigningKey(), SignatureAlgorithm.HS512)

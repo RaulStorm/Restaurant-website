@@ -1,5 +1,8 @@
 package org.example.restaurantwebsite.telegram;
 
+import org.example.restaurantwebsite.dto.MenuItemDto;
+import org.example.restaurantwebsite.dto.ReservationWithIdDto;
+import org.example.restaurantwebsite.dto.UserDto;
 import org.example.restaurantwebsite.model.*;
 import org.example.restaurantwebsite.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,10 +54,6 @@ public class AuthService {
             return userDto;
         }
         return null;
-    }
-
-    public boolean isTokenValid(String token) {
-        return !userService.isTokenBlacklisted(token);
     }
 
     public List<ReservationWithIdDto> getUserReservations(String token) {

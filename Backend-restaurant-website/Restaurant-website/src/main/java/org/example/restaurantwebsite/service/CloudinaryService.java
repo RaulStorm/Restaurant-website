@@ -14,7 +14,6 @@ public class CloudinaryService {
 
     private final Cloudinary cloudinary;
 
-    // Конструктор для CloudinaryService, использующий параметры из application.properties
     public CloudinaryService(
             @Value("${cloudinary.cloud_name}") String cloudName,
             @Value("${cloudinary.api_key}") String apiKey,
@@ -27,9 +26,8 @@ public class CloudinaryService {
         ));
     }
 
-    // Метод для загрузки изображения в Cloudinary и получения URL
     public String uploadImage(MultipartFile file) throws IOException {
         Map<String, String> uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
-        return uploadResult.get("url");  // Возвращаем URL изображения
+        return uploadResult.get("url");
     }
 }

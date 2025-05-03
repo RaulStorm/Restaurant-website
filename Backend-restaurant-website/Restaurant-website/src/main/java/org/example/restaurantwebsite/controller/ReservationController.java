@@ -1,6 +1,6 @@
 package org.example.restaurantwebsite.controller;
 
-import org.example.restaurantwebsite.model.ReservationDto;
+import org.example.restaurantwebsite.dto.ReservationDto;
 import org.example.restaurantwebsite.model.Reservation;
 import org.example.restaurantwebsite.model.RestaurantTable;
 import org.example.restaurantwebsite.model.User;

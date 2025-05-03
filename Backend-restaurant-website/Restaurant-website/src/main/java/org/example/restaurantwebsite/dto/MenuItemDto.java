@@ -1,4 +1,4 @@
-package org.example.restaurantwebsite.model;
+package org.example.restaurantwebsite.dto;
 
 import lombok.Getter;
 import lombok.Setter;

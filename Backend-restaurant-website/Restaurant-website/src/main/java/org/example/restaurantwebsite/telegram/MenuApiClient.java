@@ -1,6 +1,6 @@
 package org.example.restaurantwebsite.telegram;
 
-import org.example.restaurantwebsite.model.MenuItemDto;
+import org.example.restaurantwebsite.dto.MenuItemDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;

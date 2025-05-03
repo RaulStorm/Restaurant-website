@@ -1,7 +1,6 @@
 package org.example.restaurantwebsite.telegram;
 
-import org.example.restaurantwebsite.model.Review;
-import org.example.restaurantwebsite.model.ReviewDto;
+import org.example.restaurantwebsite.dto.ReviewDto;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.http.*;
@@ -9,7 +8,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 @Component

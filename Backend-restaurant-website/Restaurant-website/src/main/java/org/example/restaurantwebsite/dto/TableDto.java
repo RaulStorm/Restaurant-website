@@ -1,4 +1,4 @@
-package org.example.restaurantwebsite.model;
+package org.example.restaurantwebsite.dto;
 
 public class TableDto {
     private Long id;

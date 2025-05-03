@@ -1,6 +1,10 @@
 package org.example.restaurantwebsite.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.example.restaurantwebsite.dto.ItemDto;
+import org.example.restaurantwebsite.dto.MenuItemDto;
+import org.example.restaurantwebsite.dto.ReservationWithIdDto;
+import org.example.restaurantwebsite.dto.RestaurantTableDto;
 import org.example.restaurantwebsite.model.*;
 import org.example.restaurantwebsite.repository.OrderRepository;
 import org.example.restaurantwebsite.repository.ReservationRepository;

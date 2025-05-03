@@ -2,7 +2,7 @@ package org.example.restaurantwebsite.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.example.restaurantwebsite.model.Review;
-import org.example.restaurantwebsite.model.ReviewDto;
+import org.example.restaurantwebsite.dto.ReviewDto;
 import org.example.restaurantwebsite.model.User;
 import org.example.restaurantwebsite.repository.UserRepository;
 import org.example.restaurantwebsite.security.JwtTokenUtil;
@@ -12,7 +12,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-import java.util.Date;
 
 import java.util.List;
 
