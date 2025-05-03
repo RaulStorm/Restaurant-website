@@ -14,6 +14,14 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.example.restaurantwebsite.service.ReservationService;
 import org.example.restaurantwebsite.repository.ReservationRepository;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 import java.io.IOException;
 import java.sql.Timestamp;
@@ -34,14 +42,16 @@ public class AdminController {
     private final ReviewService reviewService;
     public ReservationService reservationService;
     private ReservationRepository reservationRepository;
+    private final ReportDocumentGenerator generator;
 
-    public AdminController(MenuItemService menuItemService, CloudinaryService cloudinaryService, CategoryService categoryService, ReviewService reviewService, ReservationService reservationService, ReservationRepository reservationRepository) {
+    public AdminController(MenuItemService menuItemService, CloudinaryService cloudinaryService, CategoryService categoryService, ReviewService reviewService, ReservationService reservationService, ReservationRepository reservationRepository, ReportDocumentGenerator generator) {
         this.menuItemService = menuItemService;
         this.cloudinaryService = cloudinaryService;
         this.categoryService = categoryService;
         this.reviewService = reviewService;
         this.reservationService = reservationService;
         this.reservationRepository = reservationRepository;
+        this.generator = generator;
     }
 
     // Добавление блюда в меню
@@ -244,6 +254,24 @@ public class AdminController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Ошибка при отмене бронирования: " + e.getMessage());
         }
+    }
+
+    @PostMapping("/reviews/export/word")
+    public ResponseEntity<byte[]> exportReviewsWord(@RequestBody Map<String, Object> data) throws IOException {
+        ByteArrayOutputStream doc = generator.generateReviewReportWord(data);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=reviews.docx")
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(doc.toByteArray());
+    }
+
+    @PostMapping("/reviews/export/excel")
+    public ResponseEntity<byte[]> exportReviewsExcel(@RequestBody Map<String, Object> data) throws IOException {
+        ByteArrayOutputStream doc = generator.generateReviewReportExcel(data);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=reviews.xlsx")
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(doc.toByteArray());
     }
 
 }

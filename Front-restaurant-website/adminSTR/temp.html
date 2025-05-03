@@ -57,6 +57,9 @@
 <div id="reviews-list" style="margin-top: 20px;">
     <!-- Сюда будут загружаться отзывы -->
 </div>
+<button onclick="downloadReviewDocument('word')">Скачать Word</button>
+<button onclick="downloadReviewDocument('excel')">Скачать Excel</button>
+
 
 <div class="container">
   <h1>Управление бронированиями</h1>
@@ -290,6 +293,54 @@ function displayReviews(reviews) {
         reviewsList.innerHTML += '<p>Отзывов за выбранный период нет.</p>';
     }
 }
+
+async function downloadReviewDocument(format) {
+    const period = document.getElementById('review-period').value;
+    const token = localStorage.getItem('token');
+
+    try {
+        // Получаем уже отображённые отзывы (повторно)
+        const response = await fetch(`http://localhost:8080/adm/reviews?period=${period}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Не удалось получить отзывы: ' + response.status);
+        }
+
+        const data = await response.json();
+
+        // Отправляем полученные данные на экспорт
+        const exportResponse = await fetch(`http://localhost:8080/adm/reviews/export/${format}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (!exportResponse.ok) {
+            throw new Error('Ошибка экспорта документа: ' + exportResponse.status);
+        }
+
+        // Получаем файл
+        const blob = await exportResponse.blob();
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `reviews_${period}.${format === 'word' ? 'docx' : 'xlsx'}`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+    } catch (error) {
+        alert('Ошибка: ' + error.message);
+    }
+}
+
+
 document.getElementById('load-btn').addEventListener('click', loadReservations);
         
         async function loadReservations() {
