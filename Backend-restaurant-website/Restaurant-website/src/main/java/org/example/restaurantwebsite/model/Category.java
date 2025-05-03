@@ -19,7 +19,9 @@ public class Category {
     public Category() {
     }
     // Конструкторы
-    public Category(Long categoryId) {} // Пустой конструктор
+    public Category(Long categoryId) {
+
+    } // Пустой конструктор
 
 
 }
