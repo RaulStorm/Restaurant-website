@@ -2,200 +2,20 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Управление рестораном</title>
+    <link rel="icon" href="/authorization/img/web-icon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/admin.css">
-    <!-- <link rel="stylesheet" href="/css/styles.css"> -->
-    <!-- <style>
-        /* Общие стили для страницы */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-    
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            color: #333;
-            padding-top: 60px; /* Отступ сверху для страницы, чтобы не перекрывал хедер */
-        }
-    
-        /* Стили для бургерного меню с новым id */
-        #new-burger-menu {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            width: 30px;
-            height: 25px;
-            cursor: pointer;
-            position: absolute;  /* Фиксированное положение */
-            top: 15px;  /* Немного ниже хедера */
-            left: 15px;  /* В левом углу */
-            z-index: 1000;
-            transition: all 0.3s ease;
-        }
-    
-        #new-burger-menu div {
-            height: 4px;
-            background-color: #333;
-            border-radius: 2px;
-        }
-    
-        /* Стили для бокового меню */
-        .side-menu {
-            height: 100%;
-            width: 250px;
-            background-color: #333;
-            position: fixed;
-            top: 0;
-            left: -250px;
-            transition: left 0.3s ease;
-            z-index: 999;
-            overflow-y: auto;
-            padding-top: 60px; /* Отступ сверху */
-        }
-    
-        /* Когда меню активно (открыто), меняем положение */
-        .side-menu.active {
-            left: 0;
-        }
-    
-        /* Стиль для ссылок в боковом меню */
-        .side-menu ul {
-            list-style: none;
-        }
-    
-        .side-menu ul li {
-            padding: 10px 20px;
-            text-align: left;
-        }
-    
-        .side-menu ul li a {
-            color: white;
-            text-decoration: none;
-            font-size: 18px;
-        }
-    
-        .side-menu ul li a:hover {
-            background-color: #555;
-        }
-    
-        /* Стили для основного контента */
-        .content {
-            transition: margin-left 0.3s ease;
-            padding: 20px;
-            margin-top: 80px; /* Отступ от хедера */
-            margin-left: 0;
-        }
-    
-        .content.active {
-            margin-left: 250px; /* Когда меню открыто, сдвигаем контент вправо */
-        }
-    
-        /* Вкладки */
-        .tab-content {
-            display: none;
-            margin-top: 20px;
-        }
-    
-        .tab-content.active {
-            display: block;
-        }
-    
-        /* Стиль для элементов управления (кнопок, форм) */
-        .controls {
-            margin-bottom: 20px;
-        }
-    
-        .controls select {
-            padding: 5px;
-            margin-right: 10px;
-        }
-    
-        button {
-            padding: 10px 20px;
-            background-color: #333;
-            color: white;
-            border: none;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-    
-        button:hover {
-            background-color: #555;
-        }
-    
-        /* Стиль для таблиц */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-    
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-    
-        th {
-            background-color: #333;
-            color: white;
-        }
-    
-        td {
-            background-color: #f9f9f9;
-        }
-    
-        tr:hover td {
-            background-color: #f1f1f1;
-        }
-    
-        /* Стиль для загрузки и ошибок */
-        .loading {
-            display: none;
-            font-size: 18px;
-            color: #333;
-        }
-    
-        .error {
-            display: none;
-            color: red;
-            font-size: 18px;
-        }
-    
-        /* Стили для скрытия/отображения меню на мобильных устройствах */
-        @media (max-width: 768px) {
-            #new-burger-menu {
-                display: block;
-            }
-    
-            .side-menu {
-                position: fixed;
-                top: 0;
-                left: -250px;
-                height: 100%;
-                width: 250px;
-                background-color: #333;
-                transition: left 0.3s ease;
-            }
-    
-            .side-menu.active {
-                left: 0;
-            }
-    
-            .content.active {
-                margin-left: 0; /* Контент не сдвигается на мобильных */
-            }
-        }
-    </style>
-     -->
     
 </head>
 <body>
 
 <!-- Хедер -->
 <header>
-    <div class="header-left">Деливия</div>
+    <h1 class="restaurant-name">
+        <a href="/index.html" class="restaurant-link">Деливия</a>
+    </h1>
     <div class="header-center">Панель управления администратора</div>
 </header>
 <div class="menu-container">
