@@ -6,6 +6,9 @@ import org.example.restaurantwebsite.dto.RestaurantTableDto;
 import org.example.restaurantwebsite.model.*;
 import org.example.restaurantwebsite.service.*;
 import org.slf4j.Logger;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import java.time.format.DateTimeFormatter;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -131,16 +134,17 @@ public class AdminController {
 
     @GetMapping("/reviews")
     public ResponseEntity<?> getReviews(@RequestParam String period) {
+        // 1) вычисляем границы
         Calendar calendar = Calendar.getInstance();
-        Date startDate = null;
+        Date startDate;
         Date endDate = new Date();
 
-        // Определяем даты в зависимости от периода
         switch (period.toLowerCase()) {
             case "day":
                 calendar.set(Calendar.HOUR_OF_DAY, 0);
                 calendar.set(Calendar.MINUTE, 0);
                 calendar.set(Calendar.SECOND, 0);
+                calendar.set(Calendar.MILLISECOND, 0);
                 startDate = calendar.getTime();
                 break;
             case "week":
@@ -152,27 +156,34 @@ public class AdminController {
                 startDate = calendar.getTime();
                 break;
             default:
-                return ResponseEntity.badRequest().body("Invalid period. Please use 'day', 'week', or 'month'.");
+                return ResponseEntity
+                        .badRequest()
+                        .body("Invalid period. Use 'day', 'week' or 'month'.");
         }
 
-        // Получаем отзывы за выбранный период
+        // 2) форматируем уже заданные даты
+        SimpleDateFormat fmt = new SimpleDateFormat("dd.MM.yyyy");
+        String startStr = fmt.format(startDate);
+        String endStr   = fmt.format(endDate);
+
+        // 3) получаем и считаем отзывы
         List<Review> reviews = reviewService.getReviewsForPeriod(startDate, endDate);
-
-        // Вычисляем средний рейтинг
         double averageRating = reviewService.getAverageRating(reviews);
+        double[] percentages = reviewService.getRatingPercentages(reviews);
 
-        // Вычисляем процентное соотношение отзывов с рейтингами от 1 до 5
-        double[] ratingPercentages = reviewService.getRatingPercentages(reviews);
-
-        // Формируем ответ
+        // 4) собираем ответ
         Map<String, Object> response = new HashMap<>();
         response.put("averageRating", averageRating);
-        response.put("ratingPercentages", ratingPercentages);
+        response.put("ratingPercentages", percentages);
         response.put("totalReviews", reviews.size());
-        response.put("reviews", reviews); // Добавляем полный список отзывов
+        response.put("reviews", reviews);
+        response.put("startDate", startStr);
+        response.put("endDate", endStr);
 
         return ResponseEntity.ok(response);
     }
+
+
 
     @GetMapping("/reservations")
     public ResponseEntity<?> getReservations(@RequestParam String period) {
@@ -256,8 +267,21 @@ public class AdminController {
         }
     }
 
+
+
     @PostMapping("/reviews/export/word")
     public ResponseEntity<byte[]> exportReviewsWord(@RequestBody Map<String, Object> data) throws IOException {
+        // имя пользователя
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+
+        // время скачивания
+        String downloadedAt = LocalDateTime.now()
+                .format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss"));
+
+        data.put("downloadedBy", username);
+        data.put("downloadedAt", downloadedAt);
+
         ByteArrayOutputStream doc = generator.generateReviewReportWord(data);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=reviews.docx")
@@ -267,6 +291,14 @@ public class AdminController {
 
     @PostMapping("/reviews/export/excel")
     public ResponseEntity<byte[]> exportReviewsExcel(@RequestBody Map<String, Object> data) throws IOException {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        String downloadedAt = LocalDateTime.now()
+                .format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss"));
+
+        data.put("downloadedBy", username);
+        data.put("downloadedAt", downloadedAt);
+
         ByteArrayOutputStream doc = generator.generateReviewReportExcel(data);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=reviews.xlsx")
@@ -274,6 +306,6 @@ public class AdminController {
                 .body(doc.toByteArray());
     }
 
-}
 
+}
 
