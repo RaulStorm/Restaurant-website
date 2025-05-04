@@ -2,111 +2,329 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Добавить блюдо</title>
+    <title>Управление рестораном</title>
     <link rel="stylesheet" href="/css/admin.css">
+    <!-- <link rel="stylesheet" href="/css/styles.css"> -->
+    <!-- <style>
+        /* Общие стили для страницы */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+    
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            padding-top: 60px; /* Отступ сверху для страницы, чтобы не перекрывал хедер */
+        }
+    
+        /* Стили для бургерного меню с новым id */
+        #new-burger-menu {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 30px;
+            height: 25px;
+            cursor: pointer;
+            position: absolute;  /* Фиксированное положение */
+            top: 15px;  /* Немного ниже хедера */
+            left: 15px;  /* В левом углу */
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+    
+        #new-burger-menu div {
+            height: 4px;
+            background-color: #333;
+            border-radius: 2px;
+        }
+    
+        /* Стили для бокового меню */
+        .side-menu {
+            height: 100%;
+            width: 250px;
+            background-color: #333;
+            position: fixed;
+            top: 0;
+            left: -250px;
+            transition: left 0.3s ease;
+            z-index: 999;
+            overflow-y: auto;
+            padding-top: 60px; /* Отступ сверху */
+        }
+    
+        /* Когда меню активно (открыто), меняем положение */
+        .side-menu.active {
+            left: 0;
+        }
+    
+        /* Стиль для ссылок в боковом меню */
+        .side-menu ul {
+            list-style: none;
+        }
+    
+        .side-menu ul li {
+            padding: 10px 20px;
+            text-align: left;
+        }
+    
+        .side-menu ul li a {
+            color: white;
+            text-decoration: none;
+            font-size: 18px;
+        }
+    
+        .side-menu ul li a:hover {
+            background-color: #555;
+        }
+    
+        /* Стили для основного контента */
+        .content {
+            transition: margin-left 0.3s ease;
+            padding: 20px;
+            margin-top: 80px; /* Отступ от хедера */
+            margin-left: 0;
+        }
+    
+        .content.active {
+            margin-left: 250px; /* Когда меню открыто, сдвигаем контент вправо */
+        }
+    
+        /* Вкладки */
+        .tab-content {
+            display: none;
+            margin-top: 20px;
+        }
+    
+        .tab-content.active {
+            display: block;
+        }
+    
+        /* Стиль для элементов управления (кнопок, форм) */
+        .controls {
+            margin-bottom: 20px;
+        }
+    
+        .controls select {
+            padding: 5px;
+            margin-right: 10px;
+        }
+    
+        button {
+            padding: 10px 20px;
+            background-color: #333;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+    
+        button:hover {
+            background-color: #555;
+        }
+    
+        /* Стиль для таблиц */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+    
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+    
+        th {
+            background-color: #333;
+            color: white;
+        }
+    
+        td {
+            background-color: #f9f9f9;
+        }
+    
+        tr:hover td {
+            background-color: #f1f1f1;
+        }
+    
+        /* Стиль для загрузки и ошибок */
+        .loading {
+            display: none;
+            font-size: 18px;
+            color: #333;
+        }
+    
+        .error {
+            display: none;
+            color: red;
+            font-size: 18px;
+        }
+    
+        /* Стили для скрытия/отображения меню на мобильных устройствах */
+        @media (max-width: 768px) {
+            #new-burger-menu {
+                display: block;
+            }
+    
+            .side-menu {
+                position: fixed;
+                top: 0;
+                left: -250px;
+                height: 100%;
+                width: 250px;
+                background-color: #333;
+                transition: left 0.3s ease;
+            }
+    
+            .side-menu.active {
+                left: 0;
+            }
+    
+            .content.active {
+                margin-left: 0; /* Контент не сдвигается на мобильных */
+            }
+        }
+    </style>
+     -->
+    
 </head>
 <body>
-    <h2>Добавить блюдо</h2>
-    <form id="add-menu-item-form" enctype="multipart/form-data">
-        <label for="name">Название:</label>
-        <input type="text" id="name" name="name" required><br>
 
-        <label for="description">Описание:</label>
-        <input type="text" id="description" name="description" required><br>
+<!-- Хедер -->
+<header>
+    <div class="header-left">Деливия</div>
+    <div class="header-center">Панель управления администратора</div>
+</header>
+<div class="menu-container">
+    <div class="side-menu" id="sideMenu">
+        <ul>
+            <li><a href="#" onclick="showTab(0)">Добавить блюдо</a></li>
+            <li><a href="#" onclick="showTab(1)">Удалить блюдо</a></li>
+            <li><a href="#" onclick="showTab(2)">Просмотр отзывов</a></li>
+            <li><a href="#" onclick="showTab(3)">Управление бронированиями</a></li>
+        </ul>
+    </div>
 
-        <label for="price">Цена:</label>
-        <input type="number" id="price" name="price" step="0.01" required><br>
-
-        <label for="categoryName">Категория:</label>
-        <input type="text" id="categoryName" name="categoryName" required><br>
-        
-        <label for="image">Фото:</label>
-        <input type="file" id="image" name="image" accept="image/*" required><br><br>
-
-        <button type="submit">Добавить</button>
-    </form>
-
-    <h2>Удалить блюдо</h2>
-    <form id="delete-menu-item-form">
-      <label for="delete-menu-item">Выберите блюдо:</label>
-      <select id="delete-menu-item" name="name" required></select>
-      <button type="submit">Удалить</button>
-    </form>
-
-    <h2>Просмотр отзывов</h2>
-<div>
-    <label for="review-period">Выберите период:</label>
-    <select id="review-period">
-        <option value="day">За день</option>
-        <option value="week">За неделю</option>
-        <option value="month">За месяц</option>
-    </select>
-    <button id="load-reviews-btn">Загрузить отзывы</button>
+ <!-- Бургерное меню -->
+<div class="burger-menu" id="new-burger-menu" onclick="toggleMenu(event)">
+    <div></div>
+    <div></div>
+    <div></div>
 </div>
 
-<div id="review-stats" style="margin-top: 20px; display: none;">
-    <h3>Статистика отзывов</h3>
-    <p>Средний рейтинг: <span id="average-rating"></span></p>
-    <p>Всего отзывов: <span id="total-reviews"></span></p>
-    <div id="rating-distribution">
-        <h4>Распределение оценок:</h4>
-        <!-- Здесь будут динамически добавляться проценты по оценкам -->
+
+    <div class="content">
+        <h1>Управление рестораном</h1>
+
+        <!-- Вкладка 1 - Добавить блюдо -->
+        <div id="tab-1" class="tab-content active">
+            <h2>Добавить блюдо</h2>
+            <form id="add-menu-item-form" enctype="multipart/form-data">
+                <label for="name">Название:</label>
+                <input type="text" id="name" name="name" required><br>
+
+                <label for="description">Описание:</label>
+                <input type="text" id="description" name="description" required><br>
+
+                <label for="price">Цена:</label>
+                <input type="number" id="price" name="price" step="0.01" required><br>
+
+                <label for="categoryName">Категория:</label>
+                <input type="text" id="categoryName" name="categoryName" required><br>
+                
+                <label for="image">Фото:</label>
+                <input type="file" id="image" name="image" accept="image/*" required><br><br>
+
+                <button type="submit">Добавить</button>
+            </form>
+        </div>
+
+        <!-- Вкладка 2 - Удалить блюдо -->
+        <div id="tab-2" class="tab-content">
+            <h2>Удалить блюдо</h2>
+            <form id="delete-menu-item-form">
+                <label for="delete-menu-item">Выберите блюдо:</label>
+                <select id="delete-menu-item" name="name" required></select>
+                <button type="submit">Удалить</button>
+            </form>
+        </div>
+
+        <!-- Вкладка 3 - Просмотр отзывов -->
+        <div id="tab-3" class="tab-content">
+            <h2>Просмотр отзывов</h2>
+            <div>
+                <label for="review-period">Выберите период:</label>
+                <select id="review-period">
+                    <option value="day">За день</option>
+                    <option value="week">За неделю</option>
+                    <option value="month">За месяц</option>
+                </select>
+                <button id="load-reviews-btn">Загрузить отзывы</button>
+            </div>
+
+            <div id="review-stats" style="margin-top: 20px; display: none;">
+                <h3>Статистика отзывов</h3>
+                <p>Средний рейтинг: <span id="average-rating"></span></p>
+                <p>Всего отзывов: <span id="total-reviews"></span></p>
+                <div id="rating-distribution">
+                    <h4>Распределение оценок:</h4>
+                </div>
+            </div>
+
+            <div id="reviews-list" style="margin-top: 20px;"></div>
+            <button onclick="downloadReviewDocument('word')">Скачать Word</button>
+            <button onclick="downloadReviewDocument('excel')">Скачать Excel</button>
+        </div>
+
+        <!-- Вкладка 4 - Управление бронированиями -->
+        <div id="tab-4" class="tab-content">
+            <h2>Управление бронированиями</h2>
+            <div class="controls">
+                <label for="period-select">Выберите период:</label>
+                <select id="period-select">
+                    <option value="day">Сегодня</option>
+                    <option value="week">Неделя</option>
+                    <option value="month">Месяц</option>
+                </select>
+                <button id="load-btn">Загрузить бронирования</button>
+            </div>
+
+            <div id="loading" class="loading" style="display: none;">
+                Загрузка данных...
+            </div>
+
+            <div id="error-message" class="error" style="display: none;"></div>
+
+            <div id="reservations-container">
+                <table id="reservations-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Дата</th>
+                            <th>Время</th>
+                            <th>Конец бронирования</th>
+                            <th>Имя</th>
+                            <th>Гости</th>
+                            <th>Стол</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reservations-body">
+                        <!-- Данные будут здесь -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="export-controls">
+                <button id="export-word-btn">Скачать Word</button>
+                <button id="export-excel-btn">Скачать Excel</button>
+            </div>
+        </div>
     </div>
 </div>
-
-<div id="reviews-list" style="margin-top: 20px;">
-    <!-- Сюда будут загружаться отзывы -->
-</div>
-<button onclick="downloadReviewDocument('word')">Скачать Word</button>
-<button onclick="downloadReviewDocument('excel')">Скачать Excel</button>
-
-
-<div class="container">
-    <h1>Управление бронированиями</h1>
-
-    <div class="controls">
-        <label for="period-select">Выберите период:</label>
-        <select id="period-select">
-            <option value="day">Сегодня</option>
-            <option value="week">Неделя</option>
-            <option value="month">Месяц</option>
-        </select>
-        <button id="load-btn">Загрузить бронирования</button>
-    </div>
-
-    <div id="loading" class="loading" style="display: none;">
-        Загрузка данных...
-    </div>
-
-    <div id="error-message" class="error" style="display: none;"></div>
-
-    <div id="reservations-container">
-        <table id="reservations-table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Дата</th>
-                    <th>Время</th>
-                    <th>Конец бронирования</th>
-                    <th>Имя</th>
-                    <th>Гости</th>
-                    <th>Стол</th>
-                    <th>Действия</th>
-                </tr>
-            </thead>
-            <tbody id="reservations-body">
-                <!-- Данные будут здесь -->
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Кнопки для скачивания отчетов -->
-    <div id="export-controls">
-        <button id="export-word-btn">Скачать Word</button>
-        <button id="export-excel-btn">Скачать Excel</button>
-    </div>
-</div>
-
 
 
     <script>
@@ -543,6 +761,44 @@ document.getElementById('load-btn').addEventListener('click', loadReservations);
         document.addEventListener('DOMContentLoaded', () => {
             loadReservations();
         });
+     
+// Функция для отображения вкладок
+function showTab(tabIndex) {
+    // Скрыть все вкладки
+    const tabs = document.querySelectorAll('.tab-content');
+    tabs.forEach(tab => tab.classList.remove('active'));
+
+    // Показать выбранную вкладку
+    const selectedTab = document.getElementById('tab-' + (tabIndex + 1));
+    selectedTab.classList.add('active');
+}
+// Функция для открытия/закрытия меню
+function toggleMenu(event) {
+    // Останавливаем всплытие события, чтобы оно не срабатывало дважды
+    event.stopPropagation();
+
+    const sideMenu = document.getElementById('sideMenu');
+    sideMenu.classList.toggle('active');  // Переключаем класс "active" на боковом меню
+
+    const content = document.querySelector('.content');
+    content.classList.toggle('active');  // Переключаем класс "active" на контенте для сдвига
+}
+
+// Предотвращаем срабатывание обработчиков кликов на боковом меню (чтобы оно не закрылось сразу)
+document.getElementById('sideMenu').addEventListener('click', function(event) {
+    event.stopPropagation(); // Останавливаем всплытие
+});
+
+// Если кликать за пределами меню и бургерного меню, оно должно закрываться
+document.addEventListener('click', function(event) {
+    const sideMenu = document.getElementById('sideMenu');
+    const burgerMenu = document.getElementById('new-burger-menu');
+
+    if (!sideMenu.contains(event.target) && !burgerMenu.contains(event.target)) {
+        sideMenu.classList.remove('active');
+        document.querySelector('.content').classList.remove('active');
+    }
+});
 
     </script>
 </body>

@@ -1,19 +1,260 @@
-/* Общие стили */
-body {
-    font-family: 'Arial', sans-serif;
-    line-height: 1.6;
-    color: #333;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-    background-color: #f5f5f5;
+/* Общие стили для страницы */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-h2, h3, h4 {
-    color: #2c3e50;
-    margin-top: 30px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid #3498db;
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    color: #333;
+    padding-top: 60px; /* Отступ сверху для страницы, чтобы не перекрывал хедер */
+}
+
+/* Стили для бургерного меню */
+#new-burger-menu {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 30px;
+    height: 25px;
+    cursor: pointer;
+    position: fixed;  /* Фиксированное положение */
+    top: 15px;  /* Немного ниже хедера */
+    left: 15px;  /* В левом углу */
+    z-index: 1000;
+    transition: all 0.3s ease;
+    margin-top: 60px;
+}
+
+#new-burger-menu div {
+    height: 4px;
+    background-color: #333;
+    border-radius: 2px;
+}
+
+/* Стили для бокового меню */
+.side-menu {
+    height: 100%;
+    width: 250px;
+    background-color: #333;
+    position: fixed;
+    top: 0;
+    left: -250px;
+    transition: left 0.3s ease;
+    z-index: 999;
+    overflow-y: auto;
+    padding-top: 60px; /* Отступ сверху */
+}
+
+/* Когда меню активно (открыто), меняем положение */
+.side-menu.active {
+    left: 0;
+}
+
+/* Стиль для ссылок в боковом меню */
+.side-menu ul {
+    list-style: none;
+}
+
+.side-menu ul li {
+    padding: 10px 20px;
+    text-align: left;
+}
+
+.side-menu ul li a {
+    color: white;
+    text-decoration: none;
+    font-size: 18px;
+}
+
+.side-menu ul li a:hover {
+    background-color: #555;
+}
+
+/* Стили для основного контента */
+.content {
+    transition: margin-left 0.3s ease;
+    padding: 20px;
+    margin-top: 80px; /* Отступ от хедера */
+    margin-left: 0;
+}
+
+.content.active {
+    margin-left: 250px; /* Когда меню открыто, сдвигаем контент вправо */
+}
+
+/* Вкладки */
+.tab-content {
+    display: none;
+    margin-top: 20px;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Стили для элементов управления (кнопок, форм) */
+.controls {
+    margin-bottom: 20px;
+}
+
+.controls select {
+    padding: 5px;
+    margin-right: 10px;
+}
+
+button {
+    padding: 10px 20px;
+    background-color: #333;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #555;
+}
+
+/* Стили для таблиц */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+th {
+    background-color: #333;
+    color: white;
+}
+
+td {
+    background-color: #f9f9f9;
+}
+
+tr:hover td {
+    background-color: #f1f1f1;
+}
+
+/* Стили для загрузки и ошибок */
+.loading {
+    display: none;
+    font-size: 18px;
+    color: #333;
+}
+
+.error {
+    display: none;
+    color: red;
+    font-size: 18px;
+}
+
+/* Стили для скрытия/отображения меню на мобильных устройствах */
+@media (max-width: 768px) {
+    #new-burger-menu {
+        display: block;
+    }
+
+    .side-menu {
+        position: fixed;
+        top: 0;
+        left: -250px;
+        height: 100%;
+        width: 250px;
+        background-color: #333;
+        transition: left 0.3s ease;
+    }
+
+    .side-menu.active {
+        left: 0;
+    }
+
+    .content.active {
+        margin-left: 0; /* Контент не сдвигается на мобильных */
+    }
+}
+
+/* Стили для заголовка */
+header {
+    display: flex; /* Используем flexbox для удобного выравнивания */
+    justify-content: space-between; /* Распределяем пространство между элементами */
+    align-items: center; /* Центрируем элементы по вертикали */
+    background-color: #7e56563b; /* Цвет фона */
+    width: 100%; /* Фиксированная ширина */
+    height: 70px; /* Фиксированная высота */
+    margin: 0 auto; /* Центрируем заголовок на странице */
+    box-sizing: border-box; /* Учитываем отступы в размерах */
+}
+
+/* Стили для навигации */
+nav {
+    flex-grow: 1;
+    text-align: center;
+    position: relative;
+}
+
+nav ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+nav ul li {
+    display: inline-block;
+}
+
+nav ul li a {
+    color: #fff;
+    text-decoration: none;
+    font-weight: 500;
+    padding: 10px 20px;
+    position: relative;
+    display: inline-block;
+    transition: transform 0.3s, box-shadow 0.3s; /* Плавный эффект при наведении */
+}
+
+nav ul li a:hover {
+    background-color: #644545; /* Цвет фона при наведении */
+    border-radius: 20px;
+}
+
+/* Стили для тела страницы */
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Минимальная высота для заполнения всего окна браузера */
+}
+
+main {
+    flex: 1; /* Заставляем основной контент занимать оставшееся пространство */
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background: linear-gradient(135deg, #ccd9e8, #e4997e);
+    margin: 0;
+    padding: 0;
+    color: #333;
+}
+
+*::-webkit-scrollbar{
+    width: 8px;
+}
+
+*::-webkit-scrollbar-thumb{
+    background-color: #b4acac;
+    border: 1px solid #443d3d;
+}
+
+*::-webkit-scrollbar-track{
+    background-color: #ccd9e8;
 }
 
 /* Стили для форм */
@@ -218,71 +459,4 @@ button:hover {
     text-align: center;
     margin-top: 15px;
 }
-body {
-    font-family: Arial, sans-serif;
-    margin: 20px;
-    background-color: #f5f5f5;
-}
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-}
-h1 {
-    color: #333;
-    border-bottom: 2px solid #3498db;
-    padding-bottom: 10px;
-}
-.controls {
-    margin: 20px 0;
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
-select, button {
-    padding: 8px 12px;
-    border-radius: 4px;
-    border: 1px solid #ddd;
-}
-button {
-    background-color: #3498db;
-    color: white;
-    border: none;
-    cursor: pointer;
-    transition: background 0.3s;
-}
-button:hover {
-    background-color: #2980b9;
-}
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-}
-th, td {
-    padding: 12px 15px;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
-}
-th {
-    background-color: #3498db;
-    color: white;
-}
-tr:hover {
-    background-color: #f5f5f5;
-}
-.loading {
-    text-align: center;
-    padding: 20px;
-    color: #666;
-}
-.error {
-    color: #e74c3c;
-    padding: 15px;
-    background: #fdecea;
-    border-radius: 4px;
-    margin-top: 15px;
-}
+
