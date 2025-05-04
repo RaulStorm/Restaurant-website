@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.example.restaurantwebsite.service.ReservationService;
@@ -37,6 +38,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/adm")
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
+
     private static final Logger log = LoggerFactory.getLogger(AdminController.class);
 
     private final MenuItemService menuItemService;
@@ -195,15 +197,12 @@ public class AdminController {
 
             switch (period.toLowerCase()) {
                 case "day":
-                    // Сегодняшний день — до конца сегодняшнего дня
                     endDate = startDate.plusDays(1).minusNanos(1);
                     break;
                 case "week":
-                    // Следующие 7 дней — от начала сегодня до конца 7-го дня
                     endDate = startDate.plusWeeks(1).minusNanos(1);
                     break;
                 case "month":
-                    // Следующие 30 дней
                     endDate = startDate.plusDays(30).minusNanos(1);
                     break;
                 default:
@@ -212,15 +211,17 @@ public class AdminController {
             }
 
             Timestamp startTs = Timestamp.valueOf(startDate);
-            Timestamp endTs   = Timestamp.valueOf(endDate);
+            Timestamp endTs = Timestamp.valueOf(endDate);
 
             log.info("Поиск бронирований с {} по {}", startTs, endTs);
 
+            // Получаем бронирования по заданному времени
             List<Reservation> reservations = reservationRepository
                     .findByReservationTimeBetween(startTs, endTs);
 
             log.info("Найдено бронирований: {}", reservations.size());
 
+            // Создаём DTO для ответных данных
             List<ReservationWithIdDto> dtos = reservations.stream().map(reservation -> {
                 ReservationWithIdDto dto = new ReservationWithIdDto();
                 dto.setId(reservation.getId());
@@ -230,6 +231,11 @@ public class AdminController {
                         new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
                                 .format(reservation.getReservationTime())
                 );
+                dto.setReservationEndTime(
+                        new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+                                .format(reservation.getReservationEndTime())
+                );
+
                 dto.setTable(new RestaurantTableDto(
                         reservation.getTable().getId(),
                         reservation.getTable().getTableNumber()
@@ -244,6 +250,7 @@ public class AdminController {
                     .body("Ошибка сервера: " + e.getMessage());
         }
     }
+
     // Отмена бронирования администратором
     @DeleteMapping("/reservations/{id}")
     public ResponseEntity<?> cancelReservation(@PathVariable Long id) {
@@ -306,6 +313,102 @@ public class AdminController {
                 .body(doc.toByteArray());
     }
 
+    //резерв
+    @GetMapping("/reservations/export/word")
+    public ResponseEntity<byte[]> exportReservationsWord(@RequestParam String period) {
+        log.info("Экспорт WORD, период = {}", period);
+        return buildAndSend(period, true);
+    }
 
+    @GetMapping("/reservations/export/excel")
+    public ResponseEntity<byte[]> exportReservationsExcel(@RequestParam String period) {
+        log.info("Экспорт EXCEL, период = {}", period);
+        return buildAndSend(period, false);
+    }
+
+    private ResponseEntity<byte[]> buildAndSend(String period, boolean isWord) {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+            Object principal = auth.getPrincipal();
+            String downloadedByName;
+            String downloadedByEmail;
+
+            if (principal instanceof User) {
+                User user = (User) principal;
+                downloadedByName = user.getName();
+                downloadedByEmail = user.getEmail();
+            } else if (principal instanceof UserDetails) {
+                UserDetails ud = (UserDetails) principal;
+                downloadedByName = ud.getUsername();
+                downloadedByEmail = ud.getUsername();
+            } else {
+                downloadedByName = auth.getName();
+                downloadedByEmail = auth.getName();
+            }
+
+            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime start = now.toLocalDate().atStartOfDay();
+            LocalDateTime end;
+            switch (period.toLowerCase()) {
+                case "day":   end = start.plusDays(1).minusNanos(1); break;
+                case "week":  end = start.plusWeeks(1).minusNanos(1); break;
+                case "month": end = start.plusMonths(1).minusNanos(1); break;
+                default:
+                    log.error("Неверный период: {}", period);
+                    return ResponseEntity.badRequest()
+                            .body(("Invalid period: " + period).getBytes());
+            }
+
+            SimpleDateFormat fmt = new SimpleDateFormat("dd.MM.yyyy");
+            String startStr = fmt.format(Timestamp.valueOf(start));
+            String endStr   = fmt.format(Timestamp.valueOf(end));
+
+            List<ReservationWithIdDto> dtoList = reservationRepository
+                    .findByReservationTimeBetween(Timestamp.valueOf(start), Timestamp.valueOf(end)).stream()
+                    .map(r -> {
+                        ReservationWithIdDto dto = new ReservationWithIdDto();
+                        dto.setId(r.getId());
+                        dto.setName(r.getName());
+                        dto.setNumberOfPeople(r.getNumberOfPeople());
+                        dto.setReservationTime(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+                                .format(r.getReservationTime()));
+                        dto.setReservationEndTime(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+                                .format(r.getReservationEndTime()));
+                        dto.setTable(new RestaurantTableDto(r.getTable().getId(), r.getTable().getTableNumber()));
+                        return dto;
+                    })
+                    .sorted(Comparator.comparing(r -> LocalDateTime.parse(r.getReservationTime(), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))))
+                    .collect(Collectors.toList());
+
+            Map<String, Object> data = new HashMap<>();
+            data.put("reservations", dtoList);
+            data.put("startDate", startStr);
+            data.put("endDate", endStr);
+            data.put("downloadedByName", downloadedByName);
+            data.put("downloadedByEmail", downloadedByEmail);
+            data.put("downloadedAt", now.format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")));
+
+            ByteArrayOutputStream out = isWord
+                    ? generator.generateReservationReportWord(data)
+                    : generator.generateReservationReportExcel(data);
+
+            String filename = isWord ? "reservations.docx" : "reservations.xlsx";
+            MediaType mediaType = isWord
+                    ? MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+                    : MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                    .contentType(mediaType)
+                    .body(out.toByteArray());
+
+        } catch (Exception e) {
+            log.error("Ошибка при экспорте: ", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(("Server error: " + e.getMessage()).getBytes());
+        }
+    }
 }
+
 

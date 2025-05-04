@@ -3,6 +3,7 @@ package org.example.restaurantwebsite.dto;
 public class ReservationWithIdDto extends ReservationDto {
     private Long id;
     private Integer durationHours;
+    private String reservationEndTime;  // Новое поле
 
 
     public ReservationWithIdDto() {
@@ -24,5 +25,12 @@ public class ReservationWithIdDto extends ReservationDto {
         this.durationHours = durationHours;
     }
 
+    public String getReservationEndTime() {
+        return reservationEndTime;
+    }
+
+    public void setReservationEndTime(String reservationEndTime) {
+        this.reservationEndTime = reservationEndTime;
+    }
 }
 

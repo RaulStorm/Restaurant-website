@@ -62,45 +62,104 @@
 
 
 <div class="container">
-  <h1>Управление бронированиями</h1>
-  
-  <div class="controls">
-      <select id="period-select">
-          <option value="day">Сегодня</option>
-          <option value="week">Неделя</option>
-          <option value="month">Месяц</option>
-      </select>
-      <button id="load-btn">Загрузить бронирования</button>
-  </div>
-  
-  <div id="loading" class="loading" style="display: none;">
-      Загрузка данных...
-  </div>
-  
-  <div id="error-message" class="error" style="display: none;"></div>
-  
-  <div id="reservations-container">
-      <table id="reservations-table">
-          <thead>
-              <tr>
-                  <th>ID</th>
-                  <th>Дата</th>
-                  <th>Время</th>
-                  <th>Имя</th>
-                  <th>Гости</th>
-                  <th>Стол</th>
-                  <th>Действия</th>
-              </tr>
-          </thead>
-          <tbody id="reservations-body">
-              <!-- Данные будут здесь -->
-          </tbody>
-      </table>
-  </div>
+    <h1>Управление бронированиями</h1>
+
+    <div class="controls">
+        <label for="period-select">Выберите период:</label>
+        <select id="period-select">
+            <option value="day">Сегодня</option>
+            <option value="week">Неделя</option>
+            <option value="month">Месяц</option>
+        </select>
+        <button id="load-btn">Загрузить бронирования</button>
+    </div>
+
+    <div id="loading" class="loading" style="display: none;">
+        Загрузка данных...
+    </div>
+
+    <div id="error-message" class="error" style="display: none;"></div>
+
+    <div id="reservations-container">
+        <table id="reservations-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Дата</th>
+                    <th>Время</th>
+                    <th>Конец бронирования</th>
+                    <th>Имя</th>
+                    <th>Гости</th>
+                    <th>Стол</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody id="reservations-body">
+                <!-- Данные будут здесь -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Кнопки для скачивания отчетов -->
+    <div id="export-controls">
+        <button id="export-word-btn">Скачать Word</button>
+        <button id="export-excel-btn">Скачать Excel</button>
+    </div>
 </div>
 
 
+
     <script>
+// Получаем элементы
+const exportWordBtn = document.getElementById('export-word-btn');
+const exportExcelBtn = document.getElementById('export-excel-btn');
+const periodSelect = document.getElementById('period-select');
+
+// Функция для скачивания файла
+async function downloadReservationDocument(format) {
+    const period = periodSelect.value;  // Получаем выбранный период
+    const token = localStorage.getItem('token');  // Получаем токен
+
+    try {
+        // Отправляем запрос на сервер для получения данных о резервациях
+        const response = await fetch(`http://localhost:8080/adm/reservations/export/${format}?period=${period}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Ошибка при получении данных для экспорта');
+        }
+
+        // Получаем файл в виде Blob
+        const blob = await response.blob();
+
+        // Создаем ссылку для скачивания
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `reservations_${period}.${format === 'word' ? 'docx' : 'xlsx'}`;  // Название файла
+
+        // Кликаем по ссылке для скачивания
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } catch (error) {
+        alert('Ошибка: ' + error.message);
+        console.error('Ошибка при скачивании файла:', error);
+    }
+}
+
+// Добавляем обработчики событий для кнопок скачивания
+exportWordBtn.addEventListener('click', () => {
+    downloadReservationDocument('word');  // Скачать в формате Word
+});
+
+exportExcelBtn.addEventListener('click', () => {
+    downloadReservationDocument('excel');  // Скачать в формате Excel
+});
+
+
      document.getElementById("add-menu-item-form").addEventListener("submit", async (event) => {
     event.preventDefault();
 
@@ -384,65 +443,75 @@ document.getElementById('load-btn').addEventListener('click', loadReservations);
         }
         
         function displayReservations(reservations) {
-            const tableBody = document.getElementById('reservations-body');
-            
-            if (!reservations || reservations.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Нет бронирований за выбранный период</td></tr>';
-                return;
-            }
-            
-            reservations.forEach(reservation => {
-                const row = document.createElement('tr');
-                
-                // Парсим дату из формата "2025-05-01 19:30:00"
-                const [datePart, timePart] = reservation.reservationTime.split(' ');
-                const [year, month, day] = datePart.split('-');
-                const [hours, minutes] = timePart.split(':');
-                
-                // ID
-                const idCell = document.createElement('td');
-                idCell.textContent = reservation.id;
-                row.appendChild(idCell);
-                
-                // Дата (дд.мм.гггг)
-                const dateCell = document.createElement('td');
-                dateCell.textContent = `${day}.${month}.${year}`;
-                row.appendChild(dateCell);
-                
-                // Время (чч:мм)
-                const timeCell = document.createElement('td');
-                timeCell.textContent = `${hours}:${minutes}`;
-                row.appendChild(timeCell);
-                
-                // Имя
-                const nameCell = document.createElement('td');
-                nameCell.textContent = reservation.name;
-                row.appendChild(nameCell);
-                
-                // Количество гостей
-                const guestsCell = document.createElement('td');
-                guestsCell.textContent = reservation.numberOfPeople;
-                row.appendChild(guestsCell);
-                
-                // Стол
-                const tableCell = document.createElement('td');
-                tableCell.textContent = `№${reservation.table.tableNumber}`;
-                row.appendChild(tableCell);
-                
-                // Действия
-                const actionsCell = document.createElement('td');
-                const cancelBtn = document.createElement('button');
-                cancelBtn.textContent = 'Отменить';
-                cancelBtn.style.backgroundColor = '#e74c3c';
-                cancelBtn.style.padding = '5px 10px';
-                cancelBtn.style.borderRadius = '3px';
-                cancelBtn.onclick = () => cancelReservation(reservation.id);
-                actionsCell.appendChild(cancelBtn);
-                row.appendChild(actionsCell);
-                
-                tableBody.appendChild(row);
-            });
-        }
+    const tableBody = document.getElementById('reservations-body');
+
+    // Если нет бронирований — colspan = 8
+    if (!reservations || reservations.length === 0) {
+        tableBody.innerHTML =
+          '<tr><td colspan="8" style="text-align: center;">Нет бронирований за выбранный период</td></tr>';
+        return;
+    }
+
+    // Очищаем старые строки
+    tableBody.innerHTML = '';
+
+    reservations.forEach(reservation => {
+        const row = document.createElement('tr');
+
+        // 1) ID
+        const idCell = document.createElement('td');
+        idCell.textContent = reservation.id;
+        row.appendChild(idCell);
+
+        // 2) Дата (дд.мм.гггг)
+        const [datePart, timePart] = reservation.reservationTime.split(' ');
+        const [year, month, day] = datePart.split('-');
+        const dateCell = document.createElement('td');
+        dateCell.textContent = `${day}.${month}.${year}`;
+        row.appendChild(dateCell);
+
+        // 3) Время начала (чч:мм)
+        const [hours, minutes] = timePart.split(':');
+        const timeCell = document.createElement('td');
+        timeCell.textContent = `${hours}:${minutes}`;
+        row.appendChild(timeCell);
+
+        // 4) Конец бронирования (чч:мм)
+        // Формат reservation.reservationEndTime = "yyyy-MM-dd HH:mm:ss"
+        const [, endDt] = reservation.reservationEndTime.split(' ');
+        const [endH, endM] = endDt.split(':');
+        const endCell = document.createElement('td');
+        endCell.textContent = `${endH}:${endM}`;
+        row.appendChild(endCell);
+
+        // 5) Имя
+        const nameCell = document.createElement('td');
+        nameCell.textContent = reservation.name;
+        row.appendChild(nameCell);
+
+        // 6) Гости
+        const guestsCell = document.createElement('td');
+        guestsCell.textContent = reservation.numberOfPeople;
+        row.appendChild(guestsCell);
+
+        // 7) Стол
+        const tableCell = document.createElement('td');
+        tableCell.textContent = `№${reservation.table.tableNumber}`;
+        row.appendChild(tableCell);
+
+        // 8) Действия
+        const actionsCell = document.createElement('td');
+        const cancelBtn = document.createElement('button');
+        cancelBtn.textContent = 'Отменить';
+        cancelBtn.classList.add('btn','btn-danger'); // или ваш стиль
+        cancelBtn.onclick = () => cancelReservation(reservation.id);
+        actionsCell.appendChild(cancelBtn);
+        row.appendChild(actionsCell);
+
+        tableBody.appendChild(row);
+    });
+}
+
         
         async function cancelReservation(reservationId) {
             if (!confirm('Вы уверены, что хотите отменить это бронирование?')) {
