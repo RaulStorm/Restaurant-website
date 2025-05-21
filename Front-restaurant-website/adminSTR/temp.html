@@ -19,6 +19,8 @@
             <a href="/index.html" class="restaurant-link">Деливия</a>
         </h1>
         <div class="header-center">Панель управления администратора</div>
+          <li><a href="/страницы/rsg.html" class="nav-link">error404test</a></li>
+
     </header>
     <div class="menu-container">
         <div class="side-menu" id="sideMenu">
@@ -760,7 +762,27 @@ async function loadStats() {
     }
 }
 
-    </script>
+document.addEventListener('DOMContentLoaded', () => {
+  document.body.addEventListener('click', function (e) {
+    const target = e.target.closest('a');
+    if (!target) return;
+
+    const href = target.getAttribute('href');
+    if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+
+    const fullPath = decodeURIComponent(new URL(href, window.location.origin).pathname.toLowerCase());
+
+    if (!normalizedValidPaths.includes(fullPath)) {
+      e.preventDefault();
+      window.location.href = '/notFound404/error404.html';
+    }
+  });
+});
+
+
+    </script> 
+       <script src="/router-check.js"></script>
+
 </body>
 
 </html>
