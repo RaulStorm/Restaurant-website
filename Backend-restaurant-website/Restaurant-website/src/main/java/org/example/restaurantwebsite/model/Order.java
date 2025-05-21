@@ -22,6 +22,9 @@ public class Order {
 
     private LocalDateTime orderTime;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private OrderStatus status = OrderStatus.ACTIVE;
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
