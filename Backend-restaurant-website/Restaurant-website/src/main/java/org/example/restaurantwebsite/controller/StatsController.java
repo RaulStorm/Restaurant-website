@@ -21,34 +21,46 @@ public class StatsController {
     }
 
     /**
-     * Возвращает полную статистику (выручка, топ-блюда, редкие блюда)
-     * за период period = day | week | month.
+     * Полная статистика (выручка, топ- и редкие блюда) за период.
+     * Параметр period = day | week | month | all
      */
+// В StatsController.java
+
     @GetMapping
-    public Map<String, Object> fullStats(@RequestParam String period) {
-        DateBounds bounds = statsService.resolveBounds(period);
+    public Map<String,Object> fullStats(@RequestParam String period) {
+        DateBounds b = statsService.resolveBounds(period);
+
+        var revenue   = statsService.getRevenueStats(b.start(), b.end());
+        var topItems  = statsService.getTopItems(b.start(), b.end());
+        var rareItems = statsService.getRareItems(b.start(), b.end());
+        var avgCheck  = statsService.getAverageCheck(b.start(), b.end());
+        var daily     = statsService.getDailyOrders(b.start(), b.end());
+
         return Map.of(
-                "revenue",   statsService.getRevenueStats(bounds.start(), bounds.end()),
-                "topItems",  statsService.getTopItems(bounds.start(), bounds.end()),
-                "rareItems", statsService.getRareItems(bounds.start(), bounds.end())
+                "revenue",     revenue,
+                "topItems",    topItems,
+                "rareItems",   rareItems,
+                "averageCheck", avgCheck,
+                "dailyOrders",  daily
         );
     }
 
-    /** Статистика выручки за указанный период */
+
+    /** Отдельный endpoint только для выручки */
     @GetMapping("/revenue")
     public List<RevenueStats> revenue(@RequestParam String period) {
         DateBounds bounds = statsService.resolveBounds(period);
         return statsService.getRevenueStats(bounds.start(), bounds.end());
     }
 
-    /** Топ-5 самых часто заказываемых блюд */
+    /** Отдельный endpoint только для топ-5 блюд */
     @GetMapping("/top-items")
     public List<ItemStats> topItems(@RequestParam String period) {
         DateBounds bounds = statsService.resolveBounds(period);
         return statsService.getTopItems(bounds.start(), bounds.end());
     }
 
-    /** Топ-5 самых редко заказываемых блюд */
+    /** Отдельный endpoint только для редких блюд */
     @GetMapping("/rare-items")
     public List<ItemStats> rareItems(@RequestParam String period) {
         DateBounds bounds = statsService.resolveBounds(period);

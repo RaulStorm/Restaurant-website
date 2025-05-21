@@ -7,13 +7,11 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
-/**
- * Сервис, который умеет резолвить границы по period и выполнять запросы.
- */
 @Service
 public class StatsService {
 
@@ -30,6 +28,7 @@ public class StatsService {
 
     /**
      * Перевод period в конкретные даты start и end.
+     * Поддерживает "day", "week", "month", "all".
      */
     public DateBounds resolveBounds(String period) {
         LocalDate end = LocalDate.now();
@@ -37,9 +36,18 @@ public class StatsService {
             case "day"   -> end;
             case "week"  -> end.minusWeeks(1);
             case "month" -> end.minusMonths(1);
+            case "all"   -> getFirstOrderDate();
             default -> throw new IllegalArgumentException("Unknown period: " + period);
         };
         return new DateBounds(start, end);
+    }
+
+    /**
+     * Дата самого первого заказа (для period=all)
+     */
+    public LocalDate getFirstOrderDate() {
+        String sql = "SELECT MIN(DATE(order_time)) FROM orders";
+        return jdbc.queryForObject(sql, Map.of(), LocalDate.class);
     }
 
     //--------------- SQL -----------------
@@ -85,10 +93,11 @@ public class StatsService {
 
     //--------------- Методы -----------------
 
+    /** Статистика выручки */
     public List<RevenueStats> getRevenueStats(LocalDate start, LocalDate end) {
         var params = new MapSqlParameterSource()
                 .addValue("start", start.atStartOfDay())
-                .addValue("end",   end.plusDays(1).atStartOfDay()); // чтобы включить весь end-день
+                .addValue("end",   end.plusDays(1).atStartOfDay());
         return jdbc.query(REVENUE_SQL, params, (rs, rn) -> new RevenueStats(
                 rs.getString("period"),
                 rs.getBigDecimal("total_revenue"),
@@ -96,6 +105,7 @@ public class StatsService {
         ));
     }
 
+    /** Топ-5 самых популярных блюд */
     public List<ItemStats> getTopItems(LocalDate start, LocalDate end) {
         var params = new MapSqlParameterSource()
                 .addValue("start", start.atStartOfDay())
@@ -106,6 +116,7 @@ public class StatsService {
         ));
     }
 
+    /** Топ-5 самых редких блюд */
     public List<ItemStats> getRareItems(LocalDate start, LocalDate end) {
         var params = new MapSqlParameterSource()
                 .addValue("start", start.atStartOfDay())
@@ -115,4 +126,45 @@ public class StatsService {
                 rs.getLong("totalQuantity")
         ));
     }
+    // В StatsService.java
+
+    // 1) Средний чек
+    public BigDecimal getAverageCheck(LocalDate start, LocalDate end) {
+        String sql = """
+        SELECT
+          SUM(oi.quantity * mi.price) / COUNT(DISTINCT o.id)
+        FROM orders o
+          JOIN order_items oi ON o.id = oi.order_id
+          JOIN menu_items mi ON oi.menu_item_id = mi.id
+        WHERE o.order_time BETWEEN :start AND :end
+    """;
+        var params = new MapSqlParameterSource()
+                .addValue("start", start.atStartOfDay())
+                .addValue("end",   end.plusDays(1).atStartOfDay());
+        return jdbc.queryForObject(sql, params, BigDecimal.class);
+    }
+
+    // 2) Заказы по дням
+    public List<RevenueStats> getDailyOrders(LocalDate start, LocalDate end) {
+        String sql = """
+        SELECT
+          DATE_FORMAT(o.order_time, '%Y-%m-%d') AS period,
+          COUNT(DISTINCT o.id) AS total_orders
+        FROM orders o
+        WHERE o.order_time BETWEEN :start AND :end
+        GROUP BY period
+        ORDER BY period
+    """;
+        var params = new MapSqlParameterSource()
+                .addValue("start", start.atStartOfDay())
+                .addValue("end",   end.plusDays(1).atStartOfDay());
+        return jdbc.query(sql, params, (rs, rn) ->
+                new RevenueStats(
+                        rs.getString("period"),
+                        BigDecimal.ZERO,            // выручку не заполняем
+                        rs.getInt("total_orders")
+                )
+        );
+    }
+
 }
