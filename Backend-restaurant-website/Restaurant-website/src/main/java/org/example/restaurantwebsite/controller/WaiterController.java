@@ -1,4 +1,3 @@
-// src/main/java/org/example/restaurantwebsite/controller/WaiterController.java
 package org.example.restaurantwebsite.controller;
 
 import org.example.restaurantwebsite.dto.WaiterOrderItemView;
