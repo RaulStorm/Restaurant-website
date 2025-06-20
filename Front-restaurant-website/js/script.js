@@ -19,9 +19,10 @@ document.addEventListener("DOMContentLoaded", () => {
     images[currentImageIndex].classList.add('active'); // Установить первое изображение как активное
 });
 
+
 async function loadReviews() {
     try {
-        const response = await fetch('http://localhost:8080/api/reviews/latest');
+        const response = await fetch('http://192.168.1.70:8080/api/reviews/latest');
         if (!response.ok) throw new Error("Ошибка загрузки отзывов");
 
         const reviews = await response.json();

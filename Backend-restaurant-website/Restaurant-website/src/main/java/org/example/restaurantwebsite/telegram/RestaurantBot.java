@@ -591,10 +591,10 @@ public class RestaurantBot extends TelegramLongPollingBot {
             String reviewText = text.substring(1).trim();
 
             // Проверка на нецензурную лексику
-            if (containsProfanity(reviewText)) {
-                sendSimpleMessage(chatId, "❌ Ваш отзыв содержит недопустимые слова. Пожалуйста, измените текст.");
-                return;
-            }
+//            if (containsProfanity(reviewText)) {
+//                sendSimpleMessage(chatId, "❌ Ваш отзыв содержит недопустимые слова. Пожалуйста, измените текст.");
+//                return;
+//            }
 
             ReviewDto reviewDto = new ReviewDto();
             reviewDto.setRating(rating);
@@ -607,8 +607,8 @@ public class RestaurantBot extends TelegramLongPollingBot {
             } else {
                 sendSimpleMessage(chatId, "❌ Ошибка при сохранении отзыва.");
             }
-        } catch (IOException e) {
-            sendSimpleMessage(chatId, "⚠️ Ошибка проверки текста. Попробуйте позже.");
+//        } catch (IOException e) {
+//            sendSimpleMessage(chatId, "⚠️ Ошибка проверки текста. Попробуйте позже.");
         } catch (Exception e) {
             sendSimpleMessage(chatId, "⚠️ Неверный формат отзыва. Пример: '5 Отличный ресторан'");
         }

@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:8080"; // Убедитесь, что этот URL правильный и доступен
+const API_URL = "http://192.168.1.70:8080"; // Убедитесь, что этот URL правильный и доступен
 
 document.addEventListener("DOMContentLoaded", () => {
     const signInForm = document.querySelector('.sign-in-form'); // Убедитесь, что это правильный селектор

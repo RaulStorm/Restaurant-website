@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:8080";
+const API_URL = "http://192.168.1.70:8080"; // Убедитесь, что URL доступен из браузера
 const tableGrid = document.getElementById('tableGrid');
 const reservationForm = document.getElementById('reservation-form');
 const numTables = 20; // Количество столиков
