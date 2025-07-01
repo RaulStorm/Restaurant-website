@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Управление рестораном</title>
+    <link rel="icon" href="/authorization/img/web-icon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/admin.css">
+
+</head>
+
+<body>
+
+    <!-- Хедер -->
+    <header>
+        <h1 class="restaurant-name">
+            <a href="/index.html" class="restaurant-link">Деливия</a>
+        </h1>
+        <div class="header-center">Панель управления администратора</div>
+          <!-- <li><a href="/страницы/rsg.html" class="nav-link">error404test</a></li> -->
+
+    </header>
+    <div class="menu-container">
+        <div class="side-menu" id="sideMenu">
+            <ul>
+                <li><a href="#" onclick="showTab(0)">Добавить блюдо</a></li>
+                <li><a href="#" onclick="showTab(1)">Удалить блюдо</a></li>
+                <li><a href="#" onclick="showTab(2)">Просмотр отзывов</a></li>
+                <li><a href="#" onclick="showTab(3)">Управление бронированиями</a></li>
+                <li><a href="#" onclick="showTab(4)">Статистика</a></li>
+            </ul>
+        </div>
+
+        <!-- Бургерное меню -->
+        <div class="burger-menu" id="new-burger-menu" onclick="toggleMenu(event)">
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+
+
+        <div class="content">
+            <h1>Управление рестораном</h1>
+
+            <!-- Вкладка 1 - Добавить блюдо -->
+            <div id="tab-1" class="tab-content active">
+                <h2>Добавить блюдо</h2>
+                <form id="add-menu-item-form" enctype="multipart/form-data">
+                    <label for="name">Название:</label>
+                    <input type="text" id="name" name="name" required><br>
+
+                    <label for="description">Описание:</label>
+                    <input type="text" id="description" name="description" required><br>
+
+                    <label for="price">Цена:</label>
+                    <input type="number" id="price" name="price" step="0.01" required><br>
+
+                    <label for="categoryName">Категория:</label>
+                    <input type="text" id="categoryName" name="categoryName" required><br>
+
+                    <label for="image">Фото:</label>
+                    <input type="file" id="image" name="image" accept="image/*" required><br><br>
+
+                    <button type="submit">Добавить</button>
+                </form>
+            </div>
+
+            <!-- Вкладка 2 - Удалить блюдо -->
+            <div id="tab-2" class="tab-content">
+                <h2>Удалить блюдо</h2>
+                <form id="delete-menu-item-form">
+                    <label for="delete-menu-item">Выберите блюдо:</label>
+                    <select id="delete-menu-item" name="name" required></select>
+                    <button type="submit">Удалить</button>
+                </form>
+            </div>
+
+            <!-- Вкладка 3 - Просмотр отзывов -->
+            <div id="tab-3" class="tab-content">
+                <h2>Просмотр отзывов</h2>
+                <div>
+                    <label for="review-period">Выберите период:</label>
+                    <select id="review-period">
+                        <option value="day">За день</option>
+                        <option value="week">За неделю</option>
+                        <option value="month">За месяц</option>
+                    </select>
+                    <button id="load-reviews-btn">Загрузить отзывы</button>
+                </div>
+
+                <div id="review-stats" style="margin-top: 20px; display: none;">
+                    <h3>Статистика отзывов</h3>
+                    <p>Средний рейтинг: <span id="average-rating"></span></p>
+                    <p>Всего отзывов: <span id="total-reviews"></span></p>
+                    <div id="rating-distribution">
+                        <h4>Распределение оценок:</h4>
+                    </div>
+                </div>
+
+                <div id="reviews-list" style="margin-top: 20px;"></div>
+                <button onclick="downloadReviewDocument('word')">Скачать Word</button>
+                <button onclick="downloadReviewDocument('excel')">Скачать Excel</button>
+            </div>
+
+            <!-- Вкладка 4 - Управление бронированиями -->
+            <div id="tab-4" class="tab-content">
+                <h2>Управление бронированиями</h2>
+                <div class="controls">
+                    <label for="period-select">Выберите период:</label>
+                    <select id="period-select">
+                        <option value="day">Сегодня</option>
+                        <option value="week">Неделя</option>
+                        <option value="month">Месяц</option>
+                    </select>
+                    <button id="load-btn">Загрузить бронирования</button>
+                </div>
+
+                <div id="loading" class="loading" style="display: none;">
+                    Загрузка данных...
+                </div>
+
+                <div id="error-message" class="error" style="display: none;"></div>
+
+                <div id="reservations-container">
+                    <table id="reservations-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Дата</th>
+                                <th>Время</th>
+                                <th>Конец бронирования</th>
+                                <th>Имя</th>
+                                <th>Гости</th>
+                                <th>Стол</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reservations-body">
+                            <!-- Данные будут здесь -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="export-controls">
+                    <button id="export-word-btn">Скачать Word</button>
+                    <button id="export-excel-btn">Скачать Excel</button>
+                </div>
+            </div>
+
+            <!-- Вкладка 5 – Статистика выручки -->
+            <div id="tab-5" class="tab-content">
+                <h2>Статистика выручки</h2>
+                <div>
+                    <label for="stats-period">Период:</label>
+                    <select id="stats-period">
+                        <option value="day">За день</option>
+                        <option value="week">За неделю</option>
+                        <option value="month">За месяц</option>
+                        <option value="all">За весь период</option>
+                    </select>
+                    <button id="load-stats-btn">Загрузить статистику</button>
+                </div>
+                <div class="stats-container">
+                    <div class="stats-section">
+                        <h3>Общая статистика</h3>
+                        <p>Всего заказов: <span id="total-orders">0</span></p>
+                        <p>Выручка: <span id="total-revenue">0.00</span> ₽</p>
+                        <p>Средний чек: <span id="avg-check">0.00</span> ₽</p>
+                    </div>
+                    <div class="stats-section">
+                        <h3>Топ блюд</h3>
+                        <table class="stats-table" id="top-items-table">
+                            <thead>
+                                <tr>
+                                    <th>Блюдо</th>
+                                    <th>Кол-во</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <div class="stats-section">
+                        <h3>Низ блюд</h3>
+                        <table class="stats-table" id="bottom-items-table">
+                            <thead>
+                                <tr>
+                                    <th>Блюдо</th>
+                                    <th>Кол-во</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <div class="stats-section">
+                        <h3>Заказы по дням</h3>
+                        <table class="stats-table" id="daily-orders-table">
+                            <thead>
+                                <tr>
+                                    <th>Дата</th>
+                                    <th>Кол-во заказов</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+
+
+    <script>
+        // Получаем элементы
+        const exportWordBtn = document.getElementById('export-word-btn');
+        const exportExcelBtn = document.getElementById('export-excel-btn');
+        const periodSelect = document.getElementById('period-select');
+
+        // Функция для скачивания файла
+        async function downloadReservationDocument(format) {
+            const period = periodSelect.value; // Получаем выбранный период
+            const token = localStorage.getItem('token'); // Получаем токен
+
+            try {
+                // Отправляем запрос на сервер для получения данных о резервациях
+                const response = await fetch(
+                    `http://localhost:8080/adm/reservations/export/${format}?period=${period}`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+
+                if (!response.ok) {
+                    throw new Error('Ошибка при получении данных для экспорта');
+                }
+
+                // Получаем файл в виде Blob
+                const blob = await response.blob();
+
+                // Создаем ссылку для скачивания
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `reservations_${period}.${format === 'word' ? 'docx' : 'xlsx'}`; // Название файла
+
+                // Кликаем по ссылке для скачивания
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } catch (error) {
+                alert('Ошибка: ' + error.message);
+                console.error('Ошибка при скачивании файла:', error);
+            }
+        }
+
+        // Добавляем обработчики событий для кнопок скачивания
+        exportWordBtn.addEventListener('click', () => {
+            downloadReservationDocument('word'); // Скачать в формате Word
+        });
+
+        exportExcelBtn.addEventListener('click', () => {
+            downloadReservationDocument('excel'); // Скачать в формате Excel
+        });
+
+
+        document.getElementById("add-menu-item-form").addEventListener("submit", async (event) => {
+            event.preventDefault();
+
+            const formData = new FormData();
+            formData.append("name", document.getElementById("name").value);
+            formData.append("description", document.getElementById("description").value);
+            formData.append("price", document.getElementById("price").value);
+            formData.append("categoryName", document.getElementById("categoryName").value);
+            formData.append("image", document.getElementById("image").files[0]);
+
+            const token = localStorage.getItem("token"); // Получаем JWT токен из localStorage
+
+            try {
+                const response = await fetch("http://localhost:8080/adm/addDish", {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${token}` // Добавляем JWT токен в заголовок
+                    },
+                    body: formData,
+                });
+
+                if (response.ok) {
+                    alert("Блюдо добавлено успешно!");
+                } else {
+                    const errorText = await response.text();
+                    alert("Ошибка: " + errorText);
+                }
+            } catch (error) {
+                alert("Ошибка соединения с сервером: " + error.message);
+            }
+        });
+
+        // Функция подгрузки списка блюд для удаления
+        async function loadMenuItems() {
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch('http://localhost:8080/adm/menu', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (!response.ok) throw new Error('Не удалось получить список блюд: ' + response.status);
+                const items = await response.json();
+                const select = document.getElementById('delete-menu-item');
+                select.innerHTML = '';
+                items.forEach(item => {
+                    const opt = document.createElement('option');
+                    opt.value = item.id; // теперь value = id
+                    opt.textContent = `${item.name}`; // отображаем имя блюда
+                    select.appendChild(opt);
+                });
+            } catch (err) {
+                alert('Ошибка загрузки меню: ' + err.message);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadMenuItems);
+
+        // Обработчик формы удаления
+        document.getElementById('delete-menu-item-form').addEventListener('submit', async e => {
+            e.preventDefault();
+            const id = document.getElementById('delete-menu-item').value;
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch(
+                    `http://localhost:8080/adm/menu/${id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    }
+                );
+                if (response.status === 204) {
+                    alert('Блюдо удалено успешно!');
+                    await loadMenuItems(); // обновляем список
+                } else if (response.status === 401) {
+                    alert('Ваша сессия истекла, пожалуйста, авторизуйтесь заново.');
+                } else {
+                    const txt = await response.text();
+                    alert('Ошибка: ' + txt);
+                }
+            } catch (err) {
+                alert('Ошибка соединения: ' + err.message);
+            }
+        });
+
+
+
+        // Функция для загрузки и отображения отзывов
+        document.getElementById('load-reviews-btn').addEventListener('click', async () => {
+            const period = document.getElementById('review-period').value;
+            const token = localStorage.getItem('token');
+
+            try {
+                const response = await fetch(`http://localhost:8080/adm/reviews?period=${period}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Ошибка загрузки отзывов: ' + response.status);
+                }
+
+                const data = await response.json();
+
+                // Проверяем, есть ли отзывы
+                if (data.totalReviews === 0 || !data.reviews || data.reviews.length === 0) {
+                    // Скрываем статистику, если нет отзывов
+                    document.getElementById('review-stats').style.display = 'none';
+                    // Показываем сообщение, что отзывов нет
+                    document.getElementById('reviews-list').innerHTML =
+                        '<p>Нет отзывов за выбранный период.</p>';
+                    return;
+                }
+
+                // Отображаем статистику
+                document.getElementById('review-stats').style.display = 'block';
+                document.getElementById('average-rating').textContent = data.averageRating.toFixed(1);
+                document.getElementById('total-reviews').textContent = data.totalReviews;
+
+                // Очищаем предыдущее распределение оценок
+                const ratingDistribution = document.getElementById('rating-distribution');
+                ratingDistribution.innerHTML = '<h4>Распределение оценок:</h4>';
+
+                // Добавляем проценты для каждой оценки (1-5)
+                for (let i = 0; i < data.ratingPercentages.length; i++) {
+                    const rating = i + 1;
+                    const percentage = data.ratingPercentages[i].toFixed(1);
+
+                    const ratingElement = document.createElement('p');
+                    ratingElement.textContent = `${rating} звезд: ${percentage}%`;
+                    ratingDistribution.appendChild(ratingElement);
+                }
+
+                // Отображаем список отзывов
+                displayReviews(data.reviews);
+
+            } catch (error) {
+                alert('Ошибка: ' + error.message);
+                document.getElementById('reviews-list').innerHTML =
+                    '<p>Произошла ошибка при загрузке отзывов.</p>';
+            }
+        });
+
+        function displayReviews(reviews) {
+            const reviewsList = document.getElementById('reviews-list');
+            reviewsList.innerHTML = '<h3>Список отзывов</h3>';
+
+            reviews.forEach(review => {
+                const reviewElement = document.createElement('div');
+                reviewElement.style.border = '1px solid #ccc';
+                reviewElement.style.padding = '10px';
+                reviewElement.style.marginBottom = '10px';
+                reviewElement.style.borderRadius = '5px';
+                reviewElement.style.backgroundColor = '#f9f9f9';
+
+                reviewElement.innerHTML = `
+            <p><strong>Пользователь:</strong> ${review.user.name}</p>
+            <p><strong>Оценка:</strong> ${'★'.repeat(review.rating)} (${review.rating} из 5)</p>
+            <p><strong>Отзыв:</strong> ${review.reviewText}</p>
+            <p><strong>Дата:</strong> ${review.formattedDate}</p>
+        `;
+
+                reviewsList.appendChild(reviewElement);
+            });
+        }
+
+        function displayReviews(reviews) {
+            const reviewsList = document.getElementById('reviews-list');
+            reviewsList.innerHTML = '<h3>Список отзывов</h3>';
+
+            if (reviews && reviews.length > 0) {
+                reviews.forEach(review => {
+                    const reviewElement = document.createElement('div');
+                    reviewElement.style.border = '1px solid #ccc';
+                    reviewElement.style.padding = '10px';
+                    reviewElement.style.marginBottom = '10px';
+                    reviewElement.style.borderRadius = '5px';
+                    reviewElement.style.backgroundColor = '#f9f9f9';
+
+                    reviewElement.innerHTML = `
+                <p><strong>Пользователь:</strong> ${review.user.name}</p>
+                <p><strong>Оценка:</strong> ${'★'.repeat(review.rating)} (${review.rating} из 5)</p>
+                <p><strong>Отзыв:</strong> ${review.reviewText}</p>
+                <p><strong>Дата:</strong> ${review.formattedDate}</p>
+            `;
+
+                    reviewsList.appendChild(reviewElement);
+                });
+            } else {
+                reviewsList.innerHTML += '<p>Отзывов за выбранный период нет.</p>';
+            }
+        }
+
+        async function downloadReviewDocument(format) {
+            const period = document.getElementById('review-period').value;
+            const token = localStorage.getItem('token');
+
+            try {
+                // Получаем уже отображённые отзывы (повторно)
+                const response = await fetch(`http://localhost:8080/adm/reviews?period=${period}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Не удалось получить отзывы: ' + response.status);
+                }
+
+                const data = await response.json();
+
+                // Отправляем полученные данные на экспорт
+                const exportResponse = await fetch(`http://localhost:8080/adm/reviews/export/${format}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!exportResponse.ok) {
+                    throw new Error('Ошибка экспорта документа: ' + exportResponse.status);
+                }
+
+                // Получаем файл
+                const blob = await exportResponse.blob();
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `reviews_${period}.${format === 'word' ? 'docx' : 'xlsx'}`;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+
+            } catch (error) {
+                alert('Ошибка: ' + error.message);
+            }
+        }
+
+
+        document.getElementById('load-btn').addEventListener('click', loadReservations);
+
+        async function loadReservations() {
+            const period = document.getElementById('period-select').value;
+            const loadingElement = document.getElementById('loading');
+            const errorElement = document.getElementById('error-message');
+            const tableBody = document.getElementById('reservations-body');
+
+            // Показываем индикатор загрузки
+            loadingElement.style.display = 'block';
+            errorElement.style.display = 'none';
+            tableBody.innerHTML = '';
+
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    throw new Error('Требуется авторизация');
+                }
+
+                const response = await fetch(`http://localhost:8080/adm/reservations?period=${period}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    const error = await response.text();
+                    throw new Error(error || 'Ошибка загрузки данных');
+                }
+
+                const reservations = await response.json();
+                displayReservations(reservations);
+
+            } catch (error) {
+                errorElement.textContent = `Ошибка: ${error.message}`;
+                errorElement.style.display = 'block';
+                console.error('Ошибка:', error);
+            } finally {
+                loadingElement.style.display = 'none';
+            }
+        }
+
+        function displayReservations(reservations) {
+            const tableBody = document.getElementById('reservations-body');
+
+            // Если нет бронирований — colspan = 8
+            if (!reservations || reservations.length === 0) {
+                tableBody.innerHTML =
+                    '<tr><td colspan="8" style="text-align: center;">Нет бронирований за выбранный период</td></tr>';
+                return;
+            }
+
+            // Очищаем старые строки
+            tableBody.innerHTML = '';
+
+            reservations.forEach(reservation => {
+                const row = document.createElement('tr');
+
+                // 1) ID
+                const idCell = document.createElement('td');
+                idCell.textContent = reservation.id;
+                row.appendChild(idCell);
+
+                // 2) Дата (дд.мм.гггг)
+                const [datePart, timePart] = reservation.reservationTime.split(' ');
+                const [year, month, day] = datePart.split('-');
+                const dateCell = document.createElement('td');
+                dateCell.textContent = `${day}.${month}.${year}`;
+                row.appendChild(dateCell);
+
+                // 3) Время начала (чч:мм)
+                const [hours, minutes] = timePart.split(':');
+                const timeCell = document.createElement('td');
+                timeCell.textContent = `${hours}:${minutes}`;
+                row.appendChild(timeCell);
+
+                // 4) Конец бронирования (чч:мм)
+                // Формат reservation.reservationEndTime = "yyyy-MM-dd HH:mm:ss"
+                const [, endDt] = reservation.reservationEndTime.split(' ');
+                const [endH, endM] = endDt.split(':');
+                const endCell = document.createElement('td');
+                endCell.textContent = `${endH}:${endM}`;
+                row.appendChild(endCell);
+
+                // 5) Имя
+                const nameCell = document.createElement('td');
+                nameCell.textContent = reservation.name;
+                row.appendChild(nameCell);
+
+                // 6) Гости
+                const guestsCell = document.createElement('td');
+                guestsCell.textContent = reservation.numberOfPeople;
+                row.appendChild(guestsCell);
+
+                // 7) Стол
+                const tableCell = document.createElement('td');
+                tableCell.textContent = `№${reservation.table.tableNumber}`;
+                row.appendChild(tableCell);
+
+                // 8) Действия
+                const actionsCell = document.createElement('td');
+                const cancelBtn = document.createElement('button');
+                cancelBtn.textContent = 'Отменить';
+                cancelBtn.classList.add('btn', 'btn-danger'); // или ваш стиль
+                cancelBtn.onclick = () => cancelReservation(reservation.id);
+                actionsCell.appendChild(cancelBtn);
+                row.appendChild(actionsCell);
+
+                tableBody.appendChild(row);
+            });
+        }
+
+
+        async function cancelReservation(reservationId) {
+            if (!confirm('Вы уверены, что хотите отменить это бронирование?')) {
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`http://localhost:8080/adm/reservations/${reservationId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Ошибка при отмене бронирования');
+                }
+
+                alert('Бронирование успешно отменено');
+                loadReservations(); // Обновляем список
+            } catch (error) {
+                alert(`Ошибка: ${error.message}`);
+                console.error('Ошибка отмены бронирования:', error);
+            }
+        }
+
+        // Загружаем бронирования при загрузке страницы
+        document.addEventListener('DOMContentLoaded', () => {
+            loadReservations();
+        });
+
+        // Функция для отображения вкладок
+        function showTab(tabIndex) {
+            // Скрыть все вкладки
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.classList.remove('active'));
+
+            // Показать выбранную вкладку
+            const selectedTab = document.getElementById('tab-' + (tabIndex + 1));
+            selectedTab.classList.add('active');
+        }
+        // Функция для открытия/закрытия меню
+        function toggleMenu(event) {
+            // Останавливаем всплытие события, чтобы оно не срабатывало дважды
+            event.stopPropagation();
+
+            const sideMenu = document.getElementById('sideMenu');
+            sideMenu.classList.toggle('active'); // Переключаем класс "active" на боковом меню
+
+            const content = document.querySelector('.content');
+            content.classList.toggle('active'); // Переключаем класс "active" на контенте для сдвига
+        }
+
+        // Предотвращаем срабатывание обработчиков кликов на боковом меню (чтобы оно не закрылось сразу)
+        document.getElementById('sideMenu').addEventListener('click', function (event) {
+            event.stopPropagation(); // Останавливаем всплытие
+        });
+
+        // Если кликать за пределами меню и бургерного меню, оно должно закрываться
+        document.addEventListener('click', function (event) {
+            const sideMenu = document.getElementById('sideMenu');
+            const burgerMenu = document.getElementById('new-burger-menu');
+
+            if (!sideMenu.contains(event.target) && !burgerMenu.contains(event.target)) {
+                sideMenu.classList.remove('active');
+                document.querySelector('.content').classList.remove('active');
+            }
+        });
+        // Привязка кнопки «Загрузить статистику»
+        document.getElementById('load-stats-btn')
+            .addEventListener('click', loadStats);
+
+        // Привязка кнопки «Загрузить статистику»
+        document.getElementById('load-stats-btn')
+            .addEventListener('click', loadStats);
+
+        // Привязка кнопки «Загрузить статистику»
+        document.getElementById('load-stats-btn')
+            .addEventListener('click', loadStats);
+
+document.getElementById('load-stats-btn')
+  .addEventListener('click', loadStats);
+
+async function loadStats() {
+    const period = document.getElementById('stats-period').value;
+    const token  = localStorage.getItem('token');
+
+    try {
+        const resp = await fetch(
+            `http://localhost:8080/adm/stats?period=${period}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            }
+        );
+        if (!resp.ok) throw new Error(`Ошибка сервера ${resp.status}`);
+        const data = await resp.json();
+
+        // 1) Общие: сумма заказов и выручки
+        const totalOrders  = data.revenue.reduce((sum, x) => sum + x.totalOrders, 0);
+        const totalRevenue = data.revenue.reduce((sum, x) => sum + parseFloat(x.totalRevenue), 0);
+
+        document.getElementById('total-orders').textContent  = totalOrders;
+        document.getElementById('total-revenue').textContent = totalRevenue.toFixed(2);
+
+        // 2) Средний чек
+        const avgCheck = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+        document.getElementById('avg-check').textContent = avgCheck.toFixed(2);
+
+        // 3) Топ-5 блюд
+        const topTbody = document.querySelector('#top-items-table tbody');
+        topTbody.innerHTML = '';
+        data.topItems.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${item.name}</td><td>${item.totalQuantity}</td>`;
+            topTbody.appendChild(tr);
+        });
+
+        // 4) Редкие блюда
+        const botTbody = document.querySelector('#bottom-items-table tbody');
+        botTbody.innerHTML = '';
+        data.rareItems.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${item.name}</td><td>${item.totalQuantity}</td>`;
+            botTbody.appendChild(tr);
+        });
+
+        // 5) Заказы по дням (используем массив revenue)
+        const dailyTbody = document.querySelector('#daily-orders-table tbody');
+        dailyTbody.innerHTML = '';
+        data.revenue.forEach(row => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${row.period}</td><td>${row.totalOrders}</td>`;
+            dailyTbody.appendChild(tr);
+        });
+
+        // 6) Переключаем на вкладку «Статистика» (пятый пункт, index = 4)
+        showTab(4);
+
+    } catch (err) {
+        alert('Не удалось загрузить статистику: ' + err.message);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.body.addEventListener('click', function (e) {
+    const target = e.target.closest('a');
+    if (!target) return;
+
+    const href = target.getAttribute('href');
+    if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+
+    const fullPath = decodeURIComponent(new URL(href, window.location.origin).pathname.toLowerCase());
+
+    if (!normalizedValidPaths.includes(fullPath)) {
+      e.preventDefault();
+      window.location.href = '/notFound404/error404.html';
+    }
+  });
+});
+
+
+    </script> 
+       <script src="/router-check.js"></script>
+
+</body>
+
+</html>

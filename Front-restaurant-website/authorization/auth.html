@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Авторизация - Деливия</title>
+    <link rel="icon" href="/authorization/img/web-icon.png">
+    <link rel="stylesheet" type="text/css" href="./style.css" />
+</head>
+<body>
+    <div class="container">
+      <div class="forms-container">
+        <div class="signin-signup">
+          <form action="" class="sign-in-form">
+            <h2 class="title">Вход</h2>
+            <div class="input-field">
+              <i class="fas fa-user"></i>
+              <input type="text" name="email" placeholder="Почта пользователя" />
+            </div>
+            <div class="input-field">
+              <i class="fas fa-lock"></i>
+              <input type="password" name="password" placeholder="Пароль" />
+            </div>
+            <input type="submit" value="Войти" class="btn solid" />
+            <p><a href="/index.html" class="back-link">Перейти на главную без регистрации</a></p>
+          </form>
+
+          <form action="" class="sign-up-form">
+            <h2 class="title">Регистрация</h2>
+            <div class="input-field">
+              <i class="fas fa-user"></i>
+              <input type="text" name="name" placeholder="Имя пользователя" />
+            </div>
+            <div class="input-field">
+              <i class="fas fa-envelope"></i>
+              <input type="email" name="email" placeholder="Электронная почта" />
+            </div>
+            <div class="input-field">
+              <i class="fas fa-lock"></i>
+              <input type="password" name="password" placeholder="Пароль" />
+            </div>
+            <input type="submit" value="Зарегистрироваться" class="btn solid" />
+
+            <p class="social-text">Или зарегистрируйтесь через социальные сети:</p>
+            <div class="social-media">
+              <a href="#" class="social-icon">
+                <i class="fab fa-facebook-f"></i>
+              </a>
+              <a href="#" class="social-icon">
+                <i class="fab fa-twitter"></i>
+              </a>
+              <a href="#" class="social-icon">
+                <i class="fab fa-google"></i>
+              </a>
+              <a href="#" class="social-icon">
+                <i class="fab fa-linkedin-in"></i>
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="panels-container">
+        <div class="panel left-panel">
+            <div class="content">
+                <h3>Новичок?</h3>
+                <p>Присоединяйтесь к Деливии и откройте для себя мир удивительных вкусов.</p>
+                <button class="btn transparent" id="sign-up-btn">Регистрация</button>
+            </div>
+            <img src="/authorization/img/log.svg" class="image" alt="Вход">
+        </div>
+
+        <div class="panel right-panel">
+            <div class="content">
+                <h3>Уже с нами?</h3>
+                <p>Введите свои данные для входа и продолжайте наслаждаться вкусами Деливии.</p>
+                <button class="btn transparent" id="sign-in-btn">Вход</button>
+            </div>
+            <img src="/authorization/img/register.svg" class="image" alt="Регистрация">
+        </div>
+      </div>
+    </div>
+
+    <script src="/authorization/auth.js"></script>
+</body>
+</html>

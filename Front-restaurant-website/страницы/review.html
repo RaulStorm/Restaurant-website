@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Оставить отзыв</title>
+    <link rel="icon" href="/authorization/img/web-icon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/review.css">
+
+</head>
+<body>
+    <header></header>
+
+    <main>
+        <form id="review-form">
+            <label for="review">Ваш отзыв:</label>
+            <textarea id="review" required></textarea>
+
+            <div class="full-stars">
+                <div class="rating-group">
+                  <input type="radio" id="star-5" name="rating" value="5">
+                  <label for="star-5">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512">
+                      <path d="M259.3 17.8L194 150.2 47.9 171.5c-26.2 
+                      3.8-36.7 36.1-17.7 54.6l105.7 103-25 
+                      145.5c-4.5 26.3 23.2 46 46.4 
+                      33.7L288 439.6l130.7 68.7c23.2 
+                      12.2 50.9-7.4 46.4-33.7l-25-145.5 
+                      105.7-103c19-18.5 8.5-50.8-17.7-54.6L382 
+                      150.2 316.7 17.8c-11.7-23.6-45.6-23.9-57.4 0z"/>
+                    </svg>
+                  </label>
+              
+                  <input type="radio" id="star-4" name="rating" value="4">
+                  <label for="star-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512">
+                      <path d="M259.3 17.8L194 150.2 47.9 171.5c-26.2 
+                      3.8-36.7 36.1-17.7 54.6l105.7 103-25 
+                      145.5c-4.5 26.3 23.2 46 46.4 
+                      33.7L288 439.6l130.7 68.7c23.2 
+                      12.2 50.9-7.4 46.4-33.7l-25-145.5 
+                      105.7-103c19-18.5 8.5-50.8-17.7-54.6L382 
+                      150.2 316.7 17.8c-11.7-23.6-45.6-23.9-57.4 0z"/>
+                    </svg>
+                  </label>
+              
+                  <input type="radio" id="star-3" name="rating" value="3">
+                  <label for="star-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512">
+                      <path d="M259.3 17.8L194 150.2 47.9 171.5c-26.2 
+                      3.8-36.7 36.1-17.7 54.6l105.7 103-25 
+                      145.5c-4.5 26.3 23.2 46 46.4 
+                      33.7L288 439.6l130.7 68.7c23.2 
+                      12.2 50.9-7.4 46.4-33.7l-25-145.5 
+                      105.7-103c19-18.5 8.5-50.8-17.7-54.6L382 
+                      150.2 316.7 17.8c-11.7-23.6-45.6-23.9-57.4 0z"/>
+                    </svg>
+                  </label>
+              
+                  <input type="radio" id="star-2" name="rating" value="2">
+                  <label for="star-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512">
+                      <path d="M259.3 17.8L194 150.2 47.9 171.5c-26.2 
+                      3.8-36.7 36.1-17.7 54.6l105.7 103-25 
+                      145.5c-4.5 26.3 23.2 46 46.4 
+                      33.7L288 439.6l130.7 68.7c23.2 
+                      12.2 50.9-7.4 46.4-33.7l-25-145.5 
+                      105.7-103c19-18.5 8.5-50.8-17.7-54.6L382 
+                      150.2 316.7 17.8c-11.7-23.6-45.6-23.9-57.4 0z"/>
+                    </svg>
+                  </label>
+              
+                  <input type="radio" id="star-1" name="rating" value="1">
+                  <label for="star-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512">
+                      <path d="M259.3 17.8L194 150.2 47.9 171.5c-26.2 
+                      3.8-36.7 36.1-17.7 54.6l105.7 103-25 
+                      145.5c-4.5 26.3 23.2 46 46.4 
+                      33.7L288 439.6l130.7 68.7c23.2 
+                      12.2 50.9-7.4 46.4-33.7l-25-145.5 
+                      105.7-103c19-18.5 8.5-50.8-17.7-54.6L382 
+                      150.2 316.7 17.8c-11.7-23.6-45.6-23.9-57.4 0z"/>
+                    </svg>
+                  </label>
+                </div>
+              </div>
+              
+
+            <button type="submit">Отправить</button>
+        </form>
+    </main>
+
+    <footer></footer>
+
+    <script src="/js/review.js"></script>
+    <script>
+        function parseJwt(token) {
+    const base64Url = token.split('.')[1]; // payload
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+ 
+    const jsonPayload = decodeURIComponent(
+        atob(base64)
+            .split('')
+            .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+            .join('')
+    );
+ 
+    return JSON.parse(jsonPayload);
+}
+ fetch('/страницы/header.html')
+    .then(response => response.text())
+    .then(data => {
+        document.querySelector('header').innerHTML = data;
+        let a = document.getElementById("url-auth");
+        let token = localStorage.getItem("token");
+        if(token){
+            let payload = parseJwt(token);
+           // console.log(payload);
+            if(payload){
+                a.href= "/страницы/profile.html";
+              a.firstElementChild.src='/authorization/img/avatar-icon.png';
+            } 
+        }else{
+            a.href= "/authorization/auth.html";
+            a.firstElementChild.src='/authorization/img/auth.png';
+        }
+    })
+    .catch(err => {
+        console.error('Ошибка загрузки header:', err);
+    });
+
+fetch('/страницы/footer.html')
+    .then(response => response.text())
+    .then(data => {
+        document.querySelector('footer').innerHTML = data;
+    })
+    .catch(err => {
+        console.error('Ошибка загрузки footer:', err);
+    });
+
+    function toggleMenu() {
+    const nav = document.querySelector('nav');
+    nav.classList.toggle('active');
+}
+
+    </script>
+        <script src="/router-check.js"></script>
+
+</body>
+</html>

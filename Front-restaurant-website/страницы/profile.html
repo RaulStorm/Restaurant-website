@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Личный кабинет</title>
+  <link rel="icon" href="/authorization/img/web-icon.png">
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/profile.css">
+</head>
+<body>
+
+  <header>
+    <!-- Здесь динамически подгружается header -->
+  </header>
+
+  <div class="profile-container">
+    <div class="profile-header">
+      <img id="user-photo" src="/authorization/img/avatar-icon.png" alt="Фото пользователя">
+      <h2 id="user-name">Имя пользователя</h2>
+      <p id="user-email">email@example.com</p>
+      <button id="logout-btn">Выйти</button>
+    </div>
+
+    <div class="profile-section">
+      <h3>Бронирование столика</h3>
+      <p id="reservation-info">Загрузка...</p>
+    </div>
+
+    <div class="profile-section">
+      <h3>История заказов</h3>
+      <ul id="order-history">
+        <li>Загрузка...</li>
+      </ul>
+    </div>
+
+    <div class="profile-section">
+      <h3>Любимые блюда</h3>
+      <ul id="favorite-dishes">
+        <li>Загрузка...</li>
+      </ul>
+    </div>
+
+    <div class="profile-section">
+        <h3>Ваш отзыв</h3>
+        <div id="user-review">Загрузка...</div>
+        <button id="review-btn" style="display: none;">Оставить отзыв</button>
+      </div>
+      
+  </div>
+
+  <footer>
+    <!-- Динамически подгружается footer -->
+  </footer>
+
+  <!-- Скрипты -->
+  <script>
+    // Функция декодирования JWT
+    function parseJwt(token) {
+      try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const binaryString = atob(base64);
+        const utf8Decoder = new TextDecoder("utf-8");
+        const decodedText = utf8Decoder.decode(new Uint8Array([...binaryString].map(c => c.charCodeAt(0))));
+        return JSON.parse(decodedText);
+      } catch (e) {
+        console.error("Ошибка декодирования JWT:", e);
+        return null;
+      }
+    }
+
+    // Подгрузка header и footer
+    fetch('/страницы/header.html')
+      .then(response => response.text())
+      .then(data => {
+          document.querySelector('header').innerHTML = data;
+          const a = document.getElementById("url-auth");
+          const token = localStorage.getItem("token");
+          if(token){
+              let payload = parseJwt(token);
+           //   console.log("Payload:", payload);
+              if(payload){
+                  a.href = "/страницы/profile.html";
+                  a.firstElementChild.src = '/authorization/img/avatar-icon.png';
+              } 
+          } else {
+              a.href= "/authorization/auth.html";
+              a.firstElementChild.src='/authorization/img/auth.png';
+          }
+      })
+      .catch(err => console.error('Ошибка загрузки header:', err));
+
+    fetch('/страницы/footer.html')
+      .then(response => response.text())
+      .then(data => {
+          document.querySelector('footer').innerHTML = data;
+      })
+      .catch(err => console.error('Ошибка загрузки footer:', err));
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+          window.location.href = "/authorization/auth.html";
+          return;
+      }
+      
+      // Декодирование токена
+      const payload = parseJwt(token);
+      if (payload) {
+          document.getElementById("user-name").textContent = payload.name || "Имя пользователя";
+          document.getElementById("user-email").textContent = payload.sub || "email@example.com";
+      } else {
+          console.error("Не удалось декодировать токен");
+      }
+
+    })
+  </script>
+  <script src="/js/profile.js"></script>
+      <script src="/router-check.js"></script>
+
+</body>
+</html>

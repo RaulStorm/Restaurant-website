@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Главная страница</title>
+    <link rel="icon" href="/authorization/img/web-icon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/index.css">
+    <link rel="stylesheet" href="/css/review-index.css">
+</head>
+<body>
+    <header></header>
+     
+    
+    <main>
+        <section class="gallery">
+            <div class="carousel">
+                <div class="carousel-images">
+                    <img src="images/restaurant_interior1.png" alt="Интерьер ресторана 1">
+                    <img src="images/restaurant_interior2.png" alt="Интерьер ресторана 2">
+                    <img src="images/restaurant_interior3.png" alt="Интерьер ресторана 3">
+                </div>
+            </div>
+        </section>
+
+        <section class="about">
+            <h2>О ресторане</h2>
+            <p>
+                Мы готовы предложить вам уникальный гастрономический опыт с блюдами, 
+                которые мы готовим с любовью и вниманием к деталям. 
+                Наши повара используют только свежие и качественные ингредиенты.
+            </p>
+            <p>
+                В "Деливия" вас ждет уютная атмосфера, где каждый гость чувствует себя по-особенному. 
+                Мы уверены, что каждый визит станет для вас запоминающимся событием.
+            </p>
+            <p>
+                Мы предлагаем как классические блюда, так и авторские творения, чтобы удовлетворить 
+                любой вкус. Обязательно посетите наше меню и узнайте о специальных предложениях.
+            </p>
+        </section>
+    </main>
+
+    <section class="reviews" id="reviews-section">
+        <h2>Отзывы наших гостей</h2>
+        <div id="review-list" class="review-list"></div>
+    </section>
+
+    
+    <script src="/js/script.js"></script>
+
+    <footer></footer>
+    
+    <script>
+        function parseJwt(token) {
+    const base64Url = token.split('.')[1]; // payload
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+ 
+    const jsonPayload = decodeURIComponent(
+        atob(base64)
+            .split('')
+            .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+            .join('')
+    );
+ 
+    return JSON.parse(jsonPayload);
+}
+
+ fetch('/страницы/header.html')
+    .then(response => response.text())
+    .then(data => {
+        document.querySelector('header').innerHTML = data;
+        let a = document.getElementById("url-auth");
+        let token = localStorage.getItem("token");
+        if(token){
+            let payload = parseJwt(token);
+        //    console.log(payload);
+            if(payload){
+                a.href= "/страницы/profile.html";
+              a.firstElementChild.src='/authorization/img/avatar-icon.png';
+            } 
+        }else{ 
+            a.href= "/authorization/auth.html";
+            a.firstElementChild.src='/authorization/img/auth.png';
+        }
+    })
+    .catch(err => {
+        console.error('Ошибка загрузки header:', err);
+    });
+
+fetch('/страницы/footer.html')
+    .then(response => response.text())
+    .then(data => {
+        document.querySelector('footer').innerHTML = data;
+    })
+    .catch(err => {
+        console.error('Ошибка загрузки footer:', err);
+    });
+    
+function toggleMenu() {
+    const nav = document.querySelector('nav');
+    nav.classList.toggle('active');
+}
+    </script>
+    <script src="/router-check.js"></script>
+
+</body>
+</html>

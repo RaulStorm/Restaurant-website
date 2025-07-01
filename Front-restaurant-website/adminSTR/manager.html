@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Официант — Активные заказы</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+    .order-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+    }
+    .order-card {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      width: 300px;
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+      position: relative;
+      transition: transform 0.2s, opacity 0.2s;
+    }
+    .order-card.fade-out {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    .order-header {
+      font-weight: bold;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 1.1em;
+      color: #444;
+    }
+    .order-meta {
+      font-size: 0.9em;
+      color: #666;
+      margin-bottom: 12px;
+    }
+    .order-notes {
+      font-style: italic;
+      margin-bottom: 12px;
+      color: #555;
+    }
+    .items-list {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 16px;
+    }
+    .items-list li {
+      margin-bottom: 6px;
+      font-size: 0.95em;
+      color: #333;
+    }
+    .complete-btn {
+      align-self: stretch;
+      background: #28a745;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 10px;
+      font-size: 1em;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .complete-btn:hover {
+      background: #218838;
+    }
+    .empty {
+      text-align: center;
+      color: #777;
+      font-size: 1.1em;
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Активные заказы</h1>
+  <div id="orders" class="order-container">
+    <p class="empty">Загрузка...</p>
+  </div>
+
+  <script>
+    const ordersContainer = document.getElementById('orders');
+    const token = localStorage.getItem('token');
+
+    async function loadOrders() {
+      ordersContainer.innerHTML = '<p class="empty">Загрузка...</p>';
+      try {
+        const resp = await fetch('http://localhost:8080/waiter/orders/active', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!resp.ok) throw new Error(`Сервер вернул ${resp.status}`);
+        const orders = await resp.json();
+        renderOrders(orders);
+      } catch (err) {
+        ordersContainer.innerHTML = `<p class="empty">Ошибка: ${err.message}</p>`;
+      }
+    }
+
+    function renderOrders(orders) {
+      ordersContainer.innerHTML = '';
+      if (orders.length === 0) {
+        ordersContainer.innerHTML = '<p class="empty">Нет активных заказов</p>';
+        return;
+      }
+      orders.forEach(order => {
+        const card = document.createElement('div');
+        card.className = 'order-card';
+        card.innerHTML = `
+          <div class="order-header">
+            <span>Заказ #${order.orderId}</span>
+            <span>Стол ${order.tableNumber}</span>
+          </div>
+          <div class="order-meta">
+            Клиент: ${order.clientName}<br>
+          </div>
+          ${order.orderNotes ? `<div class="order-notes">Примечания: ${order.orderNotes}</div>` : ''}
+          <ul class="items-list">
+            ${order.items.map(it =>
+              `<li>${it.itemName} × ${it.quantity} (${it.unitPrice.toFixed(2)} ₽)</li>`
+            ).join('')}
+          </ul>
+          <button class="complete-btn">Выполнить</button>
+        `;
+        const btn = card.querySelector('.complete-btn');
+        btn.addEventListener('click', () => completeOrder(order.orderId, card));
+        ordersContainer.appendChild(card);
+      });
+    }
+
+    async function completeOrder(id, cardElement) {
+      try {
+        const resp = await fetch(`http://localhost:8080/waiter/orders/${id}/complete`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!resp.ok) throw new Error(resp.statusText);
+        // Анимация скрытия
+        cardElement.classList.add('fade-out');
+        setTimeout(() => cardElement.remove(), 200);
+        // Если после удаления не осталось карточек — показать сообщение
+        setTimeout(() => {
+          if (!ordersContainer.querySelector('.order-card')) {
+            ordersContainer.innerHTML = '<p class="empty">Нет активных заказов</p>';
+          }
+        }, 210);
+      } catch (err) {
+        alert('Не удалось выполнить заказ: ' + err.message);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadOrders);
+  </script>
+</body>
+</html>

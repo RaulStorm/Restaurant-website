@@ -1,0 +1,539 @@
+/* Общие стили для страницы */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Стили для заголовка */
+header {
+    display: flex; /* Используем flexbox для удобного выравнивания */
+    justify-content: space-between; /* Распределяем пространство между элементами */
+    align-items: center; /* Центрируем элементы по вертикали */
+    background-color: #7e56563b; /* Цвет фона */
+    padding: 15px; /* Отступы */
+    width: 100%; /* Фиксированная ширина */
+    max-width: 1000px; /* Максимальная ширина */
+    height: 70px; /* Фиксированная высота */
+    margin: 0 auto; /* Центрируем заголовок на странице */
+    box-sizing: border-box; /* Учитываем отступы в размерах */
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    color: #333;
+    padding-top: 60px; /* Отступ сверху для страницы, чтобы не перекрывал хедер */
+}
+
+.restaurant-name {
+    font-family: 'Pacifico', cursive; /* Используем подключённый шрифт */
+    font-size: 36px; /* Размер шрифта */
+    color: #fff; /* Цвет текста */
+    margin: 3; /* Убираем отступы */
+}
+
+/* Центровый блок делаем полужирным и не даём ему съехать */
+.header-center {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-weight: bold;
+  font-size: 1.1rem;       /* при желании можно увеличить */
+}
+/* Стили для бургерного меню */
+#new-burger-menu {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 30px;
+    height: 25px;
+    cursor: pointer;
+    position: fixed;  /* Фиксированное положение */
+    top: 15px;  /* Немного ниже хедера */
+    left: 15px;  /* В левом углу */
+    z-index: 1000;
+    transition: all 0.3s ease;
+    margin-top: 60px;
+}
+
+#new-burger-menu div {
+    height: 4px;
+    background-color: #ffffff;
+    border-radius: 2px;
+}
+
+/* Стили для бокового меню */
+.side-menu {
+    height: 100%;
+    width: 250px;
+    background-color: #333;
+    position: fixed;
+    top: 0;
+    left: -250px;
+    transition: left 0.3s ease;
+    z-index: 999;
+    overflow-y: auto;
+    padding-top: 120px; /* Отступ сверху */
+}
+
+/* Когда меню активно (открыто), меняем положение */
+.side-menu.active {
+    left: 0;
+}
+
+/* Стиль для ссылок в боковом меню */
+.side-menu ul {
+    list-style: none;
+}
+
+.restaurant-link {
+    color: #352323; /* Цвет текста ссылки */
+    text-decoration: none; /* Убираем подчеркивание */
+}
+
+.side-menu ul li {
+    padding: 10px 20px;
+    text-align: left;
+}
+
+.side-menu ul li a {
+    color: white;
+    text-decoration: none;
+    font-size: 18px;
+}
+
+.side-menu ul li a:hover {
+    background-color: #555;
+}
+
+/* Стили для основного контента */
+.content {
+    transition: margin-left 0.3s ease;
+    padding: 20px;
+    margin-top: 80px; /* Отступ от хедера */
+    margin-left: 0;
+}
+
+.content.active {
+    margin-left: 250px; /* Когда меню открыто, сдвигаем контент вправо */
+}
+
+/* Вкладки */
+.tab-content {
+    display: none;
+    margin-top: 20px;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Стили для элементов управления (кнопок, форм) */
+.controls {
+    margin-bottom: 20px;
+}
+
+.controls select {
+    padding: 5px;
+    margin-right: 10px;
+}
+
+button {
+    padding: 10px 20px;
+    background-color: #333;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #555;
+}
+
+/* Стили для таблиц */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+th {
+    background-color: #333;
+    color: white;
+}
+
+td {
+    background-color: #f9f9f9;
+}
+
+tr:hover td {
+    background-color: #f1f1f1;
+}
+
+/* Стили для загрузки и ошибок */
+.loading {
+    display: none;
+    font-size: 18px;
+    color: #333;
+}
+
+.error {
+    display: none;
+    color: red;
+    font-size: 18px;
+}
+
+/* Стили для скрытия/отображения меню на мобильных устройствах */
+@media (max-width: 768px) {
+    #new-burger-menu {
+        display: block;
+    }
+
+    .side-menu {
+        position: fixed;
+        top: 0;
+        left: -250px;
+        height: 100%;
+        width: 250px;
+        background-color: #333;
+        transition: left 0.3s ease;
+    }
+
+    .side-menu.active {
+        left: 0;
+    }
+
+    .content.active {
+        margin-left: 0; /* Контент не сдвигается на мобильных */
+    }
+}
+
+/* Стили для заголовка */
+header {
+    display: flex; /* Используем flexbox для удобного выравнивания */
+    justify-content: space-between; /* Распределяем пространство между элементами */
+    align-items: center; /* Центрируем элементы по вертикали */
+    background-color: #7e56563b; /* Цвет фона */
+    width: 100%; /* Фиксированная ширина */
+    height: 70px; /* Фиксированная высота */
+    margin: 0 auto; /* Центрируем заголовок на странице */
+    box-sizing: border-box; /* Учитываем отступы в размерах */
+}
+
+/* Стили для навигации */
+nav {
+    flex-grow: 1;
+    text-align: center;
+    position: relative;
+}
+
+nav ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+nav ul li {
+    display: inline-block;
+}
+
+nav ul li a {
+    color: #fff;
+    text-decoration: none;
+    font-weight: 500;
+    padding: 10px 20px;
+    position: relative;
+    display: inline-block;
+    transition: transform 0.3s, box-shadow 0.3s; /* Плавный эффект при наведении */
+}
+
+nav ul li a:hover {
+    background-color: #644545; /* Цвет фона при наведении */
+    border-radius: 20px;
+}
+
+/* Стили для тела страницы */
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Минимальная высота для заполнения всего окна браузера */
+}
+
+main {
+    flex: 1; /* Заставляем основной контент занимать оставшееся пространство */
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background: linear-gradient(135deg, #ccd9e8, #e4997e);
+    margin: 0;
+    padding: 0;
+    color: #333;
+}
+
+*::-webkit-scrollbar{
+    width: 8px;
+}
+
+*::-webkit-scrollbar-thumb{
+    background-color: #b4acac;
+    border: 1px solid #443d3d;
+}
+
+*::-webkit-scrollbar-track{
+    background-color: #ccd9e8;
+}
+
+/* Стили для форм */
+form {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+}
+
+label {
+    display: inline-block;
+    width: 120px;
+    margin: 10px 0 5px;
+    font-weight: bold;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="file"],
+select {
+    width: 300px;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+button {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin-top: 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #2980b9;
+}
+
+/* Стили для отзывов */
+#review-stats {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#reviews-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+}
+
+#reviews-list div {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s;
+}
+
+#reviews-list div:hover {
+    transform: translateY(-2px);
+}
+
+#reviews-list p {
+    margin: 8px 0;
+}
+
+/* Стили для звезд рейтинга */
+.star-rating {
+    color: #f1c40f;
+    font-size: 1.2em;
+    letter-spacing: 2px;
+}
+
+/* Стили для распределения оценок */
+#rating-distribution {
+    margin-top: 15px;
+}
+
+#rating-distribution p {
+    margin: 5px 0;
+    padding-left: 20px;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    form {
+        padding: 15px;
+    }
+    
+    label {
+        width: 100%;
+        display: block;
+    }
+    
+    input[type="text"],
+    input[type="number"],
+    input[type="file"],
+    select {
+        width: 100%;
+    }
+    
+    button {
+        width: 100%;
+    }
+}
+
+/* Стили для выбора периода */
+#review-period {
+    padding: 8px;
+    margin-right: 10px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+}
+
+#load-reviews-btn {
+    padding: 8px 15px;
+}
+
+.admin-section {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+}
+
+.period-selector {
+    margin: 20px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.period-selector select {
+    padding: 8px 12px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+}
+
+.reservations-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.reservations-table th, 
+.reservations-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.reservations-table th {
+    background-color: #3498db;
+    color: white;
+    font-weight: bold;
+}
+
+.reservations-table tr:hover {
+    background-color: #f5f5f5;
+}
+
+.btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
+}
+
+.btn:hover {
+    opacity: 0.9;
+}
+
+.btn-danger {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.error {
+    color: #e74c3c;
+    padding: 15px;
+    background: #fdecea;
+    border-radius: 4px;
+    margin-top: 15px;
+}
+
+.no-data {
+    color: #7f8c8d;
+    padding: 15px;
+    text-align: center;
+    margin-top: 15px;
+}
+
+/* === Стили для вкладки «Статистика выручки» === */
+#tab-5 { display: none; margin-top: 20px; }
+#tab-5.active { display: block; }
+
+.stats-container {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-top: 15px;
+}
+
+.stats-section {
+  margin-bottom: 30px;
+}
+
+.stats-section h3 {
+  margin-bottom: 10px;
+  color: #2c3e50;
+  border-bottom: 2px solid #3498db;
+  padding-bottom: 5px;
+}
+
+.stats-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.stats-table th,
+.stats-table td {
+  padding: 10px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.stats-table th {
+  background-color: #3498db;
+  color: #fff;
+}
+
+.stats-table tr:hover td {
+  background-color: #f5f5f5;
+}
